@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طلبات التصنيع | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/components.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') {
+    LANG = savedLang;
+  }
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  
+  var app = document.getElementById('app');
+  app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
+    '<div class="page-head">' +
+      '<div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
+        '<div>' +
+          '<h1>' + t('req_title') + '</h1>' +
+          '<p>' + t('req_sub') + '</p>' +
+        '</div>' +
+        '<button class="btn btn-primary" onclick="openRequestForm()">📣 ' + t('post_request') + '</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="container req-layout">' +
+      '<div class="card-grid">' +
+        (REQUESTS.length === 0
+          ? '<div class="empty"><div class="big">📋</div><b>' + t('no_results') + '</b><p>' + t('no_results_sub') + '</p></div>'
+          : REQUESTS.map(function(r) {
+              return '<a href="request-detail.html?id=' + r.id + '" class="request-card">' +
+                '<div class="thumb">' + r.icon + '</div>' +
+                '<h3>' + esc(L(r.title)) + '</h3>' +
+                '<div class="desc">' + esc(L(r.desc)) + '</div>' +
+                '<div class="foot">' +
+                  '<span>📦 ' + t('qty') + ': <b>' + num(r.qty) + '</b></span>' +
+                  '<span>📍 ' + L(GOVS[r.gov]) + '</span>' +
+                  '<span>🕒 ' + STR[LANG].days_ago(r.days) + '</span>' +
+                '</div>' +
+              '</a>';
+            }).join('')
+        ) +
+      '</div>' +
+    '</div>' +
+  '</main>' +
+  '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
+  footerHTML();
+});
+</script>
+</body>
+</html>
