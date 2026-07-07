@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملف المصنع | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/components.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') {
+    LANG = savedLang;
+  }
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  
+  var params = new URLSearchParams(window.location.search);
+  var factoryId = params.get('id');
+  
+  if (!factoryId) {
+    window.location.href = 'factories.html';
+    return;
+  }
+  
+  var f = FACTORIES.find(function(x) { return x.id === factoryId; });
+  if (!f) {
+    window.location.href = 'factories.html';
+    return;
+  }
+  
+  var id = ind(f.industry);
+  var slug = f.name.en.toLowerCase().replace(/[^a-z]+/g, '');
+  
+  function stars(rating) {
+    var s = '';
+    for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? '★' : '☆';
+    return s;
+  }
+  
+  var industryServicesEn = (IND_SERVICES[f.industry] && IND_SERVICES[f.industry].en) ? IND_SERVICES[f.industry].en : [];
+  var industryServicesAr = (IND_SERVICES[f.industry] && IND_SERVICES[f.industry].ar) ? IND_SERVICES[f.industry].ar : [];
+  var svcHTML = f.services.map(function(svc) {
+    var arIdx = -1;
+    for (var j = 0; j < industryServicesEn.length; j++) {
+      if (industryServicesEn[j].name === svc.name) { arIdx = j; break; }
+    }
+    return { icon: svc.icon, name: LANG === 'ar' && arIdx >= 0 ? industryServicesAr[arIdx].name : svc.name };
+  });
+  
+  var app = document.getElementById('app');
+  app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
+    '<div class="container">' +
+      '<a href="factories.html" class="back-btn">' + (LANG === 'ar' ? '→' : '←') + ' ' + t('back') + '</a>' +
+    '</div>' +
+    '<div class="container" style="margin-top:14px">' +
+      '<div class="profile-cover" style="background:' + grad(id.g) + ';border-radius:20px">' +
+        '<span class="pcode">' + factoryCode(f) + '</span>' +
+        '<span class="cover-ic">' + id.icon + '</span>' +
+      '</div>' +
+      '<div class="profile-top">' +
+        '<div class="profile-card">' +
+          '<div class="profile-logo">' + L(f.name).charAt(0) + '</div>' +
+          '<div class="profile-main">' +
+            '<h1>' + esc(L(f.name)) + '</h1>' +
+            '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
+              id.icon + ' ' + L({en: id.en, ar: id.ar}) + ' · 📍 ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr) +
+            '</div>' +
+            '<div class="rating-stars" style="margin-top:8px">' +
+              stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
+            '</div>' +
+            '<div class="badge-row">' +
+              '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
+              (f.exp ? '<span class="chip amber">🌍 ' + t('exports') + '</span>' : '') +
+              f.certs.map(function(c) { return '<span class="chip">✔ ' + c + '</span>'; }).join('') +
+              '<span class="capacity-badge daily">📊 ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
+              '<span class="capacity-badge monthly">📈 ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      
+      '<div class="profile-layout">' +
+        '<div>' +
+          '<div class="panel">' +
+            '<h2>' + t('about') + '</h2>' +
+            '<p>' + esc(L(f.desc)) + '</p>' +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2>' + t('services_title') + '</h2>' +
+            (svcHTML.length > 0
+              ? '<div class="services-grid">' + svcHTML.map(function(s) { return '<div class="service-card"><span class="svc-icon">' + s.icon + '</span><span>' + esc(s.name) + '</span></div>'; }).join('') + '</div>'
+              : '<p>' + t('no_services') + '</p>') +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2>' + t('products') + '</h2>' +
+            '<div class="chip-row">' + L(IND_PRODUCTS[f.industry]).map(function(p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + p + '</span>'; }).join('') + '</div>' +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2>' + t('capabilities') + '</h2>' +
+            '<div class="chip-row">' + L(IND_CAPS[f.industry]).map(function(p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + p + '</span>'; }).join('') + '</div>' +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2>' + t('gallery') + '</h2>' +
+            '<div class="gallery">' +
+              [0,1,2,3,4,5].map(function(n) { return '<div class="ph" style="background:' + grad(id.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? '📷' : id.icon) + '</div>'; }).join('') +
+            '</div>' +
+          '</div>' +
+          '<div class="panel">' +
+            '<h2>' + t('details') + '</h2>' +
+            '<div class="spec-grid">' +
+              '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + num(f.yr) + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + f.emp + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">📍 ' + L(f.gov) + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + t('hours_val') + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('certifications') + '</div><div class="v">' + (f.certs.length ? f.certs.join(' · ') : '—') + '</div></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        
+        '<aside class="contact-panel">' +
+          '<div class="panel">' +
+            '<h2>' + t('contact_title') + '</h2>' +
+            '<p style="margin-bottom:14px;font-size:13px">' + t('contact_sub') + '</p>' +
+            '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
+              '<span class="ci" style="background:var(--teal-tint)">📞</span>' +
+              '<span>' + t('call') + '<small dir="ltr">' + f.phone + '</small></span>' +
+            '</a>' +
+            '<a class="contact-btn" href="#" onclick="return false">' +
+              '<span class="ci" style="background:#E7F6EC">💬</span>' +
+              '<span>' + t('whatsapp') + '<small dir="ltr">' + f.phone + '</small></span>' +
+            '</a>' +
+            '<a class="contact-btn" href="mailto:info@' + slug + '.example">' +
+              '<span class="ci" style="background:#FDF0E0">✉️</span>' +
+              '<span>' + t('email') + '<small dir="ltr">info@' + slug + '.example</small></span>' +
+            '</a>' +
+            '<a class="contact-btn" href="#" onclick="return false">' +
+              '<span class="ci" style="background:#E8EEFB">🌐</span>' +
+              '<span>' + t('website') + '<small dir="ltr">' + slug + '.example.com</small></span>' +
+            '</a>' +
+            '<div class="chip-row" style="margin-top:8px">' +
+              '<span class="chip">Facebook</span><span class="chip">Instagram</span><span class="chip">LinkedIn</span>' +
+            '</div>' +
+          '</div>' +
+        '</aside>' +
+      '</div>' +
+    '</div>' +
+  '</main>' +
+  '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
+  footerHTML();
+});
+</script>
+</body>
+</html>
