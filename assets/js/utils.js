@@ -1,6 +1,12 @@
 // Language state
 var LANG = 'ar';
 
+// Load saved language preference
+(function() {
+  var saved = localStorage.getItem('sonnaLang');
+  if (saved === 'en') LANG = 'en';
+})();
+
 // Current page tracking
 var CURRENT_PAGE = 'home';
 var FILTERS = { q: '', industry: '', gov: '', moq: '', exp: false, cert: '', minCapacity: '', sort: 'name' };
@@ -17,7 +23,10 @@ function L(obj) {
 
 // Find industry by ID
 function ind(id) {
-  return INDUSTRIES.find(function(x) { return x.id === id; });
+  for (var i = 0; i < INDUSTRIES.length; i++) {
+    if (INDUSTRIES[i].id === id) return INDUSTRIES[i];
+  }
+  return INDUSTRIES[0];
 }
 
 // HTML escape
@@ -43,15 +52,12 @@ function factoryCode(f) {
   return IND_CODE[f.industry] + '-' + String(Number(f.id.slice(1)) + 1).padStart(3, '0');
 }
 
-// Set language and refresh
+// Set language and reload
 function setLang(l) {
   LANG = l;
+  localStorage.setItem('sonnaLang', l);
   document.documentElement.lang = l;
   document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
-  
-  // Reload current page to apply language
-  var currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  if (currentPage === '' || currentPage === '/') currentPage = 'index.html';
   window.location.reload();
 }
 
@@ -66,14 +72,18 @@ function toast(msg) {
 
 // Mobile menu
 function openMobileMenu() {
-  document.getElementById('mobileOverlay').classList.add('open');
-  document.getElementById('mobilePanel').classList.add('open');
+  var overlay = document.getElementById('mobileOverlay');
+  var panel = document.getElementById('mobilePanel');
+  if (overlay) overlay.classList.add('open');
+  if (panel) panel.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeMobileMenu() {
-  document.getElementById('mobileOverlay').classList.remove('open');
-  document.getElementById('mobilePanel').classList.remove('open');
+  var overlay = document.getElementById('mobileOverlay');
+  var panel = document.getElementById('mobilePanel');
+  if (overlay) overlay.classList.remove('open');
+  if (panel) panel.classList.remove('open');
   document.body.style.overflow = '';
 }
 
@@ -133,7 +143,7 @@ function openRequestForm() {
   
   bd.querySelector('#fq_cancel').onclick = function() { bd.remove(); };
   bd.querySelector('#fq_submit').onclick = function() {
-    function v(id) { return bd.querySelector(id).value.trim(); }
+    var v = function(id) { return bd.querySelector(id).value.trim(); };
     var title = v('#fq_title'), desc = v('#fq_desc'), qty = v('#fq_qty'), contact = v('#fq_contact');
     
     if (!title || !desc || !qty || !contact) {
@@ -141,26 +151,22 @@ function openRequestForm() {
       return;
     }
     
-    var mat = v('#fq_mat') || '—';
-    var budget = v('#fq_budget') || null;
-    var gov = Number(bd.querySelector('#fq_gov').value);
-    
     REQUESTS.unshift({
       id: 'r' + Date.now(),
       icon: '📝',
       days: 0,
       qty: qty,
-      budget: budget,
+      budget: v('#fq_budget') || null,
       title: { en: title, ar: title },
       desc: { en: desc, ar: desc },
-      material: { en: mat, ar: mat },
-      gov: gov,
+      material: { en: v('#fq_mat') || '—', ar: v('#fq_mat') || '—' },
+      gov: Number(bd.querySelector('#fq_gov').value),
       by: { en: 'Sonnaع user', ar: 'مستخدم صُنّاع' },
       contact: contact
     });
     
     bd.remove();
     toast(t('published'));
-    window.location.href = 'requests.html';
+    setTimeout(function() { window.location.href = 'requests.html'; }, 500);
   };
 }
