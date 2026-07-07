@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الطلب | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/components.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') {
+    LANG = savedLang;
+  }
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  
+  var params = new URLSearchParams(window.location.search);
+  var requestId = params.get('id');
+  
+  if (!requestId) { window.location.href = 'requests.html'; return; }
+  
+  var r = REQUESTS.find(function(x) { return x.id === requestId; });
+  if (!r) { window.location.href = 'requests.html'; return; }
+  
+  var app = document.getElementById('app');
+  app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
+    '<div class="container">' +
+      '<a href="requests.html" class="back-btn">' + (LANG === 'ar' ? '→' : '←') + ' ' + t('req_title') + '</a>' +
+    '</div>' +
+    '<div class="container" style="padding:18px 24px 64px;max-width:860px">' +
+      '<div class="panel">' +
+        '<div class="req-detail-head">' +
+          '<div style="display:flex;gap:14px;align-items:center">' +
+            '<div style="width:56px;height:56px;border-radius:14px;background:var(--mist);display:grid;place-items:center;font-size:26px">' + r.icon + '</div>' +
+            '<div>' +
+              '<h1 style="font-size:22px;font-weight:800">' + esc(L(r.title)) + '</h1>' +
+              '<span style="font-size:13px;color:var(--ink-soft)">' +
+                t('posted') + ' ' + STR[LANG].days_ago(r.days) + ' · ' + t('by') + ' <b>' + esc(L(r.by)) + '</b>' +
+              '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<p style="margin:18px 0;color:var(--ink);font-size:14.5px">' + esc(L(r.desc)) + '</p>' +
+        '<div class="spec-grid">' +
+          '<div class="spec"><div class="k">' + t('qty') + '</div><div class="v">' + num(r.qty) + ' ' + t('units') + '</div></div>' +
+          '<div class="spec"><div class="k">' + t('budget') + '</div><div class="v">' + (r.budget ? num(r.budget) + ' ' + t('egp') : t('budget_na')) + '</div></div>' +
+          '<div class="spec"><div class="k">' + t('materials') + '</div><div class="v">' + esc(L(r.material)) + '</div></div>' +
+          '<div class="spec"><div class="k">' + t('deliver_to') + '</div><div class="v">📍 ' + L(GOVS[r.gov]) + '</div></div>' +
+        '</div>' +
+        '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
+          '<h2>' + t('contact_requester') + '</h2>' +
+          '<p style="font-weight:600;color:var(--ink)" dir="ltr">' + esc(r.contact) + '</p>' +
+          '<p style="font-size:12.5px;margin-top:8px">' + t('req_note') + '</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</main>' +
+  '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
+  footerHTML();
+});
+</script>
+</body>
+</html>
