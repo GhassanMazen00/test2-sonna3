@@ -1,0 +1,217 @@
+<div class="container">
+  <button class="back-btn" id="backBtn" onclick="goBackToFactories()"></button>
+</div>
+
+<div class="container" style="margin-top:14px">
+  <div class="profile-cover" id="profileCover">
+    <span class="pcode" id="factoryCode"></span>
+    <span class="cover-ic" id="coverIcon"></span>
+  </div>
+
+  <div class="profile-top">
+    <div class="profile-card">
+      <div class="profile-logo" id="profileLogo"></div>
+      <div class="profile-main">
+        <h1 id="factoryName"></h1>
+        <div class="meta" id="factoryMeta" style="color:var(--ink-soft);font-size:13.5px"></div>
+        <div class="rating-stars" id="ratingStars" style="margin-top:8px"></div>
+        <div class="badge-row" id="badgeRow"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-layout">
+    <div>
+      <div class="panel">
+        <h2 id="aboutTitle"></h2>
+        <p id="aboutDesc"></p>
+      </div>
+
+      <div class="panel">
+        <h2 id="servicesTitle"></h2>
+        <div id="servicesContent"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="productsTitle"></h2>
+        <div class="chip-row" id="productsList"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="capabilitiesTitle"></h2>
+        <div class="chip-row" id="capabilitiesList"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="galleryTitle"></h2>
+        <div class="gallery" id="galleryGrid"></div>
+      </div>
+
+      <div class="panel">
+        <h2 id="detailsTitle"></h2>
+        <div class="spec-grid" id="detailsGrid"></div>
+      </div>
+    </div>
+
+    <aside class="contact-panel">
+      <div class="panel">
+        <h2 id="contactTitle"></h2>
+        <p id="contactSub" style="margin-bottom:14px;font-size:13px"></p>
+        <div id="contactButtons"></div>
+        <div class="chip-row" id="socialChips" style="margin-top:8px"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Get factory ID from URL
+  var params = new URLSearchParams(window.location.search);
+  var factoryId = params.get('id');
+  
+  if (!factoryId) {
+    window.location.href = 'factories.html';
+    return;
+  }
+  
+  var f = FACTORIES.find(function(x) { return x.id === factoryId; });
+  if (!f) {
+    window.location.href = 'factories.html';
+    return;
+  }
+  
+  var industryData = ind(f.industry);
+  var slug = f.name.en.toLowerCase().replace(/[^a-z]+/g, '');
+  
+  // Back button
+  document.getElementById('backBtn').innerHTML = (LANG === 'ar' ? '→' : '←') + ' ' + t('back');
+  
+  // Profile cover
+  document.getElementById('profileCover').style.background = grad(industryData.g);
+  document.getElementById('profileCover').style.borderRadius = '20px';
+  document.getElementById('factoryCode').textContent = factoryCode(f);
+  document.getElementById('coverIcon').textContent = industryData.icon;
+  
+  // Profile card
+  document.getElementById('profileLogo').textContent = L(f.name).charAt(0);
+  document.getElementById('factoryName').textContent = L(f.name);
+  document.getElementById('factoryMeta').innerHTML = 
+    industryData.icon + ' ' + L({en: industryData.en, ar: industryData.ar}) + 
+    ' · 📍 ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr);
+  
+  // Rating stars
+  var stars = '';
+  for (var i = 0; i < 5; i++) {
+    stars += i < Math.round(f.rating) ? '★' : '☆';
+  }
+  document.getElementById('ratingStars').innerHTML = 
+    stars + ' <span class="rating-value">' + f.rating + '</span>' +
+    ' <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>';
+  
+  // Badges
+  var badges = '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>';
+  if (f.exp) badges += '<span class="chip amber">🌍 ' + t('exports') + '</span>';
+  badges += f.certs.map(function(c) { return '<span class="chip">✔ ' + c + '</span>'; }).join('');
+  badges += '<span class="capacity-badge daily">📊 ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>';
+  badges += '<span class="capacity-badge monthly">📈 ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>';
+  document.getElementById('badgeRow').innerHTML = badges;
+  
+  // Section titles
+  document.getElementById('aboutTitle').innerHTML = '<span style="display:none"></span>' + t('about');
+  document.getElementById('aboutTitle').textContent = t('about');
+  document.getElementById('aboutDesc').textContent = L(f.desc);
+  document.getElementById('servicesTitle').textContent = t('services_title');
+  document.getElementById('productsTitle').textContent = t('products');
+  document.getElementById('capabilitiesTitle').textContent = t('capabilities');
+  document.getElementById('galleryTitle').textContent = t('gallery');
+  document.getElementById('detailsTitle').textContent = t('details');
+  document.getElementById('contactTitle').textContent = t('contact_title');
+  document.getElementById('contactSub').textContent = t('contact_sub');
+  
+  // Services
+  var industryServicesEn = (IND_SERVICES[f.industry] && IND_SERVICES[f.industry].en) ? IND_SERVICES[f.industry].en : [];
+  var industryServicesAr = (IND_SERVICES[f.industry] && IND_SERVICES[f.industry].ar) ? IND_SERVICES[f.industry].ar : [];
+  var serviceNames = f.services.map(function(svc) {
+    var arIdx = -1;
+    for (var j = 0; j < industryServicesEn.length; j++) {
+      if (industryServicesEn[j].name === svc.name) { arIdx = j; break; }
+    }
+    return {
+      icon: svc.icon,
+      name: LANG === 'ar' && arIdx >= 0 ? industryServicesAr[arIdx].name : svc.name
+    };
+  });
+  
+  if (serviceNames.length > 0) {
+    document.getElementById('servicesContent').innerHTML = 
+      '<div class="services-grid">' +
+      serviceNames.map(function(s) {
+        return '<div class="service-card"><span class="svc-icon">' + s.icon + '</span><span>' + esc(s.name) + '</span></div>';
+      }).join('') +
+      '</div>';
+  } else {
+    document.getElementById('servicesContent').innerHTML = '<p>' + t('no_services') + '</p>';
+  }
+  
+  // Products
+  document.getElementById('productsList').innerHTML = 
+    L(IND_PRODUCTS[f.industry]).map(function(p) {
+      return '<span class="chip" style="font-size:13px;padding:7px 14px">' + p + '</span>';
+    }).join('');
+  
+  // Capabilities
+  document.getElementById('capabilitiesList').innerHTML = 
+    L(IND_CAPS[f.industry]).map(function(p) {
+      return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + p + '</span>';
+    }).join('');
+  
+  // Gallery
+  document.getElementById('galleryGrid').innerHTML = 
+    [0, 1, 2, 3, 4, 5].map(function(n) {
+      return '<div class="ph" style="background:' + grad(industryData.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? '📷' : industryData.icon) + '</div>';
+    }).join('');
+  
+  // Factory details
+  document.getElementById('detailsGrid').innerHTML = 
+    '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + num(f.yr) + '</div></div>' +
+    '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + f.emp + '</div></div>' +
+    '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">📍 ' + L(f.gov) + '</div></div>' +
+    '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + t('hours_val') + '</div></div>' +
+    '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +
+    '<div class="spec"><div class="k">' + t('certifications') + '</div><div class="v">' + (f.certs.length ? f.certs.join(' · ') : '—') + '</div></div>';
+  
+  // Contact buttons
+  function cIcon(bg, em) {
+    return '<span class="ci" style="background:' + bg + '">' + em + '</span>';
+  }
+  
+  document.getElementById('contactButtons').innerHTML = 
+    '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
+      cIcon('var(--teal-tint)', '📞') +
+      '<span>' + t('call') + '<small dir="ltr">' + f.phone + '</small></span>' +
+    '</a>' +
+    '<a class="contact-btn" href="#" onclick="return false">' +
+      cIcon('#E7F6EC', '💬') +
+      '<span>' + t('whatsapp') + '<small dir="ltr">' + f.phone + '</small></span>' +
+    '</a>' +
+    '<a class="contact-btn" href="mailto:info@' + slug + '.example">' +
+      cIcon('#FDF0E0', '✉️') +
+      '<span>' + t('email') + '<small dir="ltr">info@' + slug + '.example</small></span>' +
+    '</a>' +
+    '<a class="contact-btn" href="#" onclick="return false">' +
+      cIcon('#E8EEFB', '🌐') +
+      '<span>' + t('website') + '<small dir="ltr">' + slug + '.example.com</small></span>' +
+    '</a>';
+  
+  // Social chips
+  document.getElementById('socialChips').innerHTML = 
+    '<span class="chip">Facebook</span>' +
+    '<span class="chip">Instagram</span>' +
+    '<span class="chip">LinkedIn</span>';
+})();
+
+function goBackToFactories() {
+  window.location.href = 'factories.html';
+}
+</script>
