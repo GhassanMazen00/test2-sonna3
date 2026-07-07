@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل المصانع | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/router.js"></script>
+<script>
+// Override the router initialization for this page
+document.addEventListener('DOMContentLoaded', function() {
+  var app = document.getElementById('app');
+  
+  // Detect language from saved preference or URL parameter
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') {
+    LANG = savedLang;
+  }
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  
+  // Get FILTERS from localStorage if available
+  var savedFilters = localStorage.getItem('sonnaFilters');
+  if (savedFilters) {
+    try { FILTERS = JSON.parse(savedFilters); } catch(e) {}
+  }
+  
+  // Build the page
+  var html = headerHTML() + mobileMenuHTML() + '<main>' +
+    '<div class="page-head">' +
+      '<div class="container">' +
+        '<h1>' + t('dir_title') + '</h1>' +
+        '<p>' + t('dir_sub') + '</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="container dir-layout">' +
+      '<aside class="filters">' +
+        '<h3><span>' + t('filters') + '</span> <button class="clear" onclick="clearAllFilters()">' + t('clear') + '</button></h3>' +
+        
+        '<div class="f-group">' +
+          '<label>' + (LANG === 'ar' ? 'بحث' : 'Search') + '</label>' +
+          '<input type="text" id="searchInput" placeholder="' + t('search_ph') + '" onchange="updateFilter(\'q\', this.value)">' +
+        '</div>' +
+        
+        '<div class="f-group">' +
+          '<label>' + t('f_industry') + '</label>' +
+          '<select id="industryFilter" onchange="updateFilter(\'industry\', this.value)">' +
+            '<option value="">' + t('all') + '</option>' +
+            INDUSTRIES.map(function(i) { return '<option value="' + i.id + '">' + L({en: i.en, ar: i.ar}) + '</option>'; }).join('') +
+          '</select>' +
+        '</div>' +
+        
+        '<div class="f-group">' +
+          '<label>' + t('f_gov') + '</label>' +
+          '<select id="govFilter" onchange="updateFilter(\'gov\', this.value)">' +
+            '<option value="">' + t('all') + '</option>' +
+            GOVS.map(function(g, ix) { return '<option value="' + ix + '">' + L(g) + '</option>'; }).join('') +
+          '</select>' +
+        '</div>' +
+        
+        '<div class="f-group">' +
+          '<label>' + t('f_moq') + '</label>' +
+          '<input type="number" id="moqFilter" min="0" placeholder="' + (LANG === 'ar' ? 'مثال: ٥٠٠' : 'e.g. 500') + '" onchange="updateFilter(\'moq\', this.value)">' +
+        '</div>' +
+        
+        '<div class="f-group">' +
+          '<label>' + t('f_cert') + '</label>' +
+          '<select id="certFilter" onchange="updateFilter(\'cert\', this.value)">' +
+            '<option value="">' + t('all') + '</option>' +
+            CERTS.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') +
+          '</select>' +
+        '</div>' +
+        
+        '<div class="f-group">' +
+          '<label>' + t('f_capacity') + '</label>' +
+          '<input type="number" id="capacityFilter" min="0" placeholder="' + (LANG === 'ar' ? 'مثال: ٥٠٠' : 'e.g. 500') + '" onchange="updateFilter(\'minCapacity\', this.value)">' +
+        '</div>' +
+        
+        '<div class="f-group">' +
+          '<label class="f-check">' +
+            '<input type="checkbox" id="exportFilter" onchange="updateFilter(\'exp\', this.checked)"> ' +
+            '<span>' + t('f_export') + '</span>' +
+          '</label>' +
+        '</div>' +
+      '</aside>' +
+      
+      '<div>' +
+        '<div class="results-bar">' +
+          '<span class="count"><b id="resultsCount">0</b> <span>' + t('results') + '</span></span>' +
+          '<label style="font-size:13px;color:var(--ink-soft)">' +
+            t('sort') + ': ' +
+            '<select id="sortSelect" onchange="updateFilter(\'sort\', this.value)" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;margin-inline-start:6px">' +
+              '<option value="name">' + t('sort_name') + '</option>' +
+              '<option value="moq">' + t('sort_moq') + '</option>' +
+            '</select>' +
+          '</label>' +
+        '</div>' +
+        '<div class="card-grid" id="factoriesGrid"></div>' +
+        '<div id="noResults" class="empty" style="display:none">' +
+          '<div class="big">🔍</div>' +
+          '<b>' + t('no_results') + '</b>' +
+          '<p>' + t('no_results_sub') + '</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</main>' +
+  '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
+  footerHTML();
+  
+  app.innerHTML = html;
+  
+  // Restore filter values
+  restoreFilters();
+  
+  // Initial render
+  renderFactoryList();
+});
+
+function updateFilter(key, value) {
+  FILTERS[key] = value;
+  localStorage.setItem('sonnaFilters', JSON.stringify(FILTERS));
+  renderFactoryList();
+}
+
+function clearAllFilters() {
+  FILTERS = { q: '', industry: '', gov: '', moq: '', exp: false, cert: '', minCapacity: '', sort: 'name' };
+  localStorage.removeItem('sonnaFilters');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('industryFilter').value = '';
+  document.getElementById('govFilter').value = '';
+  document.getElementById('moqFilter').value = '';
+  document.getElementById('certFilter').value = '';
+  document.getElementById('capacityFilter').value = '';
+  document.getElementById('exportFilter').checked = false;
+  document.getElementById('sortSelect').value = 'name';
+  renderFactoryList();
+}
+
+function restoreFilters() {
+  document.getElementById('searchInput').value = FILTERS.q || '';
+  if (FILTERS.industry) document.getElementById('industryFilter').value = FILTERS.industry;
+  if (FILTERS.gov) document.getElementById('govFilter').value = FILTERS.gov;
+  document.getElementById('moqFilter').value = FILTERS.moq || '';
+  if (FILTERS.cert) document.getElementById('certFilter').value = FILTERS.cert;
+  document.getElementById('capacityFilter').value = FILTERS.minCapacity || '';
+  document.getElementById('exportFilter').checked = FILTERS.exp || false;
+  document.getElementById('sortSelect').value = FILTERS.sort || 'name';
+}
+
+function renderFactoryList() {
+  var list = FACTORIES.filter(function(f) {
+    if (FILTERS.industry && f.industry !== FILTERS.industry) return false;
+    if (FILTERS.gov && String(f.gov) !== String(FILTERS.gov)) return false;
+    if (FILTERS.moq && f.moq > Number(FILTERS.moq)) return false;
+    if (FILTERS.exp && !f.exp) return false;
+    if (FILTERS.cert && f.certs.indexOf(FILTERS.cert) === -1) return false;
+    if (FILTERS.minCapacity && f.dailyCapacity < Number(FILTERS.minCapacity)) return false;
+    if (FILTERS.q) {
+      var q = FILTERS.q.toLowerCase();
+      var id = ind(f.industry);
+      var hay = [f.name.en, f.name.ar, id.en, id.ar, f.gov.en, f.gov.ar]
+        .concat(IND_PRODUCTS[f.industry].en, IND_PRODUCTS[f.industry].ar, IND_CAPS[f.industry].en, IND_CAPS[f.industry].ar)
+        .join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  
+  if (FILTERS.sort === 'moq') {
+    list.sort(function(a, b) { return a.moq - b.moq; });
+  } else {
+    list.sort(function(a, b) { return L(a.name).localeCompare(L(b.name), LANG); });
+  }
+  
+  document.getElementById('resultsCount').textContent = num(list.length);
+  
+  if (list.length > 0) {
+    document.getElementById('factoriesGrid').innerHTML = list.map(factoryCardHTML).join('');
+    document.getElementById('factoriesGrid').style.display = '';
+    document.getElementById('noResults').style.display = 'none';
+  } else {
+    document.getElementById('factoriesGrid').style.display = 'none';
+    document.getElementById('noResults').style.display = '';
+  }
+}
+</script>
+</body>
+</html>
