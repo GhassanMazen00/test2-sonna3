@@ -1,0 +1,192 @@
+<div class="page-head">
+  <div class="container">
+    <h1 id="dirTitle"></h1>
+    <p id="dirSub"></p>
+  </div>
+</div>
+
+<div class="container dir-layout">
+  <aside class="filters">
+    <h3>
+      <span id="filtersLabel"></span>
+      <button class="clear" onclick="clearAllFilters()" id="clearBtn"></button>
+    </h3>
+    
+    <div class="f-group">
+      <label for="searchInput" id="searchLabel"></label>
+      <input type="text" id="searchInput" oninput="updateFilterAndRender('q', this.value)" autocomplete="off">
+    </div>
+    
+    <div class="f-group">
+      <label for="industryFilter" id="industryLabel"></label>
+      <select id="industryFilter" onchange="updateFilterAndRender('industry', this.value)"></select>
+    </div>
+    
+    <div class="f-group">
+      <label for="govFilter" id="govLabel"></label>
+      <select id="govFilter" onchange="updateFilterAndRender('gov', this.value)"></select>
+    </div>
+    
+    <div class="f-group">
+      <label for="moqFilter" id="moqLabel"></label>
+      <input type="number" id="moqFilter" min="0" oninput="updateFilterAndRender('moq', this.value)">
+    </div>
+    
+    <div class="f-group">
+      <label for="certFilter" id="certLabel"></label>
+      <select id="certFilter" onchange="updateFilterAndRender('cert', this.value)"></select>
+    </div>
+    
+    <div class="f-group">
+      <label for="capacityFilter" id="capacityLabel"></label>
+      <input type="number" id="capacityFilter" min="0" oninput="updateFilterAndRender('minCapacity', this.value)">
+    </div>
+    
+    <div class="f-group">
+      <label class="f-check">
+        <input type="checkbox" id="exportFilter" onchange="updateFilterAndRender('exp', this.checked)">
+        <span id="exportLabel"></span>
+      </label>
+    </div>
+  </aside>
+
+  <div>
+    <div class="results-bar">
+      <span class="count"><b id="resultsCount"></b> <span id="resultsLabel"></span></span>
+      <label style="font-size:13px;color:var(--ink-soft)">
+        <span id="sortLabel"></span>:
+        <select id="sortSelect" onchange="updateFilterAndRender('sort', this.value)" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:9px;margin-inline-start:6px"></select>
+      </label>
+    </div>
+    <div id="factoriesGrid" class="card-grid"></div>
+    <div id="noResults" class="empty" style="display:none">
+      <div class="big">🔍</div>
+      <b id="noResultsTitle"></b>
+      <p id="noResultsSub"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Initialize filters when this page loads
+(function() {
+  // Set localized text
+  document.getElementById('dirTitle').textContent = t('dir_title');
+  document.getElementById('dirSub').textContent = t('dir_sub');
+  document.getElementById('filtersLabel').textContent = t('filters');
+  document.getElementById('clearBtn').textContent = t('clear');
+  document.getElementById('searchLabel').textContent = LANG === 'ar' ? 'بحث' : 'Search';
+  document.getElementById('searchInput').placeholder = t('search_ph');
+  document.getElementById('industryLabel').textContent = t('f_industry');
+  document.getElementById('govLabel').textContent = t('f_gov');
+  document.getElementById('moqLabel').textContent = t('f_moq');
+  document.getElementById('moqFilter').placeholder = LANG === 'ar' ? 'مثال: ٥٠٠' : 'e.g. 500';
+  document.getElementById('certLabel').textContent = t('f_cert');
+  document.getElementById('capacityLabel').textContent = t('f_capacity');
+  document.getElementById('capacityFilter').placeholder = LANG === 'ar' ? 'مثال: ٥٠٠' : 'e.g. 500';
+  document.getElementById('exportLabel').textContent = t('f_export');
+  document.getElementById('resultsLabel').textContent = t('results');
+  document.getElementById('sortLabel').textContent = t('sort');
+  document.getElementById('noResultsTitle').textContent = t('no_results');
+  document.getElementById('noResultsSub').textContent = t('no_results_sub');
+  
+  // Populate industry filter
+  document.getElementById('industryFilter').innerHTML = 
+    '<option value="">' + t('all') + '</option>' + 
+    INDUSTRIES.map(i => '<option value="' + i.id + '">' + L({en: i.en, ar: i.ar}) + '</option>').join('');
+  
+  // Populate governorate filter
+  document.getElementById('govFilter').innerHTML = 
+    '<option value="">' + t('all') + '</option>' + 
+    GOVS.map((g, ix) => '<option value="' + ix + '">' + L(g) + '</option>').join('');
+  
+  // Populate certification filter
+  document.getElementById('certFilter').innerHTML = 
+    '<option value="">' + t('all') + '</option>' + 
+    CERTS.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  
+  // Set sort options
+  document.getElementById('sortSelect').innerHTML = 
+    '<option value="name">' + t('sort_name') + '</option>' +
+    '<option value="moq">' + t('sort_moq') + '</option>';
+  
+  // Restore any saved filters
+  restoreFilters();
+  
+  // Render the factory list
+  renderFactoryList();
+})();
+
+function updateFilterAndRender(key, value) {
+  FILTERS[key] = value;
+  renderFactoryList();
+}
+
+function clearAllFilters() {
+  FILTERS = { q: '', industry: '', gov: '', moq: '', exp: false, cert: '', minCapacity: '', sort: 'name' };
+  document.getElementById('searchInput').value = '';
+  document.getElementById('industryFilter').value = '';
+  document.getElementById('govFilter').value = '';
+  document.getElementById('moqFilter').value = '';
+  document.getElementById('certFilter').value = '';
+  document.getElementById('capacityFilter').value = '';
+  document.getElementById('exportFilter').checked = false;
+  document.getElementById('sortSelect').value = 'name';
+  renderFactoryList();
+}
+
+function restoreFilters() {
+  // Apply current FILTERS to form elements
+  document.getElementById('searchInput').value = FILTERS.q || '';
+  if (FILTERS.industry) document.getElementById('industryFilter').value = FILTERS.industry;
+  if (FILTERS.gov) document.getElementById('govFilter').value = FILTERS.gov;
+  document.getElementById('moqFilter').value = FILTERS.moq || '';
+  if (FILTERS.cert) document.getElementById('certFilter').value = FILTERS.cert;
+  document.getElementById('capacityFilter').value = FILTERS.minCapacity || '';
+  document.getElementById('exportFilter').checked = FILTERS.exp || false;
+  document.getElementById('sortSelect').value = FILTERS.sort || 'name';
+}
+
+function renderFactoryList() {
+  // Filter factories
+  var list = FACTORIES.filter(function(f) {
+    if (FILTERS.industry && f.industry !== FILTERS.industry) return false;
+    if (FILTERS.gov && String(f.gov) !== String(FILTERS.gov)) return false;
+    if (FILTERS.moq && f.moq > Number(FILTERS.moq)) return false;
+    if (FILTERS.exp && !f.exp) return false;
+    if (FILTERS.cert && f.certs.indexOf(FILTERS.cert) === -1) return false;
+    if (FILTERS.minCapacity && f.dailyCapacity < Number(FILTERS.minCapacity)) return false;
+    if (FILTERS.q) {
+      var q = FILTERS.q.toLowerCase();
+      var industryData = ind(f.industry);
+      var haystack = [
+        f.name.en, f.name.ar,
+        industryData.en, industryData.ar,
+        f.gov.en, f.gov.ar
+      ].concat(IND_PRODUCTS[f.industry].en, IND_PRODUCTS[f.industry].ar, IND_CAPS[f.industry].en, IND_CAPS[f.industry].ar).join(' ').toLowerCase();
+      if (haystack.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  
+  // Sort
+  if (FILTERS.sort === 'moq') {
+    list.sort(function(a, b) { return a.moq - b.moq; });
+  } else {
+    list.sort(function(a, b) { return L(a.name).localeCompare(L(b.name), LANG); });
+  }
+  
+  // Update count
+  document.getElementById('resultsCount').textContent = num(list.length);
+  
+  // Render
+  if (list.length > 0) {
+    document.getElementById('factoriesGrid').innerHTML = list.map(factoryCardHTML).join('');
+    document.getElementById('factoriesGrid').style.display = '';
+    document.getElementById('noResults').style.display = 'none';
+  } else {
+    document.getElementById('factoriesGrid').style.display = 'none';
+    document.getElementById('noResults').style.display = '';
+  }
+}
+</script>
