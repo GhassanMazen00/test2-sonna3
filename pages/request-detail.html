@@ -1,0 +1,58 @@
+<div class="container">
+  <button class="back-btn" id="backBtn" onclick="goBackToRequests()"></button>
+</div>
+
+<div class="container" style="padding:18px 24px 64px;max-width:860px">
+  <div class="panel" id="requestDetailPanel"></div>
+</div>
+
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var requestId = params.get('id');
+  
+  if (!requestId) {
+    window.location.href = 'requests.html';
+    return;
+  }
+  
+  var r = REQUESTS.find(function(x) { return x.id === requestId; });
+  if (!r) {
+    window.location.href = 'requests.html';
+    return;
+  }
+  
+  document.getElementById('backBtn').innerHTML = (LANG === 'ar' ? '→' : '←') + ' ' + t('req_title');
+  
+  var daysAgo = STR[LANG].days_ago(r.days);
+  
+  document.getElementById('requestDetailPanel').innerHTML = 
+    '<div class="req-detail-head">' +
+      '<div style="display:flex;gap:14px;align-items:center">' +
+        '<div style="width:56px;height:56px;border-radius:14px;background:var(--mist);display:grid;place-items:center;font-size:26px">' + r.icon + '</div>' +
+        '<div>' +
+          '<h1 style="font-size:22px;font-weight:800">' + esc(L(r.title)) + '</h1>' +
+          '<span style="font-size:13px;color:var(--ink-soft)">' +
+            t('posted') + ' ' + daysAgo + ' · ' + t('by') + ' <b>' + esc(L(r.by)) + '</b>' +
+          '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<p style="margin:18px 0;color:var(--ink);font-size:14.5px">' + esc(L(r.desc)) + '</p>' +
+    '<div class="spec-grid">' +
+      '<div class="spec"><div class="k">' + t('qty') + '</div><div class="v">' + num(r.qty) + ' ' + t('units') + '</div></div>' +
+      '<div class="spec"><div class="k">' + t('budget') + '</div><div class="v">' + (r.budget ? num(r.budget) + ' ' + t('egp') : t('budget_na')) + '</div></div>' +
+      '<div class="spec"><div class="k">' + t('materials') + '</div><div class="v">' + esc(L(r.material)) + '</div></div>' +
+      '<div class="spec"><div class="k">' + t('deliver_to') + '</div><div class="v">📍 ' + L(GOVS[r.gov]) + '</div></div>' +
+    '</div>' +
+    '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
+      '<h2>' + t('contact_requester') + '</h2>' +
+      '<p style="font-weight:600;color:var(--ink)" dir="ltr">' + esc(r.contact) + '</p>' +
+      '<p style="font-size:12.5px;margin-top:8px">' + t('req_note') + '</p>' +
+    '</div>';
+})();
+
+function goBackToRequests() {
+  window.location.href = 'requests.html';
+}
+</script>
