@@ -8,10 +8,10 @@ const STR = {
     login: "Log in", post_request: "Post a Request",
     eyebrow: "Egypt's manufacturing directory",
     slides: [
-      ["🏭", "Egypt's Manufacturing Directory", "We connect traders, brands, and businesses with trusted manufacturers across Egypt."],
-      ["🧭", "Discover Factories by Industry", "Browse 14 sectors and filter by governorate, MOQ, capabilities, and export readiness."],
-      ["📣", "Publish Your Manufacturing Needs", "Post a request describing your product — interested factories contact you directly."],
-      ["🤝", "No Middleman. No Commissions.", "Every profile shows direct contact channels, so you deal with the factory itself."]
+      [ICONS.factory, "Egypt's Manufacturing Directory", "We connect traders, brands, and businesses with trusted manufacturers across Egypt."],
+      [ICONS.compass, "Discover Factories by Industry", "Browse 14 sectors and filter by governorate, MOQ, capabilities, and export readiness."],
+      [ICONS.megaphone, "Publish Your Manufacturing Needs", "Post a request describing your product — interested factories contact you directly."],
+      [ICONS.handshake, "No Middleman. No Commissions.", "Every profile shows direct contact channels, so you deal with the factory itself."]
     ],
     hero_title: 'Find the Right <em>Factory</em> for Your Next Product',
     hero_sub: "Sonnaع connects traders, brands, and businesses directly with trusted Egyptian manufacturers. No middleman. No commissions.",
@@ -35,10 +35,10 @@ const STR = {
     featured_view: "View Profile",
     why_title: "Why Sonnaع?",
     why: [
-      ["🏭", "Trusted manufacturers", "Find verified Egyptian factories with real capabilities and clear profiles."],
-      ["🧭", "Discover by industry", "Browse 14 manufacturing sectors, from textiles to electronics."],
-      ["📣", "Publish your needs", "Post a manufacturing request and let interested factories reach you."],
-      ["🤝", "Contact directly", "No middleman and no commissions — talk to factories on their own channels."]
+      [ICONS.factory, "Trusted manufacturers", "Find verified Egyptian factories with real capabilities and clear profiles."],
+      [ICONS.compass, "Discover by industry", "Browse 14 manufacturing sectors, from textiles to electronics."],
+      [ICONS.megaphone, "Publish your needs", "Post a manufacturing request and let interested factories reach you."],
+      [ICONS.handshake, "Contact directly", "No middleman and no commissions — talk to factories on their own channels."]
     ],
     cta_title: "Own a factory in Egypt?", cta_sub: "Get listed on Sonnaع and receive qualified leads from traders, brands, and businesses looking for production partners.", cta_btn: "List Your Factory",
     dir_title: "Factory Directory", dir_sub: "Browse and filter manufacturers across Egypt",
@@ -61,8 +61,8 @@ const STR = {
     fr_qty: "Quantity required", fr_material: "Preferred materials", fr_material_ph: "e.g. 100% Egyptian cotton",
     fr_budget: "Target budget (EGP)", fr_budget_ph: "Optional",
     fr_gov: "Delivery location", fr_contact: "Contact info", fr_contact_ph: "Phone / WhatsApp / email",
-    fr_files: "Images, files, or reference designs", fr_files_note: "📎 Drag files here or click to upload (prototype)",
-    cancel: "Cancel", publish: "Publish Request", published: "✓ Your request is now live",
+    fr_files: "Images, files, or reference designs", fr_files_note: ICONS.paperclip + " Drag files here or click to upload (prototype)",
+    cancel: "Cancel", publish: "Publish Request", published: "Your request is now live",
     optional: "optional", required: "required", fill_required: "Please fill in all required fields",
     days_ago: d => d === 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`, egp: "EGP",
     footer_about: "A modern platform connecting traders, brands, and businesses with manufacturers across Egypt.",
@@ -70,7 +70,7 @@ const STR = {
     f_links1: ["Browse factories", "Manufacturing requests", "Industries"],
     f_links2: ["About Sonnaع", "List your factory", "Careers"],
     f_links3: ["Help center", "Contact us", "Terms & privacy"],
-    rights: "© 2026 Sonnaع. All rights reserved.", made: "Made for Egyptian industry 🇪🇬",
+    rights: "© 2026 Sonnaع. All rights reserved.", made: "Made for Egyptian industry " + ICONS.flag,
     demo_note: "Prototype — all factory data is placeholder content.",
     services_title: "Additional Services",
     daily_capacity: "Daily Production Capacity",
@@ -79,9 +79,9 @@ const STR = {
     rating_reviews: "reviews",
     no_services: "No additional services listed",
     float_sets: [
-      [["🧵", "Textile factory", "El Mahalla, 300 workers"], ["📦", "New request: 5,000 polos", "2 hours ago"], ["🌍", "Export-ready factory", "ISO 9001 certified"]],
-      [["⚙️", "Metal fabricator", "10th of Ramadan"], ["🪑", "New request: Café furniture", "5 hours ago"], ["🏭", "50+ verified factories", "14 industries"]],
-      [["🍞", "Food manufacturer", "Alexandria"], ["🧴", "New request: HDPE bottles", "8 hours ago"], ["💄", "Cosmetics factory", "ISO 22716 certified"]]
+      [[ICONS.textile, "Textile factory", "El Mahalla, 300 workers"], [ICONS.box, "New request: 5,000 polos", "2 hours ago"], [ICONS.globe, "Export-ready factory", "ISO 9001 certified"]],
+      [[ICONS.gear, "Metal fabricator", "10th of Ramadan"], [ICONS.furniture, "New request: Café furniture", "5 hours ago"], [ICONS.factory, "50+ verified factories", "14 industries"]],
+      [[ICONS.food, "Food manufacturer", "Alexandria"], [ICONS.plastics, "New request: HDPE bottles", "8 hours ago"], [ICONS.cosmetics, "Cosmetics factory", "ISO 22716 certified"]]
     ]
   },
   ar: {
@@ -89,10 +89,10 @@ const STR = {
     login: "تسجيل الدخول", post_request: "انشر طلب تصنيع",
     eyebrow: "دليل التصنيع المصري",
     slides: [
-      ["🏭", "دليل التصنيع المصري", "نربط التجار والعلامات التجارية والشركات بمصانع موثوقة في جميع أنحاء مصر."],
-      ["🧭", "اكتشف المصانع حسب الصناعة", "تصفح ١٤ قطاعًا صناعيًا وصفِّ حسب المحافظة والحد الأدنى للطلب والقدرات وجاهزية التصدير."],
-      ["📣", "انشر احتياجاتك التصنيعية", "انشر طلبًا يصف منتجك — وتتواصل معك المصانع المهتمة مباشرةً."],
-      ["🤝", "بدون وسيط. بدون عمولات.", "كل ملف يعرض قنوات تواصل مباشرة، فتتعامل مع المصنع نفسه."]
+      [ICONS.factory, "دليل التصنيع المصري", "نربط التجار والعلامات التجارية والشركات بمصانع موثوقة في جميع أنحاء مصر."],
+      [ICONS.compass, "اكتشف المصانع حسب الصناعة", "تصفح ١٤ قطاعًا صناعيًا وصفِّ حسب المحافظة والحد الأدنى للطلب والقدرات وجاهزية التصدير."],
+      [ICONS.megaphone, "انشر احتياجاتك التصنيعية", "انشر طلبًا يصف منتجك — وتتواصل معك المصانع المهتمة مباشرةً."],
+      [ICONS.handshake, "بدون وسيط. بدون عمولات.", "كل ملف يعرض قنوات تواصل مباشرة، فتتعامل مع المصنع نفسه."]
     ],
     hero_title: 'اعثر على <em>المصنع</em> المناسب لمنتجك القادم',
     hero_sub: "صُنّاع تربط التجار والعلامات التجارية والشركات مباشرةً بمصانع مصرية موثوقة.<br>بدون وسيط. بدون عمولات.",
@@ -116,10 +116,10 @@ const STR = {
     featured_view: "عرض الملف",
     why_title: "لماذا صُنّاع؟",
     why: [
-      ["🏭", "مصانع موثوقة", "اعثر على مصانع مصرية موثّقة بقدرات حقيقية وملفات تعريفية واضحة."],
-      ["🧭", "اكتشف حسب الصناعة", "تصفح ١٤ قطاعًا صناعيًا، من المنسوجات إلى الإلكترونيات."],
-      ["📣", "انشر احتياجاتك", "انشر طلب تصنيع ودَع المصانع المهتمة تتواصل معك."],
-      ["🤝", "تواصل مباشر", "بدون وسيط وبدون عمولات — تواصل مع المصانع عبر قنواتها المباشرة."]
+      [ICONS.factory, "مصانع موثوقة", "اعثر على مصانع مصرية موثّقة بقدرات حقيقية وملفات تعريفية واضحة."],
+      [ICONS.compass, "اكتشف حسب الصناعة", "تصفح ١٤ قطاعًا صناعيًا، من المنسوجات إلى الإلكترونيات."],
+      [ICONS.megaphone, "انشر احتياجاتك", "انشر طلب تصنيع ودَع المصانع المهتمة تتواصل معك."],
+      [ICONS.handshake, "تواصل مباشر", "بدون وسيط وبدون عمولات — تواصل مع المصانع عبر قنواتها المباشرة."]
     ],
     cta_title: "تمتلك مصنعًا في مصر؟", cta_sub: "سجّل مصنعك على صُنّاع واحصل على عملاء جادّين من التجار والعلامات التجارية الباحثين عن شركاء إنتاج.", cta_btn: "سجّل مصنعك",
     dir_title: "دليل المصانع", dir_sub: "تصفح وصفّي المصانع في جميع أنحاء مصر",
@@ -142,8 +142,8 @@ const STR = {
     fr_qty: "الكمية المطلوبة", fr_material: "الخامات المفضلة", fr_material_ph: "مثال: قطن مصري ١٠٠٪",
     fr_budget: "الميزانية المستهدفة (جنيه)", fr_budget_ph: "اختياري",
     fr_gov: "مكان التسليم", fr_contact: "بيانات التواصل", fr_contact_ph: "هاتف / واتساب / بريد إلكتروني",
-    fr_files: "صور أو ملفات أو تصميمات مرجعية", fr_files_note: "📎 اسحب الملفات هنا أو اضغط للرفع (نموذج أولي)",
-    cancel: "إلغاء", publish: "نشر الطلب", published: "✓ تم نشر طلبك بنجاح",
+    fr_files: "صور أو ملفات أو تصميمات مرجعية", fr_files_note: ICONS.paperclip + " اسحب الملفات هنا أو اضغط للرفع (نموذج أولي)",
+    cancel: "إلغاء", publish: "نشر الطلب", published: "تم نشر طلبك بنجاح",
     optional: "اختياري", required: "مطلوب", fill_required: "يرجى استكمال الحقول المطلوبة",
     days_ago: d => d === 0 ? "اليوم" : d === 1 ? "أمس" : `منذ ${d} أيام`, egp: "ج.م",
     footer_about: "منصة حديثة تربط التجار والعلامات التجارية والشركات بالمصانع في جميع أنحاء مصر.",
@@ -151,7 +151,7 @@ const STR = {
     f_links1: ["تصفح المصانع", "طلبات التصنيع", "الصناعات"],
     f_links2: ["عن صُنّاع", "سجّل مصنعك", "الوظائف"],
     f_links3: ["مركز المساعدة", "تواصل معنا", "الشروط والخصوصية"],
-    rights: "© ٢٠٢٦ صُنّاع. جميع الحقوق محفوظة.", made: "صُنع من أجل الصناعة المصرية 🇪🇬",
+    rights: "© ٢٠٢٦ صُنّاع. جميع الحقوق محفوظة.", made: "صُنع من أجل الصناعة المصرية " + ICONS.flag,
     demo_note: "نموذج أولي — جميع بيانات المصانع محتوى تجريبي.",
     services_title: "خدمات إضافية",
     daily_capacity: "الطاقة الإنتاجية اليومية",
@@ -160,9 +160,9 @@ const STR = {
     rating_reviews: "تقييم",
     no_services: "لا توجد خدمات إضافية مدرجة",
     float_sets: [
-      [["🧵", "مصنع منسوجات", "المحلة الكبرى، ٣٠٠ عامل"], ["📦", "طلب جديد: ٥٠٠٠ بولو", "منذ ساعتين"], ["🌍", "مصنع جاهز للتصدير", "حاصل على ISO 9001"]],
-      [["⚙️", "مصنع تشغيل معادن", "العاشر من رمضان"], ["🪑", "طلب جديد: أثاث كافيه", "منذ ٥ ساعات"], ["🏭", "أكثر من ٥٠ مصنع", "١٤ قطاع صناعي"]],
-      [["🍞", "مصنع أغذية", "الإسكندرية"], ["🧴", "طلب جديد: زجاجات HDPE", "منذ ٨ ساعات"], ["💄", "مصنع مستحضرات تجميل", "ISO 22716"]]
+      [[ICONS.textile, "مصنع منسوجات", "المحلة الكبرى، ٣٠٠ عامل"], [ICONS.box, "طلب جديد: ٥٠٠٠ بولو", "منذ ساعتين"], [ICONS.globe, "مصنع جاهز للتصدير", "حاصل على ISO 9001"]],
+      [[ICONS.gear, "مصنع تشغيل معادن", "العاشر من رمضان"], [ICONS.furniture, "طلب جديد: أثاث كافيه", "منذ ٥ ساعات"], [ICONS.factory, "أكثر من ٥٠ مصنع", "١٤ قطاع صناعي"]],
+      [[ICONS.food, "مصنع أغذية", "الإسكندرية"], [ICONS.plastics, "طلب جديد: زجاجات HDPE", "منذ ٨ ساعات"], [ICONS.cosmetics, "مصنع مستحضرات تجميل", "ISO 22716"]]
     ]
   }
 };

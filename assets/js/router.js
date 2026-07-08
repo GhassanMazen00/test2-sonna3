@@ -42,8 +42,8 @@ function renderHomePage() {
           '<button class="btn btn-primary" type="submit">' + (LANG === 'ar' ? 'بحث' : 'Search') + '</button>' +
         '</form>' +
         '<div class="hero-ctas">' +
-          '<a href="factories.html" class="btn btn-ghost">🏭 ' + t('browse_factories') + '</a>' +
-          '<button class="btn btn-primary" onclick="openRequestForm()">📣 ' + t('post_request') + '</button>' +
+          '<a href="factories.html" class="btn btn-ghost">' + ICONS.factory + ' ' + t('browse_factories') + '</a>' +
+          '<button class="btn btn-primary" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('post_request') + '</button>' +
         '</div>' +
         // Hero slider
         '<div class="hero-slider" id="heroSlider">' +
@@ -67,7 +67,7 @@ function renderHomePage() {
     '<section class="featured-section">' +
       '<div class="container">' +
         '<div class="featured-header">' +
-          '<div class="featured-badge"><span class="star">✦</span>' + t('featured_badge') + '</div>' +
+          '<div class="featured-badge"><span class="star">' + ICONS.sparkle + '</span>' + t('featured_badge') + '</div>' +
           '<h2>' + t('featured_title') + '</h2>' +
           '<p>' + t('featured_desc') + '</p>' +
         '</div>' +
@@ -89,7 +89,7 @@ function renderHomePage() {
                   '<div class="fc-stat"><span class="stat-value">' + num(f.moq) + '+</span><span class="stat-label">' + t('moq') + ' (' + t('units') + ')</span></div>' +
                   '<div class="fc-stat"><span class="stat-value">' + f.emp + '</span><span class="stat-label">' + t('employees') + '</span></div>' +
                   '<div class="fc-stat"><span class="stat-value">' + num(f.yr) + '</span><span class="stat-label">' + t('established') + '</span></div>' +
-                  (f.exp ? '<div class="fc-stat"><span class="stat-value">🌍</span><span class="stat-label">' + t('exports') + '</span></div>' : '') +
+                  (f.exp ? '<div class="fc-stat"><span class="stat-value">' + ICONS.globe + '</span><span class="stat-label">' + t('exports') + '</span></div>' : '') +
                 '</div>' +
                 '<a href="factory-detail.html?id=' + f.id + '" class="btn btn-primary">' + t('featured_view') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
               '</div>' +
@@ -120,7 +120,7 @@ function renderHomePage() {
           INDUSTRIES.map(function(i) {
             var c = FACTORIES.filter(function(f) { return f.industry === i.id; }).length;
             return '<a href="factories.html" class="industry-card-new" onclick="FILTERS.industry=\'' + i.id + '\'">' +
-              '<div class="ind-icon" style="background:linear-gradient(135deg,' + i.g[0] + '15,' + i.g[1] + '25)">' + i.icon + '</div>' +
+              '<div class="ind-icon" style="background:linear-gradient(135deg,' + i.g[0] + '15,' + i.g[1] + '25);color:' + i.g[0] + '">' + i.icon + '</div>' +
               '<div class="ind-name">' + L({en: i.en, ar: i.ar}) + '</div>' +
               '<div class="ind-count">' + num(c) + ' ' + t('factories_count') + '</div>' +
             '</a>';
@@ -154,8 +154,8 @@ function renderHomePage() {
                 '<h3>' + esc(L(r.title)) + '</h3>' +
                 '<p>' + esc(L(r.desc)) + '</p>' +
                 '<div class="req-footer">' +
-                  '<span>📦 ' + t('requests_qty') + ': <strong>' + num(r.qty) + '</strong></span>' +
-                  '<span>📍 ' + t('requests_location') + ': ' + L(GOVS[r.gov]) + '</span>' +
+                  '<span>' + ICONS.box + ' ' + t('requests_qty') + ': <strong>' + num(r.qty) + '</strong></span>' +
+                  '<span>' + ICONS.pin + ' ' + t('requests_location') + ': ' + L(GOVS[r.gov]) + '</span>' +
                 '</div>' +
               '</a>';
             }).join('') +

@@ -16,17 +16,17 @@ function headerHTML() {
       '<a href="index.html" class="nav-link' + (isHome ? ' active' : '') + '">' + t('nav_home') + '</a>' +
       '<a href="factories.html" class="nav-link' + (path === 'factories.html' ? ' active' : '') + '">' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="nav-link' + (path === 'requests.html' ? ' active' : '') + '">' + t('nav_requests') + '</a>' +
-      '<button class="nav-link" onclick="openRequestForm()">📣 ' + t('post_request') + '</button>' +
+      '<button class="nav-link" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('post_request') + '</button>' +
     '</nav>' +
     '<div class="header-actions">' +
-      '<a href="factories.html" class="header-quick-btn desktop-only-flex">🏭</a>' +
-      '<a href="requests.html" class="header-quick-btn desktop-only-flex">📋</a>' +
+      '<a href="factories.html" class="header-quick-btn desktop-only-flex">' + ICONS.factory + '</a>' +
+      '<a href="requests.html" class="header-quick-btn desktop-only-flex">' + ICONS.clipboard + '</a>' +
       '<div class="lang-toggle desktop-only-flex">' +
         '<button class="' + (LANG === 'en' ? 'on' : '') + '" onclick="setLang(\'en\')">EN</button>' +
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\')">عربي</button>' +
       '</div>' +
       '<button class="btn btn-ghost btn-sm desktop-only">' + t('login') + '</button>' +
-      '<button class="mobile-menu-btn" onclick="openMobileMenu()" aria-label="Menu">☰</button>' +
+      '<button class="mobile-menu-btn" onclick="openMobileMenu()" aria-label="Menu">' + ICONS.menu + '</button>' +
     '</div></div></header>';
   
   return html;
@@ -36,7 +36,7 @@ function headerHTML() {
 function mobileMenuHTML() {
   return '<div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>' +
     '<div class="mobile-menu-panel" id="mobilePanel">' +
-      '<button class="mobile-menu-close" onclick="closeMobileMenu()">✕</button>' +
+      '<button class="mobile-menu-close" onclick="closeMobileMenu()">' + ICONS.close + '</button>' +
       '<div style="font-family:var(--font-brand);font-weight:800;font-size:20px;margin-bottom:16px">' +
         t('brand') + '<span style="color:var(--teal)">ع</span>' +
       '</div>' +
@@ -44,9 +44,9 @@ function mobileMenuHTML() {
         '<button class="' + (LANG === 'en' ? 'on' : '') + '" onclick="setLang(\'en\');closeMobileMenu()">English</button>' +
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\');closeMobileMenu()">العربية</button>' +
       '</div>' +
-      '<a href="index.html" class="mobile-menu-link" onclick="closeMobileMenu()">🏠 ' + t('nav_home') + '</a>' +
-      '<a href="factories.html" class="mobile-menu-link" onclick="closeMobileMenu()">🏭 ' + t('nav_factories') + '</a>' +
-      '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">📋 ' + t('nav_requests') + '</a>' +
+      '<a href="index.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.home + ' ' + t('nav_home') + '</a>' +
+      '<a href="factories.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.factory + ' ' + t('nav_factories') + '</a>' +
+      '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
       '<div class="mobile-menu-divider"></div>' +
       '<button class="btn btn-ghost mobile-menu-btn-full">' + t('login') + '</button>' +
       '<button class="btn btn-primary mobile-menu-btn-full" onclick="openRequestForm();closeMobileMenu()">' + t('post_request') + '</button>' +
@@ -91,14 +91,14 @@ function factoryCardHTML(f) {
       '<h3>' + esc(L(f.name)) + '</h3>' +
       '<div class="meta">' +
         '<span>' + i.icon + ' ' + L({en: i.en, ar: i.ar}) + '</span> · ' +
-        '<span>📍 ' + L(f.gov) + '</span>' +
+        '<span>' + ICONS.pin + ' ' + L(f.gov) + '</span>' +
       '</div>' +
       '<div class="desc">' + esc(L(f.desc)) + '</div>' +
       '<div class="chip-row">' +
         '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + '</span>' +
-        (f.exp ? '<span class="chip amber">🌍 ' + t('exports') + '</span>' : '') +
+        (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
         f.certs.slice(0, 1).map(function(c) { return '<span class="chip">' + c + '</span>'; }).join('') +
-        '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">⭐ ' + f.rating + '</span>' +
+        '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.star + ' ' + f.rating + '</span>' +
       '</div>' +
     '</div>' +
   '</a>';

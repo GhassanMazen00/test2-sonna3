@@ -14,6 +14,7 @@
 
 <div id="app"></div>
 
+<script src="assets/js/icons.js"></script>
 <script src="assets/js/lang.js"></script>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/utils.js"></script>
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function stars(rating) {
     var s = '';
-    for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? '★' : '☆';
+    for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? ICONS.star : ICONS.starOutline;
     return s;
   }
   
@@ -76,17 +77,17 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="profile-main">' +
             '<h1>' + esc(L(f.name)) + '</h1>' +
             '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
-              id.icon + ' ' + L({en: id.en, ar: id.ar}) + ' · 📍 ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr) +
+              id.icon + ' ' + L({en: id.en, ar: id.ar}) + ' · ' + ICONS.pin + ' ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr) +
             '</div>' +
             '<div class="rating-stars" style="margin-top:8px">' +
               stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
             '</div>' +
             '<div class="badge-row">' +
               '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
-              (f.exp ? '<span class="chip amber">🌍 ' + t('exports') + '</span>' : '') +
-              f.certs.map(function(c) { return '<span class="chip">✔ ' + c + '</span>'; }).join('') +
-              '<span class="capacity-badge daily">📊 ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
-              '<span class="capacity-badge monthly">📈 ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
+              (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
+              f.certs.map(function(c) { return '<span class="chip">' + ICONS.check + ' ' + c + '</span>'; }).join('') +
+              '<span class="capacity-badge daily">' + ICONS.chartBar + ' ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
+              '<span class="capacity-badge monthly">' + ICONS.chartLine + ' ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -115,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="panel">' +
             '<h2>' + t('gallery') + '</h2>' +
             '<div class="gallery">' +
-              [0,1,2,3,4,5].map(function(n) { return '<div class="ph" style="background:' + grad(id.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? '📷' : id.icon) + '</div>'; }).join('') +
+              [0,1,2,3,4,5].map(function(n) { return '<div class="ph" style="background:' + grad(id.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? ICONS.camera : id.icon) + '</div>'; }).join('') +
             '</div>' +
           '</div>' +
           '<div class="panel">' +
@@ -123,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<div class="spec-grid">' +
               '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + num(f.yr) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + f.emp + '</div></div>' +
-              '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">📍 ' + L(f.gov) + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">' + ICONS.pin + ' ' + L(f.gov) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + t('hours_val') + '</div></div>' +
               '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +
               '<div class="spec"><div class="k">' + t('certifications') + '</div><div class="v">' + (f.certs.length ? f.certs.join(' · ') : '—') + '</div></div>' +
@@ -136,19 +137,19 @@ document.addEventListener('DOMContentLoaded', function() {
             '<h2>' + t('contact_title') + '</h2>' +
             '<p style="margin-bottom:14px;font-size:13px">' + t('contact_sub') + '</p>' +
             '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
-              '<span class="ci" style="background:var(--teal-tint)">📞</span>' +
+              '<span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span>' +
               '<span>' + t('call') + '<small dir="ltr">' + f.phone + '</small></span>' +
             '</a>' +
             '<a class="contact-btn" href="#" onclick="return false">' +
-              '<span class="ci" style="background:#E7F6EC">💬</span>' +
+              '<span class="ci" style="background:#E7F6EC">' + ICONS.chat + '</span>' +
               '<span>' + t('whatsapp') + '<small dir="ltr">' + f.phone + '</small></span>' +
             '</a>' +
             '<a class="contact-btn" href="mailto:info@' + slug + '.example">' +
-              '<span class="ci" style="background:#FDF0E0">✉️</span>' +
+              '<span class="ci" style="background:#FDF0E0">' + ICONS.envelope + '</span>' +
               '<span>' + t('email') + '<small dir="ltr">info@' + slug + '.example</small></span>' +
             '</a>' +
             '<a class="contact-btn" href="#" onclick="return false">' +
-              '<span class="ci" style="background:#E8EEFB">🌐</span>' +
+              '<span class="ci" style="background:#E8EEFB">' + ICONS.globe + '</span>' +
               '<span>' + t('website') + '<small dir="ltr">' + slug + '.example.com</small></span>' +
             '</a>' +
             '<div class="chip-row" style="margin-top:8px">' +

@@ -155,7 +155,7 @@ function openRequestForm() {
     
     REQUESTS.unshift({
       id: 'r' + Date.now(),
-      icon: '📝',
+      icon: ICONS.note,
       days: 0,
       qty: qty,
       budget: v('#fq_budget') || null,
