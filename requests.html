@@ -14,6 +14,7 @@
 
 <div id="app"></div>
 
+<script src="assets/js/icons.js"></script>
 <script src="assets/js/lang.js"></script>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/utils.js"></script>
@@ -35,22 +36,22 @@ document.addEventListener('DOMContentLoaded', function() {
           '<h1>' + t('req_title') + '</h1>' +
           '<p>' + t('req_sub') + '</p>' +
         '</div>' +
-        '<button class="btn btn-primary" onclick="openRequestForm()">📣 ' + t('post_request') + '</button>' +
+        '<button class="btn btn-primary" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('post_request') + '</button>' +
       '</div>' +
     '</div>' +
     '<div class="container req-layout">' +
       '<div class="card-grid">' +
         (REQUESTS.length === 0
-          ? '<div class="empty"><div class="big">📋</div><b>' + t('no_results') + '</b><p>' + t('no_results_sub') + '</p></div>'
+          ? '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><b>' + t('no_results') + '</b><p>' + t('no_results_sub') + '</p></div>'
           : REQUESTS.map(function(r) {
               return '<a href="request-detail.html?id=' + r.id + '" class="request-card">' +
                 '<div class="thumb">' + r.icon + '</div>' +
                 '<h3>' + esc(L(r.title)) + '</h3>' +
                 '<div class="desc">' + esc(L(r.desc)) + '</div>' +
                 '<div class="foot">' +
-                  '<span>📦 ' + t('qty') + ': <b>' + num(r.qty) + '</b></span>' +
-                  '<span>📍 ' + L(GOVS[r.gov]) + '</span>' +
-                  '<span>🕒 ' + STR[LANG].days_ago(r.days) + '</span>' +
+                  '<span>' + ICONS.box + ' ' + t('qty') + ': <b>' + num(r.qty) + '</b></span>' +
+                  '<span>' + ICONS.pin + ' ' + L(GOVS[r.gov]) + '</span>' +
+                  '<span>' + ICONS.clock + ' ' + STR[LANG].days_ago(r.days) + '</span>' +
                 '</div>' +
               '</a>';
             }).join('')

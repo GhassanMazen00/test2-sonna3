@@ -127,6 +127,26 @@ body::before {
   background-size: 120px 120px, 120px 120px, 30px 30px, 30px 30px;
 }
 
+/* ---------- SVG icons (replaces emojis) ---------- */
+.svg-ic {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.14em;
+  flex: none;
+}
+
+/* Watermark icons on the colored cover/featured art read as light */
+.cover-ic, .fc-icon, .profile-cover .cover-ic {
+  color: #fff;
+}
+
+/* Icons inside tinted tiles use the brand color */
+.service-card .svc-icon, .request-card-new .req-icon,
+.request-card .thumb, .contact-panel .ci {
+  color: var(--teal);
+}
+
 /* ---------- Header ---------- */
 header {
   position: sticky;

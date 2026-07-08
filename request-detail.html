@@ -14,6 +14,7 @@
 
 <div id="app"></div>
 
+<script src="assets/js/icons.js"></script>
 <script src="assets/js/lang.js"></script>
 <script src="assets/js/data.js"></script>
 <script src="assets/js/utils.js"></script>
@@ -58,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="spec"><div class="k">' + t('qty') + '</div><div class="v">' + num(r.qty) + ' ' + t('units') + '</div></div>' +
           '<div class="spec"><div class="k">' + t('budget') + '</div><div class="v">' + (r.budget ? num(r.budget) + ' ' + t('egp') : t('budget_na')) + '</div></div>' +
           '<div class="spec"><div class="k">' + t('materials') + '</div><div class="v">' + esc(L(r.material)) + '</div></div>' +
-          '<div class="spec"><div class="k">' + t('deliver_to') + '</div><div class="v">📍 ' + L(GOVS[r.gov]) + '</div></div>' +
+          '<div class="spec"><div class="k">' + t('deliver_to') + '</div><div class="v">' + ICONS.pin + ' ' + L(GOVS[r.gov]) + '</div></div>' +
         '</div>' +
         '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
           '<h2>' + t('contact_requester') + '</h2>' +

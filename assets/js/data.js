@@ -3,20 +3,20 @@
 // ============================================
 
 const INDUSTRIES = [
-  { id: "textile", en: "Textile & Apparel", ar: "المنسوجات والملابس", icon: "🧵", g: ["#0E6B5E", "#12897A"] },
-  { id: "packaging", en: "Packaging & Printing", ar: "التعبئة والطباعة", icon: "📦", g: ["#C98A2B", "#E0A94F"] },
-  { id: "furniture", en: "Furniture", ar: "الأثاث", icon: "🪑", g: ["#7A4E2D", "#A06B42"] },
-  { id: "food", en: "Food Manufacturing", ar: "الصناعات الغذائية", icon: "🍞", g: ["#B5541C", "#D97A3D"] },
-  { id: "plastics", en: "Plastics", ar: "البلاستيك", icon: "🧴", g: ["#2563A8", "#3B82C9"] },
-  { id: "metal", en: "Metal Fabrication", ar: "تشكيل المعادن", icon: "⚙️", g: ["#475569", "#64748B"] },
-  { id: "chemicals", en: "Chemicals", ar: "الكيماويات", icon: "⚗️", g: ["#6D28A8", "#8B44C9"] },
-  { id: "cosmetics", en: "Cosmetics", ar: "مستحضرات التجميل", icon: "💄", g: ["#B02A6A", "#D14C8B"] },
-  { id: "construction", en: "Construction Materials", ar: "مواد البناء", icon: "🧱", g: ["#8A4B2F", "#B06A45"] },
-  { id: "medical", en: "Medical Supplies", ar: "المستلزمات الطبية", icon: "🩺", g: ["#0E7490", "#22A3BF"] },
-  { id: "promo", en: "Promotional Products", ar: "منتجات دعائية", icon: "🎁", g: ["#B45309", "#D97706"] },
-  { id: "electronics", en: "Electronics", ar: "الإلكترونيات", icon: "🔌", g: ["#1E40AF", "#3B5FD9"] },
-  { id: "agriculture", en: "Agriculture", ar: "الصناعات الزراعية", icon: "🌾", g: ["#3F6212", "#5C8A1E"] },
-  { id: "automotive", en: "Automotive Components", ar: "مكونات السيارات", icon: "🚗", g: ["#334155", "#52657E"] }
+  { id: "textile", en: "Textile & Apparel", ar: "المنسوجات والملابس", icon: ICONS.textile, g: ["#0E6B5E", "#12897A"] },
+  { id: "packaging", en: "Packaging & Printing", ar: "التعبئة والطباعة", icon: ICONS.box, g: ["#C98A2B", "#E0A94F"] },
+  { id: "furniture", en: "Furniture", ar: "الأثاث", icon: ICONS.furniture, g: ["#7A4E2D", "#A06B42"] },
+  { id: "food", en: "Food Manufacturing", ar: "الصناعات الغذائية", icon: ICONS.food, g: ["#B5541C", "#D97A3D"] },
+  { id: "plastics", en: "Plastics", ar: "البلاستيك", icon: ICONS.plastics, g: ["#2563A8", "#3B82C9"] },
+  { id: "metal", en: "Metal Fabrication", ar: "تشكيل المعادن", icon: ICONS.gear, g: ["#475569", "#64748B"] },
+  { id: "chemicals", en: "Chemicals", ar: "الكيماويات", icon: ICONS.chemicals, g: ["#6D28A8", "#8B44C9"] },
+  { id: "cosmetics", en: "Cosmetics", ar: "مستحضرات التجميل", icon: ICONS.cosmetics, g: ["#B02A6A", "#D14C8B"] },
+  { id: "construction", en: "Construction Materials", ar: "مواد البناء", icon: ICONS.construction, g: ["#8A4B2F", "#B06A45"] },
+  { id: "medical", en: "Medical Supplies", ar: "المستلزمات الطبية", icon: ICONS.medical, g: ["#0E7490", "#22A3BF"] },
+  { id: "promo", en: "Promotional Products", ar: "منتجات دعائية", icon: ICONS.promo, g: ["#B45309", "#D97706"] },
+  { id: "electronics", en: "Electronics", ar: "الإلكترونيات", icon: ICONS.electronics, g: ["#1E40AF", "#3B5FD9"] },
+  { id: "agriculture", en: "Agriculture", ar: "الصناعات الزراعية", icon: ICONS.agriculture, g: ["#3F6212", "#5C8A1E"] },
+  { id: "automotive", en: "Automotive Components", ar: "مكونات السيارات", icon: ICONS.automotive, g: ["#334155", "#52657E"] }
 ];
 
 const GOVS = [
@@ -206,200 +206,200 @@ const CERTS = ["ISO 9001", "ISO 14001", "ISO 22000", "CE", "GMP", "OEKO-TEX", "H
 const IND_SERVICES = {
   textile: {
     en: [
-      { icon: "🖨️", name: "Fabric Printing" },
-      { icon: "🧵", name: "Embroidery" },
-      { icon: "✂️", name: "Pattern Making" },
-      { icon: "📦", name: "Private Labeling" },
-      { icon: "🎨", name: "Custom Dyeing" }
+      { icon: ICONS.printer, name: "Fabric Printing" },
+      { icon: ICONS.textile, name: "Embroidery" },
+      { icon: ICONS.scissors, name: "Pattern Making" },
+      { icon: ICONS.box, name: "Private Labeling" },
+      { icon: ICONS.palette, name: "Custom Dyeing" }
     ],
     ar: [
-      { icon: "🖨️", name: "طباعة أقمشة" },
-      { icon: "🧵", name: "تطريز" },
-      { icon: "✂️", name: "تصميم باترونات" },
-      { icon: "📦", name: "تعبئة بعلامة خاصة" },
-      { icon: "🎨", name: "صباغة مخصصة" }
+      { icon: ICONS.printer, name: "طباعة أقمشة" },
+      { icon: ICONS.textile, name: "تطريز" },
+      { icon: ICONS.scissors, name: "تصميم باترونات" },
+      { icon: ICONS.box, name: "تعبئة بعلامة خاصة" },
+      { icon: ICONS.palette, name: "صباغة مخصصة" }
     ]
   },
   packaging: {
     en: [
-      { icon: "🎨", name: "Graphic Design" },
-      { icon: "📐", name: "Structural Design" },
-      { icon: "🏷️", name: "Barcode Generation" },
-      { icon: "📦", name: "Assembly & Fulfillment" }
+      { icon: ICONS.palette, name: "Graphic Design" },
+      { icon: ICONS.ruler, name: "Structural Design" },
+      { icon: ICONS.tag, name: "Barcode Generation" },
+      { icon: ICONS.box, name: "Assembly & Fulfillment" }
     ],
     ar: [
-      { icon: "🎨", name: "تصميم جرافيك" },
-      { icon: "📐", name: "تصميم هيكلي" },
-      { icon: "🏷️", name: "إنشاء باركود" },
-      { icon: "📦", name: "تجميع وشحن" }
+      { icon: ICONS.palette, name: "تصميم جرافيك" },
+      { icon: ICONS.ruler, name: "تصميم هيكلي" },
+      { icon: ICONS.tag, name: "إنشاء باركود" },
+      { icon: ICONS.box, name: "تجميع وشحن" }
     ]
   },
   furniture: {
     en: [
-      { icon: "🎨", name: "Custom Finishing" },
-      { icon: "📐", name: "CAD Design" },
-      { icon: "🔧", name: "Assembly Service" },
-      { icon: "🚚", name: "Delivery & Installation" }
+      { icon: ICONS.palette, name: "Custom Finishing" },
+      { icon: ICONS.ruler, name: "CAD Design" },
+      { icon: ICONS.wrench, name: "Assembly Service" },
+      { icon: ICONS.truck, name: "Delivery & Installation" }
     ],
     ar: [
-      { icon: "🎨", name: "تشطيب مخصص" },
-      { icon: "📐", name: "تصميم CAD" },
-      { icon: "🔧", name: "خدمة تجميع" },
-      { icon: "🚚", name: "توصيل وتركيب" }
+      { icon: ICONS.palette, name: "تشطيب مخصص" },
+      { icon: ICONS.ruler, name: "تصميم CAD" },
+      { icon: ICONS.wrench, name: "خدمة تجميع" },
+      { icon: ICONS.truck, name: "توصيل وتركيب" }
     ]
   },
   food: {
     en: [
-      { icon: "🏷️", name: "Private Labeling" },
-      { icon: "📦", name: "Custom Packaging" },
-      { icon: "🔬", name: "Shelf-life Testing" },
-      { icon: "📋", name: "Nutritional Labeling" }
+      { icon: ICONS.tag, name: "Private Labeling" },
+      { icon: ICONS.box, name: "Custom Packaging" },
+      { icon: ICONS.microscope, name: "Shelf-life Testing" },
+      { icon: ICONS.clipboard, name: "Nutritional Labeling" }
     ],
     ar: [
-      { icon: "🏷️", name: "علامة خاصة" },
-      { icon: "📦", name: "تغليف مخصص" },
-      { icon: "🔬", name: "اختبار صلاحية" },
-      { icon: "📋", name: "بطاقة غذائية" }
+      { icon: ICONS.tag, name: "علامة خاصة" },
+      { icon: ICONS.box, name: "تغليف مخصص" },
+      { icon: ICONS.microscope, name: "اختبار صلاحية" },
+      { icon: ICONS.clipboard, name: "بطاقة غذائية" }
     ]
   },
   plastics: {
     en: [
-      { icon: "⚙️", name: "Mold Design" },
-      { icon: "🎨", name: "Color Matching" },
-      { icon: "📦", name: "Assembly" },
-      { icon: "♻️", name: "Recycled Options" }
+      { icon: ICONS.gear, name: "Mold Design" },
+      { icon: ICONS.palette, name: "Color Matching" },
+      { icon: ICONS.box, name: "Assembly" },
+      { icon: ICONS.recycle, name: "Recycled Options" }
     ],
     ar: [
-      { icon: "⚙️", name: "تصميم اسطمبات" },
-      { icon: "🎨", name: "مطابقة ألوان" },
-      { icon: "📦", name: "تجميع" },
-      { icon: "♻️", name: "خيارات معاد تدويرها" }
+      { icon: ICONS.gear, name: "تصميم اسطمبات" },
+      { icon: ICONS.palette, name: "مطابقة ألوان" },
+      { icon: ICONS.box, name: "تجميع" },
+      { icon: ICONS.recycle, name: "خيارات معاد تدويرها" }
     ]
   },
   metal: {
     en: [
-      { icon: "🎨", name: "Powder Coating" },
-      { icon: "🔧", name: "Assembly" },
-      { icon: "📐", name: "CAD/CAM" },
-      { icon: "🔬", name: "Quality Testing" }
+      { icon: ICONS.palette, name: "Powder Coating" },
+      { icon: ICONS.wrench, name: "Assembly" },
+      { icon: ICONS.ruler, name: "CAD/CAM" },
+      { icon: ICONS.microscope, name: "Quality Testing" }
     ],
     ar: [
-      { icon: "🎨", name: "دهان إلكتروستاتيك" },
-      { icon: "🔧", name: "تجميع" },
-      { icon: "📐", name: "CAD/CAM" },
-      { icon: "🔬", name: "فحص جودة" }
+      { icon: ICONS.palette, name: "دهان إلكتروستاتيك" },
+      { icon: ICONS.wrench, name: "تجميع" },
+      { icon: ICONS.ruler, name: "CAD/CAM" },
+      { icon: ICONS.microscope, name: "فحص جودة" }
     ]
   },
   chemicals: {
     en: [
-      { icon: "🧪", name: "Formulation" },
-      { icon: "📦", name: "Contract Filling" },
-      { icon: "🏷️", name: "Private Labeling" },
-      { icon: "🔬", name: "Lab Testing" }
+      { icon: ICONS.testtube, name: "Formulation" },
+      { icon: ICONS.box, name: "Contract Filling" },
+      { icon: ICONS.tag, name: "Private Labeling" },
+      { icon: ICONS.microscope, name: "Lab Testing" }
     ],
     ar: [
-      { icon: "🧪", name: "تركيبات" },
-      { icon: "📦", name: "تعبئة تعاقدية" },
-      { icon: "🏷️", name: "علامة خاصة" },
-      { icon: "🔬", name: "فحص معملي" }
+      { icon: ICONS.testtube, name: "تركيبات" },
+      { icon: ICONS.box, name: "تعبئة تعاقدية" },
+      { icon: ICONS.tag, name: "علامة خاصة" },
+      { icon: ICONS.microscope, name: "فحص معملي" }
     ]
   },
   cosmetics: {
     en: [
-      { icon: "🧪", name: "Formula Development" },
-      { icon: "📦", name: "Filling & Packing" },
-      { icon: "🏷️", name: "White Label" },
-      { icon: "🔬", name: "Stability Testing" }
+      { icon: ICONS.testtube, name: "Formula Development" },
+      { icon: ICONS.box, name: "Filling & Packing" },
+      { icon: ICONS.tag, name: "White Label" },
+      { icon: ICONS.microscope, name: "Stability Testing" }
     ],
     ar: [
-      { icon: "🧪", name: "تطوير تركيبات" },
-      { icon: "📦", name: "تعبئة وتغليف" },
-      { icon: "🏷️", name: "علامة بيضاء" },
-      { icon: "🔬", name: "اختبار ثبات" }
+      { icon: ICONS.testtube, name: "تطوير تركيبات" },
+      { icon: ICONS.box, name: "تعبئة وتغليف" },
+      { icon: ICONS.tag, name: "علامة بيضاء" },
+      { icon: ICONS.microscope, name: "اختبار ثبات" }
     ]
   },
   construction: {
     en: [
-      { icon: "🚚", name: "Bulk Delivery" },
-      { icon: "📐", name: "Custom Sizes" },
-      { icon: "🔬", name: "Material Testing" },
-      { icon: "📋", name: "Technical Support" }
+      { icon: ICONS.truck, name: "Bulk Delivery" },
+      { icon: ICONS.ruler, name: "Custom Sizes" },
+      { icon: ICONS.microscope, name: "Material Testing" },
+      { icon: ICONS.clipboard, name: "Technical Support" }
     ],
     ar: [
-      { icon: "🚚", name: "توصيل بالجملة" },
-      { icon: "📐", name: "مقاسات مخصصة" },
-      { icon: "🔬", name: "فحص مواد" },
-      { icon: "📋", name: "دعم فني" }
+      { icon: ICONS.truck, name: "توصيل بالجملة" },
+      { icon: ICONS.ruler, name: "مقاسات مخصصة" },
+      { icon: ICONS.microscope, name: "فحص مواد" },
+      { icon: ICONS.clipboard, name: "دعم فني" }
     ]
   },
   medical: {
     en: [
-      { icon: "🧪", name: "Sterilization" },
-      { icon: "📦", name: "Cleanroom Packing" },
-      { icon: "🏷️", name: "Custom Labeling" },
-      { icon: "📋", name: "Regulatory Support" }
+      { icon: ICONS.testtube, name: "Sterilization" },
+      { icon: ICONS.box, name: "Cleanroom Packing" },
+      { icon: ICONS.tag, name: "Custom Labeling" },
+      { icon: ICONS.clipboard, name: "Regulatory Support" }
     ],
     ar: [
-      { icon: "🧪", name: "تعقيم" },
-      { icon: "📦", name: "تعبئة نظيفة" },
-      { icon: "🏷️", name: "ملصقات مخصصة" },
-      { icon: "📋", name: "دعم تنظيمي" }
+      { icon: ICONS.testtube, name: "تعقيم" },
+      { icon: ICONS.box, name: "تعبئة نظيفة" },
+      { icon: ICONS.tag, name: "ملصقات مخصصة" },
+      { icon: ICONS.clipboard, name: "دعم تنظيمي" }
     ]
   },
   promo: {
     en: [
-      { icon: "🎨", name: "Graphic Design" },
-      { icon: "🖨️", name: "Branding" },
-      { icon: "📦", name: "Gift Wrapping" },
-      { icon: "🚚", name: "Drop Shipping" }
+      { icon: ICONS.palette, name: "Graphic Design" },
+      { icon: ICONS.printer, name: "Branding" },
+      { icon: ICONS.box, name: "Gift Wrapping" },
+      { icon: ICONS.truck, name: "Drop Shipping" }
     ],
     ar: [
-      { icon: "🎨", name: "تصميم جرافيك" },
-      { icon: "🖨️", name: "علامة تجارية" },
-      { icon: "📦", name: "تغليف هدايا" },
-      { icon: "🚚", name: "شحن مباشر" }
+      { icon: ICONS.palette, name: "تصميم جرافيك" },
+      { icon: ICONS.printer, name: "علامة تجارية" },
+      { icon: ICONS.box, name: "تغليف هدايا" },
+      { icon: ICONS.truck, name: "شحن مباشر" }
     ]
   },
   electronics: {
     en: [
-      { icon: "🔧", name: "PCB Design" },
-      { icon: "📦", name: "Enclosure Design" },
-      { icon: "🔬", name: "Functional Testing" },
-      { icon: "📋", name: "Certification Support" }
+      { icon: ICONS.wrench, name: "PCB Design" },
+      { icon: ICONS.box, name: "Enclosure Design" },
+      { icon: ICONS.microscope, name: "Functional Testing" },
+      { icon: ICONS.clipboard, name: "Certification Support" }
     ],
     ar: [
-      { icon: "🔧", name: "تصميم PCB" },
-      { icon: "📦", name: "تصميم هيكل" },
-      { icon: "🔬", name: "اختبار وظيفي" },
-      { icon: "📋", name: "دعم شهادات" }
+      { icon: ICONS.wrench, name: "تصميم PCB" },
+      { icon: ICONS.box, name: "تصميم هيكل" },
+      { icon: ICONS.microscope, name: "اختبار وظيفي" },
+      { icon: ICONS.clipboard, name: "دعم شهادات" }
     ]
   },
   agriculture: {
     en: [
-      { icon: "📦", name: "Custom Packing" },
-      { icon: "🏷️", name: "Private Label" },
-      { icon: "🔬", name: "Quality Grading" },
-      { icon: "🚚", name: "Cold Chain" }
+      { icon: ICONS.box, name: "Custom Packing" },
+      { icon: ICONS.tag, name: "Private Label" },
+      { icon: ICONS.microscope, name: "Quality Grading" },
+      { icon: ICONS.truck, name: "Cold Chain" }
     ],
     ar: [
-      { icon: "📦", name: "تعبئة مخصصة" },
-      { icon: "🏷️", name: "علامة خاصة" },
-      { icon: "🔬", name: "تدريج جودة" },
-      { icon: "🚚", name: "سلسلة تبريد" }
+      { icon: ICONS.box, name: "تعبئة مخصصة" },
+      { icon: ICONS.tag, name: "علامة خاصة" },
+      { icon: ICONS.microscope, name: "تدريج جودة" },
+      { icon: ICONS.truck, name: "سلسلة تبريد" }
     ]
   },
   automotive: {
     en: [
-      { icon: "🔧", name: "Reverse Engineering" },
-      { icon: "📐", name: "3D Scanning" },
-      { icon: "🔬", name: "Material Testing" },
-      { icon: "📋", name: "PPAP Documentation" }
+      { icon: ICONS.wrench, name: "Reverse Engineering" },
+      { icon: ICONS.ruler, name: "3D Scanning" },
+      { icon: ICONS.microscope, name: "Material Testing" },
+      { icon: ICONS.clipboard, name: "PPAP Documentation" }
     ],
     ar: [
-      { icon: "🔧", name: "هندسة عكسية" },
-      { icon: "📐", name: "مسح ثلاثي" },
-      { icon: "🔬", name: "فحص مواد" },
-      { icon: "📋", name: "توثيق PPAP" }
+      { icon: ICONS.wrench, name: "هندسة عكسية" },
+      { icon: ICONS.ruler, name: "مسح ثلاثي" },
+      { icon: ICONS.microscope, name: "فحص مواد" },
+      { icon: ICONS.clipboard, name: "توثيق PPAP" }
     ]
   }
 };
@@ -486,42 +486,42 @@ const FACTORIES = (function() {
 // Initial requests data
 let REQUESTS = [
   {
-    id: "r1", icon: "👕", days: 0, qty: "5,000", budget: "250,000",
+    id: "r1", icon: ICONS.shirt, days: 0, qty: "5,000", budget: "250,000",
     title: { en: "Cotton polo shirts with embroidered logo", ar: "قمصان بولو قطنية بشعار مطرز" },
     desc: { en: "Looking for 5,000 pique polo shirts (100% Egyptian cotton, 220 gsm) in 4 colors.", ar: "مطلوب ٥٠٠٠ قميص بولو بيكيه (قطن مصري ١٠٠٪، ٢٢٠ جم) بأربعة ألوان." },
     material: { en: "100% Egyptian cotton", ar: "قطن مصري ١٠٠٪" },
     gov: 0, by: { en: "Nour Apparel", ar: "نور للملابس" }, contact: "+20 100 555 0192"
   },
   {
-    id: "r2", icon: "🫙", days: 1, qty: "20,000", budget: null,
+    id: "r2", icon: ICONS.jar, days: 1, qty: "20,000", budget: null,
     title: { en: "Glass jars with printed lids", ar: "برطمانات زجاجية بأغطية مطبوعة" },
     desc: { en: "380 ml glass jars with custom-printed twist-off lids.", ar: "برطمانات زجاج ٣٨٠ مل بأغطية معدنية مطبوعة." },
     material: { en: "Glass, tinplate", ar: "زجاج، صفيح" },
     gov: 2, by: { en: "Karam Foods", ar: "كرم للأغذية" }, contact: "+20 101 444 7736"
   },
   {
-    id: "r3", icon: "🪑", days: 2, qty: "120", budget: "900,000",
+    id: "r3", icon: ICONS.furniture, days: 2, qty: "120", budget: "900,000",
     title: { en: "Café furniture set", ar: "أثاث كافيه" },
     desc: { en: "120 chairs and 40 tables with matte lacquer finish.", ar: "١٢٠ كرسي و٤٠ طاولة بتشطيب دوكو مطفي." },
     material: { en: "Beech wood", ar: "خشب زان" },
     gov: 1, by: { en: "Bunn Café", ar: "بُن للكافيهات" }, contact: "+20 106 210 8845"
   },
   {
-    id: "r4", icon: "🧴", days: 3, qty: "50,000", budget: null,
+    id: "r4", icon: ICONS.plastics, days: 3, qty: "50,000", budget: null,
     title: { en: "HDPE bottles 250 ml", ar: "زجاجات HDPE ٢٥٠ مل" },
     desc: { en: "Monthly supply of 50,000 white HDPE bottles.", ar: "توريد شهري ٥٠ ألف زجاجة HDPE بيضاء." },
     material: { en: "HDPE, PP caps", ar: "HDPE وأغطية PP" },
     gov: 5, by: { en: "Sator Clean", ar: "ساتور كلين" }, contact: "+20 122 300 4519"
   },
   {
-    id: "r5", icon: "🎁", days: 4, qty: "2,000", budget: "180,000",
+    id: "r5", icon: ICONS.promo, days: 4, qty: "2,000", budget: "180,000",
     title: { en: "Corporate gift boxes", ar: "علب هدايا شركات" },
     desc: { en: "2,000 gift sets with branded mug and notebook.", ar: "٢٠٠٠ طقم هدايا بمج ونوت بوك بشعار." },
     material: { en: "Rigid board, ceramic", ar: "كرتون مقوى، سيراميك" },
     gov: 0, by: { en: "Meem Marketing", ar: "ميم للتسويق" }, contact: "+20 109 887 2210"
   },
   {
-    id: "r6", icon: "🩺", days: 6, qty: "100,000", budget: null,
+    id: "r6", icon: ICONS.medical, days: 6, qty: "100,000", budget: null,
     title: { en: "Disposable non-woven gowns", ar: "أرواب غير منسوجة" },
     desc: { en: "100k SMS non-woven gowns (35 gsm, EN 13795).", ar: "١٠٠ ألف روب SMS غير منسوج (٣٥ جم)." },
     material: { en: "SMS non-woven", ar: "SMS غير منسوج" },
