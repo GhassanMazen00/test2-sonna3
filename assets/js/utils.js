@@ -52,12 +52,14 @@ function factoryCode(f) {
   return IND_CODE[f.industry] + '-' + String(Number(f.id.slice(1)) + 1).padStart(3, '0');
 }
 
-// Set language and reload
+// Set language and reload.
+// We intentionally do NOT change the current page's direction/text here — doing
+// that mid-page causes a visible "flip" glitch. We just save the choice and
+// reload; an inline script in each page's <head> applies the correct direction
+// before the page paints, so the switch looks clean.
 function setLang(l) {
-  LANG = l;
+  if (l === LANG) return;
   localStorage.setItem('sonnaLang', l);
-  document.documentElement.lang = l;
-  document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
   window.location.reload();
 }
 
