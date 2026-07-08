@@ -148,6 +148,13 @@ body::before {
   color: var(--teal);
 }
 
+/* ---------- Auth modal ---------- */
+.acc-type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acc-type { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1.5px solid var(--line); border-radius: 12px; cursor: pointer; font-size: 13.5px; font-weight: 600; }
+.acc-type input { accent-color: var(--teal); }
+.acc-type:has(input:checked) { border-color: var(--teal); background: var(--teal-tint); }
+.au-err { background: #FEE4E2; color: #B42318; font-size: 13px; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; }
+
 /* ---------- Header ---------- */
 header {
   position: sticky;
