@@ -17,6 +17,7 @@
 <script src="assets/js/icons.js"></script>
 <script src="assets/js/lang.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/store.js"></script>
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/components.js"></script>
@@ -24,8 +25,9 @@
 <script>
 // Override the router initialization for this page
 document.addEventListener('DOMContentLoaded', function() {
+  AdminStore.bootstrap().then(function() {
   var app = document.getElementById('app');
-  
+
   // Detect language from saved preference or URL parameter
   var savedLang = localStorage.getItem('sonnaLang');
   if (savedLang === 'en' || savedLang === 'ar') {
@@ -135,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initial render
   renderFactoryList();
+  });
 });
 
 function updateFilter(key, value) {

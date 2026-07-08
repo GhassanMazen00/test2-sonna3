@@ -1,18 +1,21 @@
-// Page initialization based on which HTML file we're on
+// Page initialization based on which HTML file we're on.
+// We wait for the latest data (from Supabase, with a safe fallback) first.
 (function() {
   var path = window.location.pathname.split('/').pop() || 'index.html';
-  
-  // Set current page
-  if (path === '' || path === 'index.html' || path === '/') {
-    CURRENT_PAGE = 'home';
-    renderHomePage();
-  } else if (path === 'factories.html') {
-    CURRENT_PAGE = 'factories';
-    // factories.html handles its own rendering
-  } else if (path === 'requests.html') {
-    CURRENT_PAGE = 'requests';
-    // requests.html handles its own rendering
-  }
+  var start = function() {
+    if (path === '' || path === 'index.html' || path === '/') {
+      CURRENT_PAGE = 'home';
+      renderHomePage();
+    } else if (path === 'factories.html') {
+      CURRENT_PAGE = 'factories';
+      // factories.html handles its own rendering
+    } else if (path === 'requests.html') {
+      CURRENT_PAGE = 'requests';
+      // requests.html handles its own rendering
+    }
+  };
+  if (window.AdminStore && AdminStore.bootstrap) AdminStore.bootstrap().then(start);
+  else start();
 })();
 
 function renderHomePage() {

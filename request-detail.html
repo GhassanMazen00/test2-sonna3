@@ -17,18 +17,20 @@
 <script src="assets/js/icons.js"></script>
 <script src="assets/js/lang.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/store.js"></script>
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/components.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  AdminStore.bootstrap().then(function() {
   var savedLang = localStorage.getItem('sonnaLang');
   if (savedLang === 'en' || savedLang === 'ar') {
     LANG = savedLang;
   }
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  
+
   var params = new URLSearchParams(window.location.search);
   var requestId = params.get('id');
   
@@ -72,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
   '</main>' +
   '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
   footerHTML();
+  });
 });
 </script>
 </body>
