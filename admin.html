@@ -69,18 +69,18 @@
 
 <script src="assets/js/icons.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/store.js"></script>
 <script>
 /* ================= Admin dashboard ================= */
 
-// Change this password to your own. NOTE: on a static site this is a soft gate,
-// not real security — anyone viewing the page source can read it. For real
-// protection you need a backend login (see the notes we discussed).
-var ADMIN_PASSWORD = 'sonna2026';
-
+// Login and data now use your Supabase backend: real, secure email/password
+// login, and changes save straight to the live database. Connection values are
+// in assets/js/supabase-config.js.
 var DATA = null;
 var TAB = 'factories';
 var root = document.getElementById('root');
+var SB_TOKEN = null;
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
 function iconKeys() { return Object.keys(window.ICONS || {}); }
@@ -89,39 +89,83 @@ function uid() {
   DATA.factories.forEach(function(f){ var n = parseInt(String(f.id).replace(/[^0-9]/g,''),10); if(!isNaN(n)&&n>max) max=n; });
   return 'f' + (max + 1);
 }
-function saveData() { AdminStore.save(DATA); }
+function setSaveStatus(msg) { var el = document.getElementById('saveStatus'); if (el) el.textContent = msg; }
+// Save to the live database (and cache locally). Optimistic: UI already updated.
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); } catch(e){}
+  setSaveStatus('Saving…');
+  return AdminStore.saveRemote(DATA, SB_TOKEN).then(function(){
+    setSaveStatus('Saved ✓');
+    setTimeout(function(){ setSaveStatus(''); }, 2000);
+  }).catch(function(err){
+    setSaveStatus('');
+    var m = String(err && err.message || '');
+    if (m.indexOf('401') >= 0 || m.indexOf('403') >= 0) {
+      alert('Your login has expired or is not authorized to edit. Please log out and log back in.');
+    } else {
+      alert('Could not save to the database (' + m + ').\nYour change is kept in this browser — check your connection and try again.');
+    }
+  });
+}
 function lines(arr) { return (arr || []).join('\n'); }
 function toLines(str) { return String(str || '').split('\n').map(function(s){return s.trim();}).filter(Boolean); }
 
-/* ---------- Auth ---------- */
-function isAuthed() { try { return sessionStorage.getItem('sonnaAdmin') === '1'; } catch(e){ return false; } }
-function renderLogin() {
+/* ---------- Auth (Supabase) ---------- */
+function tokenValid() {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('sbSession') || 'null');
+    if (!s || !s.access_token) return false;
+    if (s.expires_at && (Date.now()/1000) > (s.expires_at - 30)) return false;
+    SB_TOKEN = s.access_token;
+    return true;
+  } catch(e){ return false; }
+}
+function renderLogin(errMsg) {
   root.innerHTML =
     '<div class="login-box">' +
       '<h1>Sonna<span style="color:var(--teal)">ع</span> Admin</h1>' +
-      '<p>Enter the admin password to manage factories, sectors, and search settings.</p>' +
-      '<div class="login-err" id="loginErr">Wrong password. Try again.</div>' +
-      '<input type="password" id="pw" placeholder="Password" autofocus>' +
-      '<button class="btn btn-primary" style="width:100%" onclick="doLogin()">Log in</button>' +
+      '<p>Log in to manage factories, sectors, and search settings.</p>' +
+      '<div class="login-err" id="loginErr" style="'+(errMsg?'display:block':'')+'">'+esc(errMsg||'')+'</div>' +
+      '<input type="email" id="email" placeholder="Email" autofocus>' +
+      '<input type="password" id="pw" placeholder="Password">' +
+      '<button class="btn btn-primary" style="width:100%" id="loginBtn" onclick="doLogin()">Log in</button>' +
     '</div>';
-  var pw = document.getElementById('pw');
-  pw.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  document.getElementById('pw').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
 }
 function doLogin() {
-  var pw = document.getElementById('pw').value;
-  if (pw === ADMIN_PASSWORD) {
-    try { sessionStorage.setItem('sonnaAdmin','1'); } catch(e){}
-    boot();
-  } else {
-    document.getElementById('loginErr').style.display = 'block';
-  }
+  var email = (document.getElementById('email').value || '').trim();
+  var pw = document.getElementById('pw').value || '';
+  if (!email || !pw) { renderLogin('Enter your email and password.'); return; }
+  document.getElementById('loginBtn').textContent = 'Logging in…';
+  fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: pw })
+  }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+    .then(function(res){
+      if (res.ok && res.j.access_token) {
+        var exp = res.j.expires_at || (Math.floor(Date.now()/1000) + (res.j.expires_in || 3600));
+        try { sessionStorage.setItem('sbSession', JSON.stringify({ access_token: res.j.access_token, refresh_token: res.j.refresh_token, expires_at: exp, email: email })); } catch(e){}
+        SB_TOKEN = res.j.access_token;
+        boot();
+      } else {
+        renderLogin(res.j.error_description || res.j.msg || 'Wrong email or password.');
+      }
+    })
+    .catch(function(){ renderLogin('Could not reach the login server. Check your connection.'); });
 }
-function logout() { try { sessionStorage.removeItem('sonnaAdmin'); } catch(e){} renderLogin(); }
+function logout() { try { sessionStorage.removeItem('sbSession'); } catch(e){} SB_TOKEN = null; renderLogin(); }
 
 /* ---------- Shell ---------- */
 function boot() {
-  DATA = AdminStore.load();
-  renderApp();
+  root.innerHTML = '<div style="padding:60px;text-align:center;color:var(--ink-soft)">Loading…</div>';
+  AdminStore.fetchRemote().then(function(remote){
+    DATA = (remote && (remote.factories || remote.industries)) ? remote : AdminStore.defaults();
+    renderApp();
+  }).catch(function(){
+    DATA = AdminStore.defaults();
+    renderApp();
+  });
 }
 function renderApp() {
   var tabs = [['factories','Factories'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
@@ -130,6 +174,7 @@ function renderApp() {
       '<div class="admin-top">' +
         '<h1>Sonna<span class="brand-ain">ع</span> — Control Panel</h1>' +
         '<div class="admin-actions">' +
+          '<span id="saveStatus" class="muted" style="align-self:center"></span>' +
           '<a class="btn btn-ghost btn-sm" href="index.html" target="_blank">View site ↗</a>' +
           '<button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>' +
         '</div>' +
@@ -390,7 +435,6 @@ function saveConfig() {
   document.querySelectorAll('.flt').forEach(function(c){ filters[c.value] = c.checked; });
   DATA.filters = filters;
   saveData();
-  alert('Search & filter settings saved.');
 }
 function addCert() {
   var v = document.getElementById('newCert').value.trim();
@@ -417,21 +461,21 @@ function removeGov(ix) {
 function renderDataTab() {
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
-      '<h2>Publish changes to the live site</h2>' +
-      '<div class="hint">Your edits are saved in <b>this browser only</b>. To make them live for everyone, export the file below and send it to whoever publishes the site (or ask the AI to commit it).</div>' +
+      '<h2>Your changes are live</h2>' +
+      '<div class="hint" style="margin:0">Every time you Save, your edits go straight to the Supabase database and are <b>immediately live for everyone</b> — no commits or exports needed. The Export/Import below is just for keeping your own backups.</div>' +
+    '</div>' +
+    '<div class="panel-card">' +
+      '<h2>Backup</h2>' +
+      '<div class="hint">Download a copy of all your data, or restore from a backup file (restoring saves it live too).</div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
-        '<button class="btn btn-primary btn-sm" onclick="exportData()">⬇ Export data (.json)</button>' +
-        '<label class="btn btn-ghost btn-sm" style="cursor:pointer">⬆ Import data<input type="file" accept="application/json" style="display:none" onchange="importData(this)"></label>' +
+        '<button class="btn btn-primary btn-sm" onclick="exportData()">⬇ Export backup (.json)</button>' +
+        '<label class="btn btn-ghost btn-sm" style="cursor:pointer">⬆ Import backup<input type="file" accept="application/json" style="display:none" onchange="importData(this)"></label>' +
       '</div>' +
     '</div>' +
     '<div class="panel-card">' +
-      '<h2>Reset</h2>' +
-      '<div class="hint">Discard all your changes in this browser and go back to the original built-in data.</div>' +
+      '<h2 class="danger">Reset</h2>' +
+      '<div class="hint">Replace the live data with the original built-in factories and sectors. This overwrites everyone\'s view — use with care.</div>' +
       '<button class="btn btn-sm btn-danger" onclick="resetData()">Reset to default data</button>' +
-    '</div>' +
-    '<div class="panel-card">' +
-      '<h2 class="danger">Security note</h2>' +
-      '<div class="hint" style="margin:0">This panel is protected by a password in the page code, which is fine for keeping casual visitors out but is <b>not strong security</b> on a static site. For a truly private admin with real logins, we would add a small backend — ask when you\'re ready.</div>' +
     '</div>';
 }
 function exportData() {
@@ -449,15 +493,15 @@ function importData(input) {
     try {
       var d = JSON.parse(e.target.result);
       if (!d.factories || !d.industries) throw new Error('bad file');
-      DATA = d; saveData(); alert('Data imported.'); TAB='factories'; renderApp();
+      DATA = d; TAB='factories'; renderApp(); saveData();
     } catch(err){ alert('That file could not be read as Sonnaع data.'); }
   };
   reader.readAsText(file);
 }
 function resetData() {
-  if (!confirm('Reset to the original built-in data? Your saved changes in this browser will be lost.')) return;
-  AdminStore.clear();
-  location.reload();
+  if (!confirm('Reset the LIVE data to the original built-in factories and sectors? This overwrites everyone\'s view.')) return;
+  DATA = AdminStore.defaults();
+  TAB = 'factories'; renderApp(); saveData();
 }
 
 /* ---------- Modal + field helpers ---------- */
@@ -481,7 +525,7 @@ function openModal(title, bodyHTML, onSave) {
 function closeModal() { var m = document.getElementById('modal'); if (m) m.remove(); }
 
 /* ---------- Start ---------- */
-if (isAuthed()) boot(); else renderLogin();
+if (tokenValid()) boot(); else renderLogin();
 </script>
 </body>
 </html>

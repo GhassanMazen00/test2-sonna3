@@ -138,13 +138,73 @@ var AdminStore = {
   }
 };
 
-// On every public page: apply saved data if it exists; otherwise make sure the
-// default factories carry a govIndex so the governorate filter works.
+// Make default factories carry a govIndex so the governorate filter works
+function normalizeDefaults() {
+  FACTORIES.forEach(function (f) { if (f.govIndex == null) f.govIndex = govIndexOf(f.gov); });
+}
+
+/* ---------- Supabase (live database) ---------- */
+AdminStore.remoteEnabled = function () { return !!(window.SUPABASE_URL && window.SUPABASE_ANON_KEY); };
+
+// Read the single content row from Supabase (public — no login needed)
+AdminStore.fetchRemote = function () {
+  if (!this.remoteEnabled()) return Promise.reject(new Error('no config'));
+  var url = SUPABASE_URL + '/rest/v1/' + (window.SUPABASE_TABLE || 'site_content') + '?id=eq.1&select=data';
+  return fetch(url, { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+    .then(function (r) { if (!r.ok) throw new Error('fetch ' + r.status); return r.json(); })
+    .then(function (rows) { return (rows && rows[0]) ? rows[0].data : null; });
+};
+
+// Write the content row (needs a logged-in admin's access token)
+AdminStore.saveRemote = function (data, token) {
+  if (!this.remoteEnabled()) return Promise.reject(new Error('no config'));
+  var url = SUPABASE_URL + '/rest/v1/' + (window.SUPABASE_TABLE || 'site_content') + '?id=eq.1';
+  return fetch(url, {
+    method: 'PATCH',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal'
+    },
+    body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
+  }).then(function (r) { if (!r.ok) throw new Error('save ' + r.status); return true; });
+};
+
+// Apply remote data if usable, else fall back to the local cache, else defaults
+AdminStore.applyDataOrFallback = function (remote) {
+  if (remote && (remote.factories || remote.industries)) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(remote)); } catch (e) { }
+    this.apply(remote);
+    return 'remote';
+  }
+  var cached = this.read();
+  if (cached) { this.apply(cached); return 'cache'; }
+  normalizeDefaults();
+  return 'default';
+};
+
+// Public pages call this before rendering: get the latest data from Supabase,
+// but never hang or break — fall back to cache/built-in data if it's slow/down.
+AdminStore.bootstrap = function () {
+  var self = this;
+  return new Promise(function (resolve) {
+    if (!self.remoteEnabled()) { resolve(self.applyDataOrFallback(null)); return; }
+    var settled = false;
+    var finish = function (remote) { if (settled) return; settled = true; clearTimeout(timer); resolve(self.applyDataOrFallback(remote)); };
+    var timer = setTimeout(function () { finish(null); }, 3500);
+    self.fetchRemote().then(finish).catch(function () { finish(null); });
+  });
+};
+
+// Snapshot the pristine built-in data now, before any cache/remote data is
+// applied, so "reset to defaults" can truly restore it.
+AdminStore._defaultsSnapshot = JSON.stringify(AdminStore.seedFromDefaults());
+AdminStore.defaults = function () { return JSON.parse(this._defaultsSnapshot); };
+
+// Synchronous safety net so globals are never empty even if a page forgets to
+// wait for bootstrap(): apply the local cache or normalize the defaults now.
 (function () {
   var saved = AdminStore.read();
-  if (saved) {
-    AdminStore.apply(saved);
-  } else {
-    FACTORIES.forEach(function (f) { if (f.govIndex == null) f.govIndex = govIndexOf(f.gov); });
-  }
+  if (saved) AdminStore.apply(saved); else normalizeDefaults();
 })();
