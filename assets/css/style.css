@@ -1,3 +1,35 @@
+/* =================================================================
+   TABLE OF CONTENTS  —  where to find things in this file
+   Search (Ctrl+F / Cmd+F) the section name to jump to it.
+   -----------------------------------------------------------------
+   COLORS, FONTS & BASICS ...... :root  (brand colors, fonts, sizes)
+   Global blueprint grid ....... /* Global blueprint grid background
+   Header ...................... /* ---------- Header
+   Mobile menu ................. /* Mobile menu overlay
+   Hero (top of home page) ..... /* ---------- Hero
+   Hero slider ................. /* Hero slider
+   Ticker (scrolling strip) .... /* ---------- Ticker (via /* Ticker
+   Industries section .......... /* ---------- Industries Section
+   Requests section (home) ..... /* ---------- Requests Section
+   Featured factories .......... /* ---------- Featured Section
+   Blocks (generic sections) ... /* ---------- Blocks
+   Cards (factory cards) ....... /* ---------- Cards
+   "Why Sonnaع" section ........ /* ---------- Why Section
+   CTA band .................... /* ---------- CTA Band
+   Page head (inner pages) ..... /* ---------- Page Head
+   Directory layout ............ /* ---------- Directory Layout
+   Factory profile page ........ /* ---------- Profile
+   Services .................... /* ---------- Services
+   Rating stars ................ /* ---------- Rating Stars
+   Capacity badges ............. /* ---------- Capacity Badges
+   Requests layout (list page) . /* ---------- Requests Layout
+   Modal (pop-up forms) ........ /* ---------- Modal
+   Footer ...................... /* ---------- Footer
+   Responsive (mobile sizes) ... /* ---------- Responsive
+   -----------------------------------------------------------------
+   TIP: To recolor the whole site, edit the values in :root below.
+   ================================================================= */
+
 :root {
   --ink: #15221F;
   --ink-soft: #4A5A56;
