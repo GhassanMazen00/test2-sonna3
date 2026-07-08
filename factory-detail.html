@@ -54,15 +54,22 @@ document.addEventListener('DOMContentLoaded', function() {
     return s;
   }
   
-  var industryServicesEn = (IND_SERVICES[f.industry] && IND_SERVICES[f.industry].en) ? IND_SERVICES[f.industry].en : [];
-  var industryServicesAr = (IND_SERVICES[f.industry] && IND_SERVICES[f.industry].ar) ? IND_SERVICES[f.industry].ar : [];
-  var svcHTML = f.services.map(function(svc) {
-    var arIdx = -1;
-    for (var j = 0; j < industryServicesEn.length; j++) {
-      if (industryServicesEn[j].name === svc.name) { arIdx = j; break; }
-    }
-    return { icon: svc.icon, name: LANG === 'ar' && arIdx >= 0 ? industryServicesAr[arIdx].name : svc.name };
-  });
+  // Per-factory lists (fall back to the sector's defaults if a factory has none)
+  function nonEmpty(o){ return o && ((o.en && o.en.length) || (o.ar && o.ar.length)); }
+  var svcNames;
+  if (Array.isArray(f.services)) {
+    var sset = IND_SERVICES[f.industry] || {en:[],ar:[]};
+    svcNames = f.services.map(function(s){
+      if (LANG === 'ar') { for (var j=0;j<(sset.en||[]).length;j++){ if (sset.en[j].name === s.name) return (sset.ar[j]||sset.en[j]).name; } }
+      return s.name;
+    });
+  } else { svcNames = L(f.services || {en:[],ar:[]}); }
+  var prodList = nonEmpty(f.products) ? f.products : (IND_PRODUCTS[f.industry] || {en:[],ar:[]});
+  var capList  = nonEmpty(f.capabilities) ? f.capabilities : (IND_CAPS[f.industry] || {en:[],ar:[]});
+  var hoursTxt = (f.hours && (f.hours.en || f.hours.ar)) ? L(f.hours) : t('hours_val');
+  var waNum = (f.whatsapp || f.phone || '').replace(/[^0-9]/g,'');
+  var emailAddr = f.email || ('info@' + slug + '.example');
+  var siteUrl = f.website || (slug + '.example.com');
   
   var app = document.getElementById('app');
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
@@ -106,17 +113,17 @@ document.addEventListener('DOMContentLoaded', function() {
           '</div>' +
           '<div class="panel">' +
             '<h2>' + t('services_title') + '</h2>' +
-            (svcHTML.length > 0
-              ? '<div class="services-grid">' + svcHTML.map(function(s) { return '<div class="service-card"><span class="svc-icon">' + s.icon + '</span><span>' + esc(s.name) + '</span></div>'; }).join('') + '</div>'
+            (svcNames.length > 0
+              ? '<div class="services-grid">' + svcNames.map(function(name) { return '<div class="service-card"><span class="svc-icon">' + ICONS.wrench + '</span><span>' + esc(name) + '</span></div>'; }).join('') + '</div>'
               : '<p>' + t('no_services') + '</p>') +
           '</div>' +
           '<div class="panel">' +
             '<h2>' + t('products') + '</h2>' +
-            '<div class="chip-row">' + L(IND_PRODUCTS[f.industry] || {en:[],ar:[]}).map(function(p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + p + '</span>'; }).join('') + '</div>' +
+            '<div class="chip-row">' + L(prodList).map(function(p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>' +
           '</div>' +
           '<div class="panel">' +
             '<h2>' + t('capabilities') + '</h2>' +
-            '<div class="chip-row">' + L(IND_CAPS[f.industry] || {en:[],ar:[]}).map(function(p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + p + '</span>'; }).join('') + '</div>' +
+            '<div class="chip-row">' + L(capList).map(function(p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>' +
           '</div>' +
           '<div class="panel">' +
             '<h2>' + t('gallery') + '</h2>' +
@@ -136,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
               '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + num(f.yr) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + f.emp + '</div></div>' +
               '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">' + ICONS.pin + ' ' + L(f.gov) + '</div></div>' +
-              '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + t('hours_val') + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + esc(hoursTxt) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +
               '<div class="spec"><div class="k">' + t('certifications') + '</div><div class="v">' + (f.certs.length ? f.certs.join(' · ') : '—') + '</div></div>' +
             '</div>' +
@@ -151,21 +158,25 @@ document.addEventListener('DOMContentLoaded', function() {
               '<span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span>' +
               '<span>' + t('call') + '<small dir="ltr">' + f.phone + '</small></span>' +
             '</a>' +
-            '<a class="contact-btn" href="#" onclick="return false">' +
+            '<a class="contact-btn" href="' + (waNum ? 'https://wa.me/' + waNum : '#') + '"' + (waNum ? ' target="_blank"' : ' onclick="return false"') + '>' +
               '<span class="ci" style="background:#E7F6EC">' + ICONS.chat + '</span>' +
-              '<span>' + t('whatsapp') + '<small dir="ltr">' + f.phone + '</small></span>' +
+              '<span>' + t('whatsapp') + '<small dir="ltr">' + esc(f.whatsapp || f.phone) + '</small></span>' +
             '</a>' +
-            '<a class="contact-btn" href="mailto:info@' + slug + '.example">' +
+            '<a class="contact-btn" href="mailto:' + esc(emailAddr) + '">' +
               '<span class="ci" style="background:#FDF0E0">' + ICONS.envelope + '</span>' +
-              '<span>' + t('email') + '<small dir="ltr">info@' + slug + '.example</small></span>' +
+              '<span>' + t('email') + '<small dir="ltr">' + esc(emailAddr) + '</small></span>' +
             '</a>' +
-            '<a class="contact-btn" href="#" onclick="return false">' +
+            '<a class="contact-btn" href="' + (/^https?:\/\//.test(siteUrl) ? siteUrl : 'https://' + siteUrl) + '" target="_blank">' +
               '<span class="ci" style="background:#E8EEFB">' + ICONS.globe + '</span>' +
-              '<span>' + t('website') + '<small dir="ltr">' + slug + '.example.com</small></span>' +
+              '<span>' + t('website') + '<small dir="ltr">' + esc(siteUrl) + '</small></span>' +
             '</a>' +
-            '<div class="chip-row" style="margin-top:8px">' +
-              '<span class="chip">Facebook</span><span class="chip">Instagram</span><span class="chip">LinkedIn</span>' +
-            '</div>' +
+            (f.facebook || f.instagram || f.linkedin
+              ? '<div class="chip-row" style="margin-top:8px">' +
+                  (f.facebook ? '<a class="chip" href="' + esc(f.facebook) + '" target="_blank">Facebook</a>' : '') +
+                  (f.instagram ? '<a class="chip" href="' + esc(f.instagram) + '" target="_blank">Instagram</a>' : '') +
+                  (f.linkedin ? '<a class="chip" href="' + esc(f.linkedin) + '" target="_blank">LinkedIn</a>' : '') +
+                '</div>'
+              : '') +
           '</div>' +
         '</aside>' +
       '</div>' +

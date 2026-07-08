@@ -66,6 +66,8 @@
   .media-thumb { width: 90px; height: 68px; border-radius: 8px; background: var(--mist); background-size: cover; background-position: center; border: 1px solid var(--line); object-fit: cover; }
   .media-item { position: relative; }
   .media-item .btn-danger { position: absolute; top: 3px; inset-inline-end: 3px; padding: 2px 7px; border-radius: 6px; }
+  .section-sep { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 4px; }
+  .section-sep b { font-size: 14px; }
   @media (max-width: 640px) { .form-grid2 { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -113,10 +115,32 @@ function uid() {
 }
 function setSaveStatus(msg) { var el = document.getElementById('saveStatus'); if (el) el.textContent = msg; }
 // Save to the live database (and cache locally). Optimistic: UI already updated.
+// Return a valid access token, refreshing it first if it has (nearly) expired.
+// This prevents the "exp claim timestamp check failed" errors on save/upload.
+function getFreshToken() {
+  var s = null;
+  try { s = JSON.parse(sessionStorage.getItem('sbSession') || 'null'); } catch(e){}
+  if (!s || !s.access_token) return Promise.reject(new Error('not logged in'));
+  var now = Date.now() / 1000;
+  if (s.expires_at && now < s.expires_at - 60) { SB_TOKEN = s.access_token; return Promise.resolve(s.access_token); }
+  if (!s.refresh_token) return Promise.reject(new Error('session expired'));
+  return fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+    method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: s.refresh_token })
+  }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+    .then(function(res){
+      if (res.ok && res.j.access_token) {
+        var exp = res.j.expires_at || (Math.floor(Date.now()/1000) + (res.j.expires_in || 3600));
+        try { sessionStorage.setItem('sbSession', JSON.stringify({ access_token: res.j.access_token, refresh_token: res.j.refresh_token || s.refresh_token, expires_at: exp, email: s.email })); } catch(e){}
+        SB_TOKEN = res.j.access_token; return SB_TOKEN;
+      }
+      throw new Error('session expired');
+    });
+}
 function saveData() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); } catch(e){}
   setSaveStatus('Saving…');
-  return AdminStore.saveRemote(DATA, SB_TOKEN).then(function(){
+  return getFreshToken().then(function(tok){ return AdminStore.saveRemote(DATA, tok); }).then(function(){
     setSaveStatus('Saved ✓');
     setTimeout(function(){ setSaveStatus(''); }, 2000);
   }).catch(function(err){
@@ -254,10 +278,9 @@ function renderFactories() {
     '</div>';
 }
 
-function factoryServicesFor(sectorId) {
-  var s = DATA.industries.find(function(i){return i.id===sectorId;});
-  return (s && s.services && s.services.en) ? s.services.en : [];
-}
+function nonEmptyList(o){ return o && ((o.en && o.en.length) || (o.ar && o.ar.length)); }
+function sectorDef(id){ return DATA.industries.find(function(s){return s.id===id;}) || {products:{en:[],ar:[]},caps:{en:[],ar:[]},services:{en:[],ar:[]}}; }
+function names(list){ return (list||[]).map(function(x){ return (x && x.name != null) ? x.name : x; }); }
 
 function editFactory(i) {
   var f = i >= 0 ? DATA.factories[i] : {
@@ -265,34 +288,59 @@ function editFactory(i) {
     name:{en:'',ar:''}, desc:{en:'',ar:''}, yr: 2010, moq: 500, emp: '50–100',
     phone: '+20 10', exp: false, featured: false, certs: [],
     dailyCapacity: 500, monthlyCapacity: 13000, rating: 4.5, reviewCount: 20,
-    services: [], keywords: ''
+    services: {en:[],ar:[]}, products: {en:[],ar:[]}, capabilities: {en:[],ar:[]},
+    hours: {en:'',ar:''}, keywords: '', whatsapp:'', email:'', website:'', facebook:'', instagram:'', linkedin:''
   };
   EDIT_FX = { logo: f.logo || '', cover: f.cover || '', media: (f.media || []).slice() };
+  var sd = sectorDef(f.industry);
+  // Prefill from the sector's defaults if this factory has none yet
+  var prod = nonEmptyList(f.products) ? f.products : { en: (sd.products||{}).en||[], ar: (sd.products||{}).ar||[] };
+  var caps = nonEmptyList(f.capabilities) ? f.capabilities : { en: (sd.caps||{}).en||[], ar: (sd.caps||{}).ar||[] };
+  var svc;
+  if (f.services && !Array.isArray(f.services) && nonEmptyList(f.services)) svc = f.services;
+  else if (Array.isArray(f.services) && f.services.length) { var nm = names(f.services); svc = { en: nm, ar: nm }; }
+  else svc = { en: names((sd.services||{}).en), ar: names((sd.services||{}).ar) };
+  var hrs = f.hours || {en:'',ar:''};
   var sectorOpts = DATA.industries.map(function(s){ return '<option value="'+esc(s.id)+'"'+(s.id===f.industry?' selected':'')+'>'+esc(s.en)+'</option>'; }).join('');
   var govOpts = DATA.govs.map(function(g,ix){ return '<option value="'+ix+'"'+(ix===f.govIndex?' selected':'')+'>'+esc(g.en)+'</option>'; }).join('');
-  var certList = DATA.certs.map(function(c){ var on = f.certs.indexOf(c)>=0; return '<label><input type="checkbox" class="fcert" value="'+esc(c)+'"'+(on?' checked':'')+'> '+esc(c)+'</label>'; }).join('');
 
   openModal((i<0?'Add':'Edit')+' factory',
     '<div class="form-grid2">' +
       fld('Name (English) *', '<input type="text" id="fx_nameEn" value="'+esc(f.name.en)+'">') +
       fld('Name (Arabic) *', '<input type="text" id="fx_nameAr" dir="rtl" value="'+esc(f.name.ar)+'">') +
-      fld('Sector', '<select id="fx_industry" onchange="refreshFactoryServices()">'+sectorOpts+'</select>') +
+      fld('Sector', '<select id="fx_industry">'+sectorOpts+'</select>') +
       fld('Governorate', '<select id="fx_gov">'+govOpts+'</select>') +
       fld('Year established', '<input type="number" id="fx_yr" value="'+esc(f.yr)+'">') +
       fld('MOQ (min. order)', '<input type="number" id="fx_moq" value="'+esc(f.moq)+'">') +
-      fld('Employees', '<input type="text" id="fx_emp" value="'+esc(f.emp)+'" list="empList"><datalist id="empList"><option>10–50</option><option>50–100</option><option>100–250</option><option>250–500</option><option>500+</option></datalist>') +
+      fld('Employees', '<input type="text" id="fx_emp" value="'+esc(f.emp)+'" placeholder="e.g. 50–100">') +
       fld('Phone', '<input type="text" id="fx_phone" value="'+esc(f.phone)+'">') +
       fld('Daily capacity', '<input type="number" id="fx_daily" value="'+esc(f.dailyCapacity)+'">') +
       fld('Monthly capacity', '<input type="number" id="fx_monthly" value="'+esc(f.monthlyCapacity)+'">') +
       fld('Rating (0–5)', '<input type="number" step="0.1" min="0" max="5" id="fx_rating" value="'+esc(f.rating)+'">') +
       fld('Review count', '<input type="number" id="fx_reviews" value="'+esc(f.reviewCount)+'">') +
+      fld('Business hours (English)', '<input type="text" id="fx_hoursEn" value="'+esc(hrs.en)+'" placeholder="Sun–Thu, 9:00 AM – 5:00 PM">') +
+      fld('Business hours (Arabic)', '<input type="text" id="fx_hoursAr" dir="rtl" value="'+esc(hrs.ar)+'">') +
       fld('Description (English)', '<textarea id="fx_descEn">'+esc(f.desc.en)+'</textarea>', true) +
       fld('Description (Arabic)', '<textarea id="fx_descAr" dir="rtl">'+esc(f.desc.ar)+'</textarea>', true) +
       fld('Search keywords / tags (comma or space separated)', '<input type="text" id="fx_keywords" value="'+esc(f.keywords)+'" placeholder="e.g. t-shirts cotton export">', true) +
       '<div class="fld full"><label class="chk-row"><input type="checkbox" id="fx_exp"'+(f.exp?' checked':'')+'> Exports available</label>' +
         '<label class="chk-row"><input type="checkbox" id="fx_featured"'+(f.featured?' checked':'')+'> Featured on homepage</label></div>' +
-      '<div class="fld full"><label>Certifications</label><div class="check-list">'+ (certList||'<span class="muted">No certifications defined (add some under Search &amp; Filters).</span>') +'</div></div>' +
-      '<div class="fld full"><label>Services offered</label><div class="check-list" id="fx_services">'+servicesChecklist(f.industry, f.services)+'</div></div>' +
+      '<div class="fld full section-sep"><b>Products, capabilities &amp; services</b><div class="muted">Type one item per line. Keep the English and Arabic lists in the same order.</div></div>' +
+      fld('Products — English (one per line)', '<textarea id="fx_prodEn">'+esc(lines(prod.en))+'</textarea>', true) +
+      fld('Products — Arabic (one per line)', '<textarea id="fx_prodAr" dir="rtl">'+esc(lines(prod.ar))+'</textarea>', true) +
+      fld('Capabilities — English (one per line)', '<textarea id="fx_capEn">'+esc(lines(caps.en))+'</textarea>', true) +
+      fld('Capabilities — Arabic (one per line)', '<textarea id="fx_capAr" dir="rtl">'+esc(lines(caps.ar))+'</textarea>', true) +
+      fld('Services — English (one per line)', '<textarea id="fx_svcEn">'+esc(lines(svc.en))+'</textarea>', true) +
+      fld('Services — Arabic (one per line)', '<textarea id="fx_svcAr" dir="rtl">'+esc(lines(svc.ar))+'</textarea>', true) +
+      fld('Certifications (one per line)', '<textarea id="fx_certs">'+esc(lines(f.certs))+'</textarea>', true) +
+      '<div class="fld full section-sep"><b>Contact info</b><div class="muted">Shown in the "Contact this factory" box. Leave blank to hide a channel.</div></div>' +
+      fld('WhatsApp number', '<input type="text" id="fx_whatsapp" value="'+esc(f.whatsapp||'')+'" placeholder="'+esc(f.phone||'+20 …')+'">') +
+      fld('Email', '<input type="text" id="fx_email" value="'+esc(f.email||'')+'" placeholder="info@company.com">') +
+      fld('Website', '<input type="text" id="fx_website" value="'+esc(f.website||'')+'" placeholder="www.company.com">') +
+      fld('Facebook (link)', '<input type="text" id="fx_facebook" value="'+esc(f.facebook||'')+'" placeholder="https://facebook.com/…">') +
+      fld('Instagram (link)', '<input type="text" id="fx_instagram" value="'+esc(f.instagram||'')+'" placeholder="https://instagram.com/…">') +
+      fld('LinkedIn (link)', '<input type="text" id="fx_linkedin" value="'+esc(f.linkedin||'')+'" placeholder="https://linkedin.com/…">') +
+      '<div class="fld full section-sep"><b>Media</b></div>' +
       '<div class="fld full"><label>Profile picture</label><div class="media-row" id="fxLogoBox">'+fxImageBox('logo')+'</div></div>' +
       '<div class="fld full"><label>Cover picture</label><div class="media-row" id="fxCoverBox">'+fxImageBox('cover')+'</div></div>' +
       '<div class="fld full"><label>Product images &amp; videos</label>' +
@@ -331,11 +379,11 @@ function uploadFactoryImage(kind, input) {
   var file = input.files[0]; if (!file || !requireLogin()) return;
   var box = document.getElementById(kind === 'logo' ? 'fxLogoBox' : 'fxCoverBox');
   var status = box.querySelector('.upl-status'); if (status) status.textContent = 'Uploading…';
-  AdminStore.uploadFile(file, SB_TOKEN).then(function(url){
+  getFreshToken().then(function(tok){ return AdminStore.uploadFile(file, tok); }).then(function(url){
     if (EDIT_FX[kind]) AdminStore.deleteFile(EDIT_FX[kind], SB_TOKEN);
     EDIT_FX[kind] = url;
     box.innerHTML = fxImageBox(kind);
-  }).catch(function(e){ if (status) status.textContent = ''; alert('Upload failed: ' + (e.message || e) + '\n\nMake sure the Supabase "media" storage bucket exists (see setup steps).'); });
+  }).catch(function(e){ if (status) status.textContent = ''; alert('Upload failed: ' + (e.message || e) + '\n\nIf it mentions the bucket, make sure a public Supabase Storage bucket named "media" exists. If it mentions the session, log out and back in.'); });
 }
 function removeFactoryImage(kind) {
   if (EDIT_FX[kind]) AdminStore.deleteFile(EDIT_FX[kind], SB_TOKEN);
@@ -349,7 +397,7 @@ function uploadFactoryMedia(input) {
   var done = 0, total = files.length;
   status.textContent = 'Uploading 0/' + total + '…';
   files.forEach(function(file){
-    AdminStore.uploadFile(file, SB_TOKEN).then(function(url){
+    getFreshToken().then(function(tok){ return AdminStore.uploadFile(file, tok); }).then(function(url){
       EDIT_FX.media.push({ type: file.type.indexOf('video') === 0 ? 'video' : 'image', url: url });
     }).catch(function(e){ alert('One file failed to upload: ' + (e.message || e)); })
       .then(function(){ done++; status.textContent = done < total ? ('Uploading ' + done + '/' + total + '…') : ''; document.getElementById('fxMediaList').innerHTML = fxMediaListHtml(); });
@@ -363,47 +411,34 @@ function removeMedia(ix) {
   document.getElementById('fxMediaList').innerHTML = fxMediaListHtml();
 }
 
-function servicesChecklist(sectorId, selected) {
-  var avail = factoryServicesFor(sectorId);
-  if (!avail.length) return '<span class="muted">This sector has no services defined yet.</span>';
-  var selNames = (selected||[]).map(function(s){return s.name;});
-  return avail.map(function(s){
-    var on = selNames.indexOf(s.name) >= 0;
-    return '<label><input type="checkbox" class="fsvc" value="'+esc(s.name)+'" data-icon="'+esc(s.icon)+'"'+(on?' checked':'')+'> '+esc(s.name)+'</label>';
-  }).join('');
-}
-function refreshFactoryServices() {
-  var sec = document.getElementById('fx_industry').value;
-  document.getElementById('fx_services').innerHTML = servicesChecklist(sec, []);
-}
-
+function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function saveFactory(i) {
-  var nameEn = document.getElementById('fx_nameEn').value.trim();
-  var nameAr = document.getElementById('fx_nameAr').value.trim();
+  var nameEn = val('fx_nameEn'), nameAr = val('fx_nameAr');
   if (!nameEn || !nameAr) { alert('Please fill in the factory name in both English and Arabic.'); return; }
-  var svc = [];
-  document.querySelectorAll('#fx_services .fsvc:checked').forEach(function(c){ svc.push({ icon: c.getAttribute('data-icon'), name: c.value }); });
-  var certs = [];
-  document.querySelectorAll('.fcert:checked').forEach(function(c){ certs.push(c.value); });
   var obj = {
     id: i>=0 ? DATA.factories[i].id : uid(),
     industry: document.getElementById('fx_industry').value,
     govIndex: Number(document.getElementById('fx_gov').value),
     name: { en: nameEn, ar: nameAr },
-    desc: { en: document.getElementById('fx_descEn').value.trim(), ar: document.getElementById('fx_descAr').value.trim() },
-    yr: Number(document.getElementById('fx_yr').value) || 0,
-    moq: Number(document.getElementById('fx_moq').value) || 0,
-    emp: document.getElementById('fx_emp').value.trim(),
-    phone: document.getElementById('fx_phone').value.trim(),
+    desc: { en: val('fx_descEn'), ar: val('fx_descAr') },
+    yr: Number(val('fx_yr')) || 0,
+    moq: Number(val('fx_moq')) || 0,
+    emp: val('fx_emp'),
+    phone: val('fx_phone'),
     exp: document.getElementById('fx_exp').checked,
     featured: document.getElementById('fx_featured').checked,
-    certs: certs,
-    dailyCapacity: Number(document.getElementById('fx_daily').value) || 0,
-    monthlyCapacity: Number(document.getElementById('fx_monthly').value) || 0,
-    rating: Number(document.getElementById('fx_rating').value) || 0,
-    reviewCount: Number(document.getElementById('fx_reviews').value) || 0,
-    services: svc,
-    keywords: document.getElementById('fx_keywords').value.trim(),
+    certs: toLines(val('fx_certs')),
+    dailyCapacity: Number(val('fx_daily')) || 0,
+    monthlyCapacity: Number(val('fx_monthly')) || 0,
+    rating: Number(val('fx_rating')) || 0,
+    reviewCount: Number(val('fx_reviews')) || 0,
+    products: { en: toLines(val('fx_prodEn')), ar: toLines(val('fx_prodAr')) },
+    capabilities: { en: toLines(val('fx_capEn')), ar: toLines(val('fx_capAr')) },
+    services: { en: toLines(val('fx_svcEn')), ar: toLines(val('fx_svcAr')) },
+    hours: { en: val('fx_hoursEn'), ar: val('fx_hoursAr') },
+    keywords: val('fx_keywords'),
+    whatsapp: val('fx_whatsapp'), email: val('fx_email'), website: val('fx_website'),
+    facebook: val('fx_facebook'), instagram: val('fx_instagram'), linkedin: val('fx_linkedin'),
     logo: EDIT_FX ? EDIT_FX.logo : '',
     cover: EDIT_FX ? EDIT_FX.cover : '',
     media: EDIT_FX ? EDIT_FX.media : []

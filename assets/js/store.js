@@ -34,6 +34,26 @@ function iconKeyFromSvg(svg) {
   if (window.ICONS) { for (var k in ICONS) { if (ICONS[k] === svg) return k; } }
   return 'clipboard';
 }
+function cloneList(o) { return { en: (o && o.en ? o.en.slice() : []), ar: (o && o.ar ? o.ar.slice() : []) }; }
+// Services stored per-factory as bilingual name lists. Seed from the factory's
+// current services, translating each English name via the sector's list.
+function seedServices(f) {
+  var en = [], ar = [];
+  var sset = (typeof IND_SERVICES !== 'undefined' && IND_SERVICES[f.industry]) ? IND_SERVICES[f.industry] : { en: [], ar: [] };
+  (f.services || []).forEach(function (s) {
+    en.push(s.name);
+    var arName = s.name;
+    for (var i = 0; i < (sset.en || []).length; i++) { if (sset.en[i].name === s.name) { arName = (sset.ar[i] || sset.en[i]).name; break; } }
+    ar.push(arName);
+  });
+  return { en: en, ar: ar };
+}
+// Accept either the new {en:[],ar:[]} form or the old [{icon,name}] form
+function normalizeServices(s) {
+  if (Array.isArray(s)) { var n = s.map(function (x) { return x && x.name ? x.name : x; }); return { en: n, ar: n }; }
+  if (s && (s.en || s.ar)) return { en: s.en || [], ar: s.ar || [] };
+  return { en: [], ar: [] };
+}
 function govIndexOf(govObj) {
   var i = GOVS.indexOf(govObj);
   if (i >= 0) return i;
@@ -66,8 +86,12 @@ var AdminStore = {
           exp: !!f.exp, featured: !!f.featured, certs: (f.certs || []).slice(),
           dailyCapacity: f.dailyCapacity, monthlyCapacity: f.monthlyCapacity,
           rating: f.rating, reviewCount: f.reviewCount,
-          services: (f.services || []).map(function (s) { return { icon: s.icon, name: s.name }; }),
+          services: seedServices(f),
+          products: cloneList(IND_PRODUCTS[f.industry]),
+          capabilities: cloneList(IND_CAPS[f.industry]),
+          hours: { en: '', ar: '' },
           keywords: f.keywords || '',
+          whatsapp: '', email: '', website: '', facebook: '', instagram: '', linkedin: '',
           logo: f.logo || '', cover: f.cover || '', media: (f.media || []).slice()
         };
       }),
@@ -139,7 +163,11 @@ var AdminStore = {
           certs: a.certs || [], dailyCapacity: Number(a.dailyCapacity) || 0,
           monthlyCapacity: Number(a.monthlyCapacity) || 0,
           rating: Number(a.rating) || 0, reviewCount: Number(a.reviewCount) || 0,
-          services: a.services || [], keywords: a.keywords || '',
+          services: normalizeServices(a.services), keywords: a.keywords || '',
+          products: a.products || { en: [], ar: [] }, capabilities: a.capabilities || { en: [], ar: [] },
+          hours: a.hours || { en: '', ar: '' },
+          whatsapp: a.whatsapp || '', email: a.email || '', website: a.website || '',
+          facebook: a.facebook || '', instagram: a.instagram || '', linkedin: a.linkedin || '',
           logo: a.logo || '', cover: a.cover || '', media: a.media || []
         });
       });
