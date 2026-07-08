@@ -17,6 +17,7 @@
 <script src="assets/js/icons.js"></script>
 <script src="assets/js/lang.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/router.js"></script>
@@ -56,46 +57,52 @@ document.addEventListener('DOMContentLoaded', function() {
           '<input type="text" id="searchInput" placeholder="' + t('search_ph') + '" onchange="updateFilter(\'q\', this.value)">' +
         '</div>' +
         
+        (FILTER_CONFIG.industry ?
         '<div class="f-group">' +
           '<label>' + t('f_industry') + '</label>' +
           '<select id="industryFilter" onchange="updateFilter(\'industry\', this.value)">' +
             '<option value="">' + t('all') + '</option>' +
             INDUSTRIES.map(function(i) { return '<option value="' + i.id + '">' + L({en: i.en, ar: i.ar}) + '</option>'; }).join('') +
           '</select>' +
-        '</div>' +
-        
+        '</div>' : '') +
+
+        (FILTER_CONFIG.gov ?
         '<div class="f-group">' +
           '<label>' + t('f_gov') + '</label>' +
           '<select id="govFilter" onchange="updateFilter(\'gov\', this.value)">' +
             '<option value="">' + t('all') + '</option>' +
             GOVS.map(function(g, ix) { return '<option value="' + ix + '">' + L(g) + '</option>'; }).join('') +
           '</select>' +
-        '</div>' +
-        
+        '</div>' : '') +
+
+        (FILTER_CONFIG.moq ?
         '<div class="f-group">' +
           '<label>' + t('f_moq') + '</label>' +
           '<input type="number" id="moqFilter" min="0" placeholder="' + (LANG === 'ar' ? 'مثال: ٥٠٠' : 'e.g. 500') + '" onchange="updateFilter(\'moq\', this.value)">' +
-        '</div>' +
-        
+        '</div>' : '') +
+
+        (FILTER_CONFIG.cert ?
         '<div class="f-group">' +
           '<label>' + t('f_cert') + '</label>' +
           '<select id="certFilter" onchange="updateFilter(\'cert\', this.value)">' +
             '<option value="">' + t('all') + '</option>' +
             CERTS.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') +
           '</select>' +
-        '</div>' +
-        
+        '</div>' : '') +
+
+        (FILTER_CONFIG.capacity ?
         '<div class="f-group">' +
           '<label>' + t('f_capacity') + '</label>' +
           '<input type="number" id="capacityFilter" min="0" placeholder="' + (LANG === 'ar' ? 'مثال: ٥٠٠' : 'e.g. 500') + '" onchange="updateFilter(\'minCapacity\', this.value)">' +
-        '</div>' +
-        
+        '</div>' : '') +
+
+        (FILTER_CONFIG.exp ?
         '<div class="f-group">' +
           '<label class="f-check">' +
             '<input type="checkbox" id="exportFilter" onchange="updateFilter(\'exp\', this.checked)"> ' +
             '<span>' + t('f_export') + '</span>' +
           '</label>' +
-        '</div>' +
+        '</div>' : '') +
       '</aside>' +
       
       '<div>' +
@@ -136,35 +143,38 @@ function updateFilter(key, value) {
   renderFactoryList();
 }
 
+function setVal(id, val) { var el = document.getElementById(id); if (el) el.value = val; }
+function setChecked(id, val) { var el = document.getElementById(id); if (el) el.checked = val; }
+
 function clearAllFilters() {
   FILTERS = { q: '', industry: '', gov: '', moq: '', exp: false, cert: '', minCapacity: '', sort: 'name' };
   localStorage.removeItem('sonnaFilters');
-  document.getElementById('searchInput').value = '';
-  document.getElementById('industryFilter').value = '';
-  document.getElementById('govFilter').value = '';
-  document.getElementById('moqFilter').value = '';
-  document.getElementById('certFilter').value = '';
-  document.getElementById('capacityFilter').value = '';
-  document.getElementById('exportFilter').checked = false;
-  document.getElementById('sortSelect').value = 'name';
+  setVal('searchInput', '');
+  setVal('industryFilter', '');
+  setVal('govFilter', '');
+  setVal('moqFilter', '');
+  setVal('certFilter', '');
+  setVal('capacityFilter', '');
+  setChecked('exportFilter', false);
+  setVal('sortSelect', 'name');
   renderFactoryList();
 }
 
 function restoreFilters() {
-  document.getElementById('searchInput').value = FILTERS.q || '';
-  if (FILTERS.industry) document.getElementById('industryFilter').value = FILTERS.industry;
-  if (FILTERS.gov) document.getElementById('govFilter').value = FILTERS.gov;
-  document.getElementById('moqFilter').value = FILTERS.moq || '';
-  if (FILTERS.cert) document.getElementById('certFilter').value = FILTERS.cert;
-  document.getElementById('capacityFilter').value = FILTERS.minCapacity || '';
-  document.getElementById('exportFilter').checked = FILTERS.exp || false;
-  document.getElementById('sortSelect').value = FILTERS.sort || 'name';
+  setVal('searchInput', FILTERS.q || '');
+  if (FILTERS.industry) setVal('industryFilter', FILTERS.industry);
+  if (FILTERS.gov) setVal('govFilter', FILTERS.gov);
+  setVal('moqFilter', FILTERS.moq || '');
+  if (FILTERS.cert) setVal('certFilter', FILTERS.cert);
+  setVal('capacityFilter', FILTERS.minCapacity || '');
+  setChecked('exportFilter', FILTERS.exp || false);
+  setVal('sortSelect', FILTERS.sort || 'name');
 }
 
 function renderFactoryList() {
   var list = FACTORIES.filter(function(f) {
     if (FILTERS.industry && f.industry !== FILTERS.industry) return false;
-    if (FILTERS.gov && String(f.gov) !== String(FILTERS.gov)) return false;
+    if (FILTERS.gov !== '' && FILTERS.gov != null && f.govIndex != null && String(f.govIndex) !== String(FILTERS.gov)) return false;
     if (FILTERS.moq && f.moq > Number(FILTERS.moq)) return false;
     if (FILTERS.exp && !f.exp) return false;
     if (FILTERS.cert && f.certs.indexOf(FILTERS.cert) === -1) return false;
@@ -172,10 +182,19 @@ function renderFactoryList() {
     if (FILTERS.q) {
       var q = FILTERS.q.toLowerCase();
       var id = ind(f.industry);
-      var hay = [f.name.en, f.name.ar, id.en, id.ar, f.gov.en, f.gov.ar]
-        .concat(IND_PRODUCTS[f.industry].en, IND_PRODUCTS[f.industry].ar, IND_CAPS[f.industry].en, IND_CAPS[f.industry].ar)
-        .join(' ').toLowerCase();
-      if (hay.indexOf(q) === -1) return false;
+      // Which fields the keyword search looks in is controlled from the admin panel
+      var fields = (window.SEARCH_CONFIG && SEARCH_CONFIG.fields) || ['name'];
+      var prod = IND_PRODUCTS[f.industry] || { en: [], ar: [] };
+      var caps = IND_CAPS[f.industry] || { en: [], ar: [] };
+      var parts = [];
+      if (fields.indexOf('name') >= 0) parts.push(f.name.en, f.name.ar);
+      if (fields.indexOf('sector') >= 0) parts.push(id.en, id.ar);
+      if (fields.indexOf('governorate') >= 0 && f.gov) parts.push(f.gov.en, f.gov.ar);
+      if (fields.indexOf('products') >= 0) parts = parts.concat(prod.en, prod.ar);
+      if (fields.indexOf('capabilities') >= 0) parts = parts.concat(caps.en, caps.ar);
+      if (fields.indexOf('description') >= 0) parts.push(f.desc.en, f.desc.ar);
+      if (fields.indexOf('keywords') >= 0 && f.keywords) parts.push(f.keywords);
+      if (parts.join(' ').toLowerCase().indexOf(q) === -1) return false;
     }
     return true;
   });
