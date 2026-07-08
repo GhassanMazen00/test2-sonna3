@@ -28,7 +28,10 @@ function headerHTML() {
         '<button class="' + (LANG === 'en' ? 'on' : '') + '" onclick="setLang(\'en\')">EN</button>' +
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\')">عربي</button>' +
       '</div>' +
-      '<button class="btn btn-ghost btn-sm desktop-only">' + t('login') + '</button>' +
+      (window.Auth && Auth.isLoggedIn()
+        ? '<a href="account.html" class="btn btn-ghost btn-sm desktop-only nav-account">' + ICONS.user + ' ' + t('my_account') + '</a>'
+        : '<button class="btn btn-ghost btn-sm desktop-only" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
+          '<button class="btn btn-primary btn-sm desktop-only" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>') +
       '<button class="mobile-menu-btn" onclick="openMobileMenu()" aria-label="Menu">' + ICONS.menu + '</button>' +
     '</div></div></header>';
   
@@ -54,8 +57,14 @@ function mobileMenuHTML() {
       '<a href="factories.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.factory + ' ' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
       '<a href="' + consultHref + '" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
+      (window.Auth && Auth.isLoggedIn()
+        ? '<a href="account.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.user + ' ' + t('my_account') + '</a>'
+        : '') +
       '<div class="mobile-menu-divider"></div>' +
-      '<button class="btn btn-ghost mobile-menu-btn-full">' + t('login') + '</button>' +
+      (window.Auth && Auth.isLoggedIn()
+        ? '<button class="btn btn-ghost mobile-menu-btn-full" onclick="Auth.logout()">' + t('logout') + '</button>'
+        : '<button class="btn btn-ghost mobile-menu-btn-full" onclick="openAuthModal(\'login\');closeMobileMenu()">' + t('login') + '</button>' +
+          '<button class="btn btn-primary mobile-menu-btn-full" onclick="openAuthModal(\'signup\');closeMobileMenu()">' + t('signup') + '</button>') +
       '<button class="btn btn-primary mobile-menu-btn-full" onclick="openRequestForm();closeMobileMenu()">' + t('post_request') + '</button>' +
     '</div>';
 }
