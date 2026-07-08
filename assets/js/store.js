@@ -29,6 +29,11 @@ window.FILTER_CONFIG = Object.assign({}, DEFAULT_FILTER_CONFIG);
 
 function iconKeyFor(id) { return DEFAULT_INDUSTRY_ICON[id] || 'factory'; }
 function resolveIcon(key) { return (window.ICONS && ICONS[key]) || (window.ICONS && ICONS.factory) || ''; }
+// Reverse lookup: given a rendered SVG string, find its icon key (for seeding)
+function iconKeyFromSvg(svg) {
+  if (window.ICONS) { for (var k in ICONS) { if (ICONS[k] === svg) return k; } }
+  return 'clipboard';
+}
 function govIndexOf(govObj) {
   var i = GOVS.indexOf(govObj);
   if (i >= 0) return i;
@@ -62,7 +67,16 @@ var AdminStore = {
           dailyCapacity: f.dailyCapacity, monthlyCapacity: f.monthlyCapacity,
           rating: f.rating, reviewCount: f.reviewCount,
           services: (f.services || []).map(function (s) { return { icon: s.icon, name: s.name }; }),
-          keywords: f.keywords || ''
+          keywords: f.keywords || '',
+          logo: f.logo || '', cover: f.cover || '', media: (f.media || []).slice()
+        };
+      }),
+      requests: (typeof REQUESTS !== 'undefined' ? REQUESTS : []).map(function (r) {
+        return {
+          id: r.id, iconKey: iconKeyFromSvg(r.icon), days: r.days, qty: r.qty, budget: r.budget || '',
+          title: { en: r.title.en, ar: r.title.ar }, desc: { en: r.desc.en, ar: r.desc.ar },
+          material: { en: (r.material || {}).en || '', ar: (r.material || {}).ar || '' },
+          gov: r.gov, by: { en: (r.by || {}).en || '', ar: (r.by || {}).ar || '' }, contact: r.contact || ''
         };
       }),
       search: { fields: DEFAULT_SEARCH_FIELDS.slice() },
@@ -125,7 +139,19 @@ var AdminStore = {
           certs: a.certs || [], dailyCapacity: Number(a.dailyCapacity) || 0,
           monthlyCapacity: Number(a.monthlyCapacity) || 0,
           rating: Number(a.rating) || 0, reviewCount: Number(a.reviewCount) || 0,
-          services: a.services || [], keywords: a.keywords || ''
+          services: a.services || [], keywords: a.keywords || '',
+          logo: a.logo || '', cover: a.cover || '', media: a.media || []
+        });
+      });
+    }
+    if (Array.isArray(data.requests)) {
+      REQUESTS.length = 0;
+      data.requests.forEach(function (a) {
+        REQUESTS.push({
+          id: a.id, icon: resolveIcon(a.iconKey), days: Number(a.days) || 0, qty: a.qty,
+          budget: a.budget || null, title: a.title, desc: a.desc,
+          material: a.material || { en: '', ar: '' }, gov: Number(a.gov) || 0,
+          by: a.by || { en: '', ar: '' }, contact: a.contact || ''
         });
       });
     }
@@ -169,6 +195,35 @@ AdminStore.saveRemote = function (data, token) {
     },
     body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
   }).then(function (r) { if (!r.ok) throw new Error('save ' + r.status); return true; });
+};
+
+// Upload a file to Supabase Storage (admin only); resolves to its public URL
+AdminStore.uploadFile = function (file, token) {
+  if (!this.remoteEnabled()) return Promise.reject(new Error('no config'));
+  var bucket = window.SUPABASE_BUCKET || 'media';
+  var safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  var path = 'factory/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + safe;
+  return fetch(SUPABASE_URL + '/storage/v1/object/' + bucket + '/' + path, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+    body: file
+  }).then(function (r) {
+    if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('upload ' + r.status)); });
+    return SUPABASE_URL + '/storage/v1/object/public/' + bucket + '/' + path;
+  });
+};
+
+// Best-effort delete of a previously uploaded file (by its public URL)
+AdminStore.deleteFile = function (publicUrl, token) {
+  if (!this.remoteEnabled() || !publicUrl) return Promise.resolve();
+  var marker = '/storage/v1/object/public/';
+  var i = publicUrl.indexOf(marker);
+  if (i < 0) return Promise.resolve();
+  var rest = publicUrl.slice(i + marker.length); // bucket/path...
+  return fetch(SUPABASE_URL + '/storage/v1/object/' + rest, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token }
+  }).catch(function () { });
 };
 
 // Apply remote data if usable, else fall back to the local cache, else defaults

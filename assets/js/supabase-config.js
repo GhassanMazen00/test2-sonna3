@@ -13,3 +13,6 @@ window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 
 // Where all site content is stored (created by the SQL step)
 window.SUPABASE_TABLE = 'site_content';
+
+// Storage bucket that holds uploaded factory images/videos (create it in Supabase)
+window.SUPABASE_BUCKET = 'media';

@@ -60,6 +60,12 @@
   .login-box input { width: 100%; padding: 12px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; margin-bottom: 12px; }
   .login-err { color: #B42318; font-size: 13px; margin-bottom: 10px; display: none; }
   .save-bar { position: sticky; bottom: 0; background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 0; display: flex; justify-content: flex-end; gap: 10px; }
+  .admin-search { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 14px; font-family: inherit; background: var(--mist); }
+  .media-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .media-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .media-thumb { width: 90px; height: 68px; border-radius: 8px; background: var(--mist); background-size: cover; background-position: center; border: 1px solid var(--line); object-fit: cover; }
+  .media-item { position: relative; }
+  .media-item .btn-danger { position: absolute; top: 3px; inset-inline-end: 3px; padding: 2px 7px; border-radius: 6px; }
   @media (max-width: 640px) { .form-grid2 { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -81,6 +87,22 @@ var DATA = null;
 var TAB = 'factories';
 var root = document.getElementById('root');
 var SB_TOKEN = null;
+var SEARCH = {};        // per-tab search text
+var EDIT_FX = null;     // factory being edited (holds its media while the form is open)
+
+// Live-filter a table body without rebuilding the search box (keeps focus)
+function onSearch(tab, v) {
+  SEARCH[tab] = v;
+  var body = document.getElementById(tab + 'Body');
+  if (!body) return;
+  if (tab === 'factories') body.innerHTML = factoryRows();
+  else if (tab === 'sectors') body.innerHTML = sectorRows();
+  else if (tab === 'requests') body.innerHTML = requestRows();
+}
+function searchBar(tab, placeholder) {
+  return '<input class="admin-search" id="search_' + tab + '" placeholder="' + placeholder + '" value="' + esc(SEARCH[tab] || '') + '" oninput="onSearch(\'' + tab + '\', this.value)">';
+}
+function hit(text, tab) { var q = (SEARCH[tab] || '').trim().toLowerCase(); return !q || String(text).toLowerCase().indexOf(q) >= 0; }
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
 function iconKeys() { return Object.keys(window.ICONS || {}); }
@@ -161,6 +183,7 @@ function boot() {
   root.innerHTML = '<div style="padding:60px;text-align:center;color:var(--ink-soft)">Loading…</div>';
   AdminStore.fetchRemote().then(function(remote){
     DATA = (remote && (remote.factories || remote.industries)) ? remote : AdminStore.defaults();
+    if (!DATA.requests) DATA.requests = AdminStore.defaults().requests;   // migrate older saves
     renderApp();
   }).catch(function(){
     DATA = AdminStore.defaults();
@@ -168,7 +191,7 @@ function boot() {
   });
 }
 function renderApp() {
-  var tabs = [['factories','Factories'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  var tabs = [['factories','Factories'],['requests','Requests'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
   root.innerHTML =
     '<div class="admin-wrap">' +
       '<div class="admin-top">' +
@@ -189,6 +212,7 @@ function renderApp() {
 function switchTab(t) { TAB = t; renderApp(); }
 function renderTab() {
   if (TAB === 'factories') renderFactories();
+  else if (TAB === 'requests') renderRequests();
   else if (TAB === 'sectors') renderSectors();
   else if (TAB === 'config') renderConfig();
   else renderDataTab();
@@ -198,28 +222,34 @@ function renderTab() {
 function sectorName(id) { var s = DATA.industries.find(function(i){return i.id===id;}); return s ? s.en : id; }
 function govName(ix) { var g = DATA.govs[ix]; return g ? g.en : '—'; }
 
+function factoryRows() {
+  var out = DATA.factories.map(function(f, i){ return { f:f, i:i }; })
+    .filter(function(o){ var f=o.f; return hit(f.name.en+' '+f.name.ar+' '+sectorName(f.industry)+' '+govName(f.govIndex)+' '+(f.keywords||''), 'factories'); })
+    .map(function(o){ var f=o.f, i=o.i;
+      return '<tr>' +
+        '<td><b>'+esc(f.name.en)+'</b><div class="muted" dir="rtl">'+esc(f.name.ar)+'</div></td>' +
+        '<td>'+esc(sectorName(f.industry))+'</td>' +
+        '<td>'+esc(govName(f.govIndex))+'</td>' +
+        '<td>'+esc(f.moq)+'</td>' +
+        '<td>'+(f.featured?'★':'')+'</td>' +
+        '<td><div class="row-actions">' +
+          '<button class="btn btn-ghost btn-sm" onclick="editFactory('+i+')">Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteFactory('+i+')">Delete</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  return out || '<tr><td colspan="6" class="muted">No factories match.</td></tr>';
+}
 function renderFactories() {
-  var rows = DATA.factories.map(function(f, i){
-    return '<tr>' +
-      '<td><b>'+esc(f.name.en)+'</b><div class="muted" dir="rtl">'+esc(f.name.ar)+'</div></td>' +
-      '<td>'+esc(sectorName(f.industry))+'</td>' +
-      '<td>'+esc(govName(f.govIndex))+'</td>' +
-      '<td>'+esc(f.moq)+'</td>' +
-      '<td>'+(f.featured?'★':'')+'</td>' +
-      '<td><div class="row-actions">' +
-        '<button class="btn btn-ghost btn-sm" onclick="editFactory('+i+')">Edit</button>' +
-        '<button class="btn btn-sm btn-danger" onclick="deleteFactory('+i+')">Delete</button>' +
-      '</div></td>' +
-    '</tr>';
-  }).join('');
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">' +
-        '<div><h2>Factories ('+DATA.factories.length+')</h2><div class="hint" style="margin:0">Add, edit, or remove any factory. Changes save to this browser.</div></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
+        '<div><h2>Factories ('+DATA.factories.length+')</h2><div class="hint" style="margin:0">Add, edit, or remove any factory. Changes save to the live site.</div></div>' +
         '<button class="btn btn-primary btn-sm" onclick="editFactory(-1)">+ Add factory</button>' +
       '</div>' +
-      '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Name</th><th>Sector</th><th>Governorate</th><th>MOQ</th><th>Featured</th><th></th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="6" class="muted">No factories yet.</td></tr>') +
+      searchBar('factories', 'Search factories by name, sector, city, keywords…') +
+      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Name</th><th>Sector</th><th>Governorate</th><th>MOQ</th><th>Featured</th><th></th></tr></thead><tbody id="factoriesBody">' +
+        factoryRows() +
       '</tbody></table></div>' +
     '</div>';
 }
@@ -237,6 +267,7 @@ function editFactory(i) {
     dailyCapacity: 500, monthlyCapacity: 13000, rating: 4.5, reviewCount: 20,
     services: [], keywords: ''
   };
+  EDIT_FX = { logo: f.logo || '', cover: f.cover || '', media: (f.media || []).slice() };
   var sectorOpts = DATA.industries.map(function(s){ return '<option value="'+esc(s.id)+'"'+(s.id===f.industry?' selected':'')+'>'+esc(s.en)+'</option>'; }).join('');
   var govOpts = DATA.govs.map(function(g,ix){ return '<option value="'+ix+'"'+(ix===f.govIndex?' selected':'')+'>'+esc(g.en)+'</option>'; }).join('');
   var certList = DATA.certs.map(function(c){ var on = f.certs.indexOf(c)>=0; return '<label><input type="checkbox" class="fcert" value="'+esc(c)+'"'+(on?' checked':'')+'> '+esc(c)+'</label>'; }).join('');
@@ -262,8 +293,74 @@ function editFactory(i) {
         '<label class="chk-row"><input type="checkbox" id="fx_featured"'+(f.featured?' checked':'')+'> Featured on homepage</label></div>' +
       '<div class="fld full"><label>Certifications</label><div class="check-list">'+ (certList||'<span class="muted">No certifications defined (add some under Search &amp; Filters).</span>') +'</div></div>' +
       '<div class="fld full"><label>Services offered</label><div class="check-list" id="fx_services">'+servicesChecklist(f.industry, f.services)+'</div></div>' +
+      '<div class="fld full"><label>Profile picture</label><div class="media-row" id="fxLogoBox">'+fxImageBox('logo')+'</div></div>' +
+      '<div class="fld full"><label>Cover picture</label><div class="media-row" id="fxCoverBox">'+fxImageBox('cover')+'</div></div>' +
+      '<div class="fld full"><label>Product images &amp; videos</label>' +
+        '<div class="media-grid" id="fxMediaList">'+fxMediaListHtml()+'</div>' +
+        '<label class="btn btn-ghost btn-sm" style="cursor:pointer;margin-top:8px;display:inline-block">⬆ Add images / videos<input type="file" accept="image/*,video/*" multiple style="display:none" onchange="uploadFactoryMedia(this)"></label>' +
+        '<span id="fxMediaStatus" class="muted" style="margin-inline-start:10px"></span>' +
+      '</div>' +
     '</div>',
     'saveFactory('+i+')');
+}
+
+/* --- Factory media upload UI (uses EDIT_FX while the form is open) --- */
+function fxImageBox(kind) {
+  var url = EDIT_FX[kind];
+  return (url
+      ? '<div class="media-thumb" style="background-image:url(\''+url+'\')"></div>' +
+        '<button type="button" class="btn btn-sm btn-danger" onclick="removeFactoryImage(\''+kind+'\')">Remove</button>'
+      : '<span class="muted">No picture.</span>') +
+    '<label class="btn btn-ghost btn-sm" style="cursor:pointer;margin-inline-start:8px">'+(url?'Replace':'Upload')+'<input type="file" accept="image/*" style="display:none" onchange="uploadFactoryImage(\''+kind+'\', this)"></label>' +
+    '<span class="upl-status muted" style="margin-inline-start:8px"></span>';
+}
+function fxMediaListHtml() {
+  if (!EDIT_FX.media.length) return '<span class="muted">No product media yet.</span>';
+  return EDIT_FX.media.map(function(m, ix){
+    var thumb = m.type === 'video'
+      ? '<video src="'+m.url+'" muted class="media-thumb"></video>'
+      : '<div class="media-thumb" style="background-image:url(\''+m.url+'\')"></div>';
+    return '<div class="media-item">'+thumb+'<button type="button" class="btn btn-sm btn-danger" onclick="removeMedia('+ix+')">✕</button></div>';
+  }).join('');
+}
+function requireLogin() {
+  if (!SB_TOKEN) { alert('Please log in again to upload files.'); return false; }
+  return true;
+}
+function uploadFactoryImage(kind, input) {
+  var file = input.files[0]; if (!file || !requireLogin()) return;
+  var box = document.getElementById(kind === 'logo' ? 'fxLogoBox' : 'fxCoverBox');
+  var status = box.querySelector('.upl-status'); if (status) status.textContent = 'Uploading…';
+  AdminStore.uploadFile(file, SB_TOKEN).then(function(url){
+    if (EDIT_FX[kind]) AdminStore.deleteFile(EDIT_FX[kind], SB_TOKEN);
+    EDIT_FX[kind] = url;
+    box.innerHTML = fxImageBox(kind);
+  }).catch(function(e){ if (status) status.textContent = ''; alert('Upload failed: ' + (e.message || e) + '\n\nMake sure the Supabase "media" storage bucket exists (see setup steps).'); });
+}
+function removeFactoryImage(kind) {
+  if (EDIT_FX[kind]) AdminStore.deleteFile(EDIT_FX[kind], SB_TOKEN);
+  EDIT_FX[kind] = '';
+  document.getElementById(kind === 'logo' ? 'fxLogoBox' : 'fxCoverBox').innerHTML = fxImageBox(kind);
+}
+function uploadFactoryMedia(input) {
+  if (!requireLogin()) return;
+  var files = Array.prototype.slice.call(input.files); if (!files.length) return;
+  var status = document.getElementById('fxMediaStatus');
+  var done = 0, total = files.length;
+  status.textContent = 'Uploading 0/' + total + '…';
+  files.forEach(function(file){
+    AdminStore.uploadFile(file, SB_TOKEN).then(function(url){
+      EDIT_FX.media.push({ type: file.type.indexOf('video') === 0 ? 'video' : 'image', url: url });
+    }).catch(function(e){ alert('One file failed to upload: ' + (e.message || e)); })
+      .then(function(){ done++; status.textContent = done < total ? ('Uploading ' + done + '/' + total + '…') : ''; document.getElementById('fxMediaList').innerHTML = fxMediaListHtml(); });
+  });
+  input.value = '';
+}
+function removeMedia(ix) {
+  var m = EDIT_FX.media[ix];
+  if (m && m.url) AdminStore.deleteFile(m.url, SB_TOKEN);
+  EDIT_FX.media.splice(ix, 1);
+  document.getElementById('fxMediaList').innerHTML = fxMediaListHtml();
 }
 
 function servicesChecklist(sectorId, selected) {
@@ -306,7 +403,10 @@ function saveFactory(i) {
     rating: Number(document.getElementById('fx_rating').value) || 0,
     reviewCount: Number(document.getElementById('fx_reviews').value) || 0,
     services: svc,
-    keywords: document.getElementById('fx_keywords').value.trim()
+    keywords: document.getElementById('fx_keywords').value.trim(),
+    logo: EDIT_FX ? EDIT_FX.logo : '',
+    cover: EDIT_FX ? EDIT_FX.cover : '',
+    media: EDIT_FX ? EDIT_FX.media : []
   };
   if (i >= 0) DATA.factories[i] = obj; else DATA.factories.unshift(obj);
   saveData(); closeModal(); renderTab();
@@ -316,29 +416,123 @@ function deleteFactory(i) {
   DATA.factories.splice(i,1); saveData(); renderTab();
 }
 
-/* ---------- Sectors ---------- */
-function renderSectors() {
-  var rows = DATA.industries.map(function(s, i){
-    var count = DATA.factories.filter(function(f){return f.industry===s.id;}).length;
-    return '<tr>' +
-      '<td class="ic-cell">'+(window.ICONS[s.iconKey]||window.ICONS.factory)+'</td>' +
-      '<td><b>'+esc(s.en)+'</b><div class="muted" dir="rtl">'+esc(s.ar)+'</div></td>' +
-      '<td><code>'+esc(s.id)+'</code></td>' +
-      '<td>'+count+'</td>' +
-      '<td><div class="row-actions">' +
-        '<button class="btn btn-ghost btn-sm" onclick="editSector('+i+')">Edit</button>' +
-        '<button class="btn btn-sm btn-danger" onclick="deleteSector('+i+')">Delete</button>' +
-      '</div></td>' +
-    '</tr>';
-  }).join('');
+/* ---------- Requests ---------- */
+function reqGovName(ix) { var g = DATA.govs[ix]; return g ? g.en : '—'; }
+function requestRows() {
+  if (!DATA.requests) DATA.requests = [];
+  var out = DATA.requests.map(function(r, i){ return { r:r, i:i }; })
+    .filter(function(o){ var r=o.r; return hit((r.title.en||'')+' '+(r.title.ar||'')+' '+(r.by.en||'')+' '+reqGovName(r.gov), 'requests'); })
+    .map(function(o){ var r=o.r, i=o.i;
+      return '<tr>' +
+        '<td class="ic-cell">'+(window.ICONS[r.iconKey]||window.ICONS.clipboard)+'</td>' +
+        '<td><b>'+esc(r.title.en)+'</b><div class="muted" dir="rtl">'+esc(r.title.ar)+'</div></td>' +
+        '<td>'+esc(r.by.en||'—')+'</td>' +
+        '<td>'+esc(reqGovName(r.gov))+'</td>' +
+        '<td>'+esc(r.qty||'')+'</td>' +
+        '<td><div class="row-actions">' +
+          '<button class="btn btn-ghost btn-sm" onclick="editRequest('+i+')">Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteRequest('+i+')">Delete</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  return out || '<tr><td colspan="6" class="muted">No requests match.</td></tr>';
+}
+function renderRequests() {
+  if (!DATA.requests) DATA.requests = [];
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
+        '<div><h2>Manufacturing requests ('+DATA.requests.length+')</h2><div class="hint" style="margin:0">Buyer requests shown on the site. Add, edit, or remove them.</div></div>' +
+        '<button class="btn btn-primary btn-sm" onclick="editRequest(-1)">+ Add request</button>' +
+      '</div>' +
+      searchBar('requests', 'Search requests by title, buyer, city…') +
+      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Icon</th><th>Title</th><th>Buyer</th><th>Governorate</th><th>Qty</th><th></th></tr></thead><tbody id="requestsBody">' +
+        requestRows() +
+      '</tbody></table></div>' +
+    '</div>';
+}
+function editRequest(i) {
+  if (!DATA.requests) DATA.requests = [];
+  var isNew = i < 0;
+  var r = !isNew ? DATA.requests[i] : {
+    id: 'r' + Date.now(), iconKey: 'clipboard', days: 0, qty: '', budget: '',
+    title:{en:'',ar:''}, desc:{en:'',ar:''}, material:{en:'',ar:''}, gov: 0, by:{en:'',ar:''}, contact: ''
+  };
+  var iconOpts = iconKeys().map(function(k){ return '<option value="'+k+'"'+(k===r.iconKey?' selected':'')+'>'+k+'</option>'; }).join('');
+  var govOpts = DATA.govs.map(function(g,ix){ return '<option value="'+ix+'"'+(ix===r.gov?' selected':'')+'>'+esc(g.en)+'</option>'; }).join('');
+  openModal((isNew?'Add':'Edit')+' request',
+    '<div class="form-grid2">' +
+      fld('Title (English) *', '<input type="text" id="rq_titleEn" value="'+esc(r.title.en)+'">') +
+      fld('Title (Arabic) *', '<input type="text" id="rq_titleAr" dir="rtl" value="'+esc(r.title.ar)+'">') +
+      '<div class="fld"><label>Icon</label><div style="display:flex;gap:10px;align-items:center"><span class="icon-preview" id="rq_iconPrev">'+(window.ICONS[r.iconKey]||'')+'</span><select id="rq_icon" onchange="document.getElementById(\'rq_iconPrev\').innerHTML=window.ICONS[this.value]||\'\'">'+iconOpts+'</select></div></div>' +
+      fld('Governorate (delivery)', '<select id="rq_gov">'+govOpts+'</select>') +
+      fld('Quantity', '<input type="text" id="rq_qty" value="'+esc(r.qty)+'" placeholder="e.g. 5,000">') +
+      fld('Target budget (optional)', '<input type="text" id="rq_budget" value="'+esc(r.budget||'')+'" placeholder="e.g. 250,000">') +
+      fld('Posted how many days ago', '<input type="number" id="rq_days" min="0" value="'+esc(r.days)+'">') +
+      fld('Buyer / company (English)', '<input type="text" id="rq_byEn" value="'+esc(r.by.en)+'">') +
+      fld('Buyer / company (Arabic)', '<input type="text" id="rq_byAr" dir="rtl" value="'+esc(r.by.ar)+'">') +
+      fld('Contact', '<input type="text" id="rq_contact" value="'+esc(r.contact)+'" placeholder="phone / email">') +
+      fld('Description (English)', '<textarea id="rq_descEn">'+esc(r.desc.en)+'</textarea>', true) +
+      fld('Description (Arabic)', '<textarea id="rq_descAr" dir="rtl">'+esc(r.desc.ar)+'</textarea>', true) +
+      fld('Preferred materials (English)', '<input type="text" id="rq_matEn" value="'+esc(r.material.en)+'">') +
+      fld('Preferred materials (Arabic)', '<input type="text" id="rq_matAr" dir="rtl" value="'+esc(r.material.ar)+'">') +
+    '</div>',
+    'saveRequest('+i+')');
+}
+function saveRequest(i) {
+  var titleEn = document.getElementById('rq_titleEn').value.trim();
+  var titleAr = document.getElementById('rq_titleAr').value.trim();
+  if (!titleEn || !titleAr) { alert('Please fill in the request title in both languages.'); return; }
+  var obj = {
+    id: i>=0 ? DATA.requests[i].id : ('r' + Date.now()),
+    iconKey: document.getElementById('rq_icon').value,
+    days: Number(document.getElementById('rq_days').value) || 0,
+    qty: document.getElementById('rq_qty').value.trim(),
+    budget: document.getElementById('rq_budget').value.trim(),
+    title: { en: titleEn, ar: titleAr },
+    desc: { en: document.getElementById('rq_descEn').value.trim(), ar: document.getElementById('rq_descAr').value.trim() },
+    material: { en: document.getElementById('rq_matEn').value.trim(), ar: document.getElementById('rq_matAr').value.trim() },
+    gov: Number(document.getElementById('rq_gov').value),
+    by: { en: document.getElementById('rq_byEn').value.trim(), ar: document.getElementById('rq_byAr').value.trim() },
+    contact: document.getElementById('rq_contact').value.trim()
+  };
+  if (i >= 0) DATA.requests[i] = obj; else DATA.requests.unshift(obj);
+  saveData(); closeModal(); renderTab();
+}
+function deleteRequest(i) {
+  if (!confirm('Delete this request ("'+DATA.requests[i].title.en+'")?')) return;
+  DATA.requests.splice(i,1); saveData(); renderTab();
+}
+
+/* ---------- Sectors ---------- */
+function sectorRows() {
+  var out = DATA.industries.map(function(s, i){ return { s:s, i:i }; })
+    .filter(function(o){ var s=o.s; return hit(s.en+' '+s.ar+' '+s.id, 'sectors'); })
+    .map(function(o){ var s=o.s, i=o.i;
+      var count = DATA.factories.filter(function(f){return f.industry===s.id;}).length;
+      return '<tr>' +
+        '<td class="ic-cell">'+(window.ICONS[s.iconKey]||window.ICONS.factory)+'</td>' +
+        '<td><b>'+esc(s.en)+'</b><div class="muted" dir="rtl">'+esc(s.ar)+'</div></td>' +
+        '<td><code>'+esc(s.id)+'</code></td>' +
+        '<td>'+count+'</td>' +
+        '<td><div class="row-actions">' +
+          '<button class="btn btn-ghost btn-sm" onclick="editSector('+i+')">Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteSector('+i+')">Delete</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  return out || '<tr><td colspan="5" class="muted">No sectors match.</td></tr>';
+}
+function renderSectors() {
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
         '<div><h2>Sectors ('+DATA.industries.length+')</h2><div class="hint" style="margin:0">These are the industries factories belong to and that appear in the sector filter.</div></div>' +
         '<button class="btn btn-primary btn-sm" onclick="editSector(-1)">+ Add sector</button>' +
       '</div>' +
-      '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Icon</th><th>Name</th><th>ID</th><th>Factories</th><th></th></tr></thead><tbody>' +
-        rows +
+      searchBar('sectors', 'Search sectors by name or id…') +
+      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Icon</th><th>Name</th><th>ID</th><th>Factories</th><th></th></tr></thead><tbody id="sectorsBody">' +
+        sectorRows() +
       '</tbody></table></div>' +
     '</div>';
 }

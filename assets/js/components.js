@@ -89,10 +89,12 @@ function footerHTML() {
 function factoryCardHTML(f) {
   var i = ind(f.industry);
   return '<a href="factory-detail.html?id=' + f.id + '" class="factory-card">' +
-    '<div class="cover" style="background:' + grad(i.g) + '">' +
+    '<div class="cover" style="' + (f.cover ? 'background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + '">' +
       '<span class="fcode">' + factoryCode(f) + '</span>' +
-      '<span class="cover-ic">' + i.icon + '</span>' +
-      '<div class="flogo">' + L(f.name).charAt(0) + '</div>' +
+      (f.cover ? '' : '<span class="cover-ic">' + i.icon + '</span>') +
+      (f.logo
+        ? '<div class="flogo" style="background-image:url(\'' + f.logo + '\');background-size:cover;background-position:center"></div>'
+        : '<div class="flogo">' + L(f.name).charAt(0) + '</div>') +
     '</div>' +
     '<div class="body">' +
       '<h3>' + esc(L(f.name)) + '</h3>' +

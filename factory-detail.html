@@ -70,13 +70,15 @@ document.addEventListener('DOMContentLoaded', function() {
       '<a href="factories.html" class="back-btn">' + (LANG === 'ar' ? '→' : '←') + ' ' + t('back') + '</a>' +
     '</div>' +
     '<div class="container" style="margin-top:14px">' +
-      '<div class="profile-cover" style="background:' + grad(id.g) + ';border-radius:20px">' +
+      '<div class="profile-cover" style="' + (f.cover ? 'background:#0000;background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(id.g)) + ';border-radius:20px">' +
         '<span class="pcode">' + factoryCode(f) + '</span>' +
-        '<span class="cover-ic">' + id.icon + '</span>' +
+        (f.cover ? '' : '<span class="cover-ic">' + id.icon + '</span>') +
       '</div>' +
       '<div class="profile-top">' +
         '<div class="profile-card">' +
-          '<div class="profile-logo">' + L(f.name).charAt(0) + '</div>' +
+          (f.logo
+            ? '<div class="profile-logo" style="background-image:url(\'' + f.logo + '\');background-size:cover;background-position:center"></div>'
+            : '<div class="profile-logo">' + L(f.name).charAt(0) + '</div>') +
           '<div class="profile-main">' +
             '<h1>' + esc(L(f.name)) + '</h1>' +
             '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
@@ -119,7 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="panel">' +
             '<h2>' + t('gallery') + '</h2>' +
             '<div class="gallery">' +
-              [0,1,2,3,4,5].map(function(n) { return '<div class="ph" style="background:' + grad(id.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? ICONS.camera : id.icon) + '</div>'; }).join('') +
+              ((f.media && f.media.length)
+                ? f.media.map(function(m) {
+                    return m.type === 'video'
+                      ? '<div class="ph"><video src="' + m.url + '" controls playsinline style="width:100%;height:100%;object-fit:cover"></video></div>'
+                      : '<a class="ph" href="' + m.url + '" target="_blank" style="background-image:url(\'' + m.url + '\');background-size:cover;background-position:center"></a>';
+                  }).join('')
+                : [0,1,2,3,4,5].map(function(n) { return '<div class="ph" style="background:' + grad(id.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? ICONS.camera : id.icon) + '</div>'; }).join('')) +
             '</div>' +
           '</div>' +
           '<div class="panel">' +
