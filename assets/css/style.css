@@ -3020,7 +3020,12 @@ footer li button:hover {
   .industries-orb {
     display: none;
   }
-  
+
+  /* Decorative floating chips overlap the hero text/search on small screens */
+  .float-chips-container {
+    display: none;
+  }
+
   .industries-grid-overlay {
     background-size: 16px 16px;
   }
@@ -3175,12 +3180,27 @@ footer li button:hover {
     font-size: clamp(26px, 5vw, 36px);
   }
   
+  /* Show 3 sectors at a time; swipe sideways for the rest */
   .industries-grid-new {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    grid-template-columns: none;
     gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 6px;
+    margin-bottom: 32px;
   }
-  
-  .industry-card-new {
+
+  .industries-grid-new::-webkit-scrollbar {
+    display: none;
+  }
+
+  .industries-grid-new .industry-card-new {
+    /* 3 cards visible: full width minus the two 8px gaps, divided by 3 */
+    flex: 0 0 calc((100% - 16px) / 3);
+    scroll-snap-align: start;
     padding: 16px 10px;
   }
   

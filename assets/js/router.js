@@ -63,8 +63,49 @@ function renderHomePage() {
         '</div>' +
       '</div>' +
     '</div>' +
-    // Ticker
-    '<div class="ticker"><div class="ticker-track">' + tickerItemsHTML() + tickerItemsHTML() + '</div></div>' +
+    // Featured section (moved up — appears right after the hero/search)
+    '<section class="featured-section">' +
+      '<div class="container">' +
+        '<div class="featured-header">' +
+          '<div class="featured-badge"><span class="star">✦</span>' + t('featured_badge') + '</div>' +
+          '<h2>' + t('featured_title') + '</h2>' +
+          '<p>' + t('featured_desc') + '</p>' +
+        '</div>' +
+        '<div class="featured-showcase" id="featuredShowcase">' +
+          featured.map(function(f, i) {
+            var indData = ind(f.industry);
+            return '<div class="featured-card-large' + (i !== 0 ? ' fade-out' : '') + '" data-fi="' + i + '" style="' + (i !== 0 ? 'display:none' : '') + '">' +
+              '<div class="fc-visual" style="background:' + grad(indData.g) + '">' +
+                '<div class="fc-pattern"></div>' +
+                '<span class="fc-badge">' + factoryCode(f) + '</span>' +
+                '<span class="fc-icon">' + indData.icon + '</span>' +
+                '<div class="fc-logo" style="color:' + indData.g[0] + '">' + L(f.name).charAt(0) + '</div>' +
+              '</div>' +
+              '<div class="fc-content">' +
+                '<span class="fc-industry">' + indData.icon + ' ' + L({en: indData.en, ar: indData.ar}) + '</span>' +
+                '<h3>' + esc(L(f.name)) + '</h3>' +
+                '<p>' + esc(L(f.desc)) + '</p>' +
+                '<div class="fc-stats">' +
+                  '<div class="fc-stat"><span class="stat-value">' + num(f.moq) + '+</span><span class="stat-label">' + t('moq') + ' (' + t('units') + ')</span></div>' +
+                  '<div class="fc-stat"><span class="stat-value">' + f.emp + '</span><span class="stat-label">' + t('employees') + '</span></div>' +
+                  '<div class="fc-stat"><span class="stat-value">' + num(f.yr) + '</span><span class="stat-label">' + t('established') + '</span></div>' +
+                  (f.exp ? '<div class="fc-stat"><span class="stat-value">🌍</span><span class="stat-label">' + t('exports') + '</span></div>' : '') +
+                '</div>' +
+                '<a href="factory-detail.html?id=' + f.id + '" class="btn btn-primary">' + t('featured_view') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
+              '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="featured-controls">' +
+          '<div class="featured-thumbs">' +
+            featured.map(function(f, i) {
+              var indData = ind(f.industry);
+              return '<button class="featured-thumb' + (i === 0 ? ' active' : '') + '" style="background:linear-gradient(135deg,' + indData.g[0] + '15,' + indData.g[1] + '25)" data-fi="' + i + '" onclick="showFeatured(' + i + ')">' + indData.icon + '</button>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</section>' +
     // Industries section
     '<section class="industries-section">' +
       '<div class="industries-grid-overlay"></div>' +
@@ -129,49 +170,8 @@ function renderHomePage() {
         '</div>' +
       '</div>' +
     '</section>' +
-    // Featured section
-    '<section class="featured-section">' +
-      '<div class="container">' +
-        '<div class="featured-header">' +
-          '<div class="featured-badge"><span class="star">✦</span>' + t('featured_badge') + '</div>' +
-          '<h2>' + t('featured_title') + '</h2>' +
-          '<p>' + t('featured_desc') + '</p>' +
-        '</div>' +
-        '<div class="featured-showcase" id="featuredShowcase">' +
-          featured.map(function(f, i) {
-            var indData = ind(f.industry);
-            return '<div class="featured-card-large' + (i !== 0 ? ' fade-out' : '') + '" data-fi="' + i + '" style="' + (i !== 0 ? 'display:none' : '') + '">' +
-              '<div class="fc-visual" style="background:' + grad(indData.g) + '">' +
-                '<div class="fc-pattern"></div>' +
-                '<span class="fc-badge">' + factoryCode(f) + '</span>' +
-                '<span class="fc-icon">' + indData.icon + '</span>' +
-                '<div class="fc-logo" style="color:' + indData.g[0] + '">' + L(f.name).charAt(0) + '</div>' +
-              '</div>' +
-              '<div class="fc-content">' +
-                '<span class="fc-industry">' + indData.icon + ' ' + L({en: indData.en, ar: indData.ar}) + '</span>' +
-                '<h3>' + esc(L(f.name)) + '</h3>' +
-                '<p>' + esc(L(f.desc)) + '</p>' +
-                '<div class="fc-stats">' +
-                  '<div class="fc-stat"><span class="stat-value">' + num(f.moq) + '+</span><span class="stat-label">' + t('moq') + ' (' + t('units') + ')</span></div>' +
-                  '<div class="fc-stat"><span class="stat-value">' + f.emp + '</span><span class="stat-label">' + t('employees') + '</span></div>' +
-                  '<div class="fc-stat"><span class="stat-value">' + num(f.yr) + '</span><span class="stat-label">' + t('established') + '</span></div>' +
-                  (f.exp ? '<div class="fc-stat"><span class="stat-value">🌍</span><span class="stat-label">' + t('exports') + '</span></div>' : '') +
-                '</div>' +
-                '<a href="factory-detail.html?id=' + f.id + '" class="btn btn-primary">' + t('featured_view') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
-              '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>' +
-        '<div class="featured-controls">' +
-          '<div class="featured-thumbs">' +
-            featured.map(function(f, i) {
-              var indData = ind(f.industry);
-              return '<button class="featured-thumb' + (i === 0 ? ' active' : '') + '" style="background:linear-gradient(135deg,' + indData.g[0] + '15,' + indData.g[1] + '25)" data-fi="' + i + '" onclick="showFeatured(' + i + ')">' + indData.icon + '</button>';
-            }).join('') +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</section>' +
+    // Ticker (moved down — the scrolling industries strip)
+    '<div class="ticker"><div class="ticker-track">' + tickerItemsHTML() + tickerItemsHTML() + '</div></div>' +
     // Why section
     '<section class="block alt">' +
       '<div class="container">' +
