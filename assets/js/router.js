@@ -170,6 +170,33 @@ function renderHomePage() {
         '</div>' +
       '</div>' +
     '</section>' +
+    // Consultant section (paid feature — matched to the sector you choose)
+    '<section class="consultant-section" id="consultant">' +
+      '<div class="container">' +
+        '<div class="consultant-wrap">' +
+          '<div class="consultant-info">' +
+            '<div class="consult-badge">' + ICONS.sparkle + ' ' + t('consult_badge') + '</div>' +
+            '<h2>' + t('consult_title') + '</h2>' +
+            '<p class="consult-sub">' + t('consult_sub') + '</p>' +
+            '<ul class="consult-points">' +
+              t('consult_points').map(function(p) {
+                return '<li><span class="cpt-ic">' + p[0] + '</span><div><b>' + p[1] + '</b><span>' + p[2] + '</span></div></li>';
+              }).join('') +
+            '</ul>' +
+          '</div>' +
+          '<div class="consultant-card">' +
+            '<div class="cc-price">' + ICONS.tag + ' ' + t('consult_price') + '</div>' +
+            '<h3>' + t('consult_card_title') + '</h3>' +
+            '<label class="cc-label" for="consultSector">' + t('consult_choose') + '</label>' +
+            '<select id="consultSector" class="cc-select">' +
+              INDUSTRIES.map(function(i) { return '<option value="' + i.id + '">' + L({en: i.en, ar: i.ar}) + '</option>'; }).join('') +
+            '</select>' +
+            '<button class="btn btn-primary cc-btn" onclick="bookConsultation()">' + t('consult_cta') + ' ' + (LANG === 'ar' ? '←' : '→') + '</button>' +
+            '<p class="cc-note">' + ICONS.handshake + ' ' + t('consult_note') + '</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</section>' +
     // Ticker (moved down — the scrolling industries strip)
     '<div class="ticker"><div class="ticker-track">' + tickerItemsHTML() + tickerItemsHTML() + '</div></div>' +
     // Why section
@@ -201,6 +228,15 @@ function renderHomePage() {
   initFeaturedRotation();
   initRequestsCarousel();
   initFloatRotation();
+
+  // If arriving via a #consultant link (e.g. from another page), scroll to the
+  // section once it has been built.
+  if (window.location.hash === '#consultant') {
+    setTimeout(function() {
+      var el = document.getElementById('consultant');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  }
 }
 
 // Ticker items

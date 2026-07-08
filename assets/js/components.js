@@ -2,7 +2,9 @@
 function headerHTML() {
   var path = window.location.pathname.split('/').pop();
   var isHome = (path === '' || path === 'index.html' || path === '/');
-  
+  // Consultant feature lives on the home page; from other pages, go home + anchor
+  var consultHref = isHome ? '#consultant' : 'index.html#consultant';
+
   var html = '<header><div class="container header-inner">' +
     '<a href="index.html" class="logo' + (isHome ? ' home-hidden' : '') + '">' +
       '<span class="logo-text-brand">' + t('brand') + '</span><span class="logo-ain">ع</span>' +
@@ -16,6 +18,7 @@ function headerHTML() {
       '<a href="index.html" class="nav-link' + (isHome ? ' active' : '') + '">' + t('nav_home') + '</a>' +
       '<a href="factories.html" class="nav-link' + (path === 'factories.html' ? ' active' : '') + '">' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="nav-link' + (path === 'requests.html' ? ' active' : '') + '">' + t('nav_requests') + '</a>' +
+      '<a href="' + consultHref + '" class="nav-link nav-consult">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
       '<button class="nav-link" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('post_request') + '</button>' +
     '</nav>' +
     '<div class="header-actions">' +
@@ -34,6 +37,9 @@ function headerHTML() {
 
 // Mobile menu
 function mobileMenuHTML() {
+  var path = window.location.pathname.split('/').pop();
+  var isHome = (path === '' || path === 'index.html' || path === '/');
+  var consultHref = isHome ? '#consultant' : 'index.html#consultant';
   return '<div class="mobile-menu-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>' +
     '<div class="mobile-menu-panel" id="mobilePanel">' +
       '<button class="mobile-menu-close" onclick="closeMobileMenu()">' + ICONS.close + '</button>' +
@@ -47,6 +53,7 @@ function mobileMenuHTML() {
       '<a href="index.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.home + ' ' + t('nav_home') + '</a>' +
       '<a href="factories.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.factory + ' ' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
+      '<a href="' + consultHref + '" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
       '<div class="mobile-menu-divider"></div>' +
       '<button class="btn btn-ghost mobile-menu-btn-full">' + t('login') + '</button>' +
       '<button class="btn btn-primary mobile-menu-btn-full" onclick="openRequestForm();closeMobileMenu()">' + t('post_request') + '</button>' +

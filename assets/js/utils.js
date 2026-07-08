@@ -63,6 +63,15 @@ function setLang(l) {
   window.location.reload();
 }
 
+// Consultant booking (prototype) — confirms a match based on the chosen sector
+function bookConsultation() {
+  var sel = document.getElementById('consultSector');
+  if (!sel) return;
+  var industry = ind(sel.value);
+  var name = L({ en: industry.en, ar: industry.ar });
+  toast(t('consult_toast_pre') + name + t('consult_toast_post'));
+}
+
 // Toast notification
 function toast(msg) {
   var el = document.createElement('div');

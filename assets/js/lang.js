@@ -5,6 +5,7 @@
 const STR = {
   en: {
     brand: "Sonna", nav_home: "Home", nav_factories: "Factories", nav_requests: "Requests",
+    nav_consult: "Consultant",
     login: "Log in", post_request: "Post a Request",
     eyebrow: "Egypt's manufacturing directory",
     slides: [
@@ -72,6 +73,22 @@ const STR = {
     f_links3: ["Help center", "Contact us", "Terms & privacy"],
     rights: "© 2026 Sonnaع. All rights reserved.", made: "Made for Egyptian industry " + ICONS.flag,
     demo_note: "Prototype — all factory data is placeholder content.",
+    consult_badge: "PREMIUM · PAID SERVICE",
+    consult_title: 'Talk to an <span class="hl">Industry Consultant</span>',
+    consult_sub: "Not sure where to begin? Get matched with a professional advisor in Egyptian manufacturing who shows you where to start, how to start, and builds a step-by-step plan tailored to your product.",
+    consult_points: [
+      [ICONS.compass, "Where to start", "Understand your options and the right first move for your idea."],
+      [ICONS.check, "How to start", "A clear, step-by-step roadmap from concept to production."],
+      [ICONS.clipboard, "A plan made for you", "A tailored sourcing and production plan for your product."],
+      [ICONS.factory, "Egyptian-industry expert", "Guidance from a professional who knows Egypt's factories."]
+    ],
+    consult_price: "from EGP 500 / session",
+    consult_card_title: "Book your consultation",
+    consult_choose: "Choose your sector",
+    consult_cta: "Book a consultation",
+    consult_note: "You'll be matched with a consultant who specializes in the sector you choose.",
+    consult_toast_pre: "We'll connect you with a consultant specialized in ",
+    consult_toast_post: ". (Prototype)",
     services_title: "Additional Services",
     daily_capacity: "Daily Production Capacity",
     monthly_capacity: "Monthly Production Capacity",
@@ -86,6 +103,7 @@ const STR = {
   },
   ar: {
     brand: "صُنّا", nav_home: "الرئيسية", nav_factories: "المصانع", nav_requests: "طلبات التصنيع",
+    nav_consult: "مستشار",
     login: "تسجيل الدخول", post_request: "انشر طلب تصنيع",
     eyebrow: "دليل التصنيع المصري",
     slides: [
@@ -153,6 +171,22 @@ const STR = {
     f_links3: ["مركز المساعدة", "تواصل معنا", "الشروط والخصوصية"],
     rights: "© ٢٠٢٦ صُنّاع. جميع الحقوق محفوظة.", made: "صُنع من أجل الصناعة المصرية " + ICONS.flag,
     demo_note: "نموذج أولي — جميع بيانات المصانع محتوى تجريبي.",
+    consult_badge: "خدمة مدفوعة · بريميوم",
+    consult_title: 'تواصل مع <span class="hl">مستشار صناعي</span>',
+    consult_sub: "محتار تبدأ منين؟ هنوصّلك بمستشار محترف في الصناعة المصرية يوضّح لك من أين تبدأ وكيف تبدأ، ويضع لك خطة عملية خطوة بخطوة مخصّصة لمنتجك.",
+    consult_points: [
+      [ICONS.compass, "من أين تبدأ", "افهم خياراتك والخطوة الأولى الصحيحة لفكرتك."],
+      [ICONS.check, "كيف تبدأ", "خريطة طريق واضحة خطوة بخطوة من الفكرة حتى الإنتاج."],
+      [ICONS.clipboard, "خطة مخصّصة لك", "خطة توريد وإنتاج مصمّمة خصيصًا لمنتجك."],
+      [ICONS.factory, "خبير في الصناعة المصرية", "إرشاد من محترف يعرف مصانع مصر جيدًا."]
+    ],
+    consult_price: "تبدأ من ٥٠٠ جنيه / الجلسة",
+    consult_card_title: "احجز استشارتك",
+    consult_choose: "اختر القطاع",
+    consult_cta: "احجز استشارة",
+    consult_note: "هنوصّلك بمستشار متخصّص في القطاع اللي تختاره.",
+    consult_toast_pre: "هنوصّلك بمستشار متخصّص في ",
+    consult_toast_post: ". (نموذج أولي)",
     services_title: "خدمات إضافية",
     daily_capacity: "الطاقة الإنتاجية اليومية",
     monthly_capacity: "الطاقة الإنتاجية الشهرية",
