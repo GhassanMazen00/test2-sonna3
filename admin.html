@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · Sonnaع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  body::before { display: none; }
+  body { background: #F4F7F6; }
+  .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .admin-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .admin-top h1 { font-size: 22px; font-weight: 800; }
+  .admin-top .brand-ain { color: var(--teal); }
+  .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--line); margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 10px 16px; border: none; background: none; font-weight: 700; font-size: 14px; color: var(--ink-soft); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .panel-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .panel-card h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+  .panel-card .hint { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 14px; }
+  table.data { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.data th, table.data td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.data th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+  table.data .ic-cell .svg-ic { width: 20px; height: 20px; color: var(--teal); }
+  .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fld { display: flex; flex-direction: column; gap: 5px; }
+  .fld.full { grid-column: 1 / -1; }
+  .fld label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+  .fld input[type=text], .fld input[type=number], .fld select, .fld textarea {
+    width: 100%; padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 9px;
+    font-size: 13.5px; font-family: inherit; background: #fff;
+  }
+  .fld textarea { min-height: 70px; resize: vertical; }
+  .check-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .check-list label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; color: var(--ink); }
+  .chk-row { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; padding: 6px 0; }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--mist); border: 1px solid var(--line); border-radius: 99px; padding: 5px 6px 5px 12px; font-size: 13px; }
+  .pill button { border: none; background: var(--line); color: var(--ink); width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 13px; line-height: 1; }
+  .inline-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+  .inline-add .fld { flex: 1; min-width: 140px; }
+  .icon-preview { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: var(--teal-tint); color: var(--teal); }
+  .icon-preview .svg-ic { width: 22px; height: 22px; }
+  .muted { color: var(--ink-soft); font-size: 12.5px; }
+  .danger { color: #B42318; }
+  .btn-danger { background: #FEE4E2; color: #B42318; }
+  .btn-danger:hover { background: #FBD5D2; }
+  .overlay { position: fixed; inset: 0; background: rgba(21,34,31,.5); display: flex; align-items: flex-start; justify-content: center; padding: 24px; overflow: auto; z-index: 100; }
+  .modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 720px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  .modal-box h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  .login-box { max-width: 380px; margin: 12vh auto 0; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; box-shadow: var(--shadow); text-align: center; }
+  .login-box h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .login-box p { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+  .login-box input { width: 100%; padding: 12px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; margin-bottom: 12px; }
+  .login-err { color: #B42318; font-size: 13px; margin-bottom: 10px; display: none; }
+  .save-bar { position: sticky; bottom: 0; background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 0; display: flex; justify-content: flex-end; gap: 10px; }
+  @media (max-width: 640px) { .form-grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
+<script>
+/* ================= Admin dashboard ================= */
+
+// Change this password to your own. NOTE: on a static site this is a soft gate,
+// not real security — anyone viewing the page source can read it. For real
+// protection you need a backend login (see the notes we discussed).
+var ADMIN_PASSWORD = 'sonna2026';
+
+var DATA = null;
+var TAB = 'factories';
+var root = document.getElementById('root');
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+function iconKeys() { return Object.keys(window.ICONS || {}); }
+function uid() {
+  var max = -1;
+  DATA.factories.forEach(function(f){ var n = parseInt(String(f.id).replace(/[^0-9]/g,''),10); if(!isNaN(n)&&n>max) max=n; });
+  return 'f' + (max + 1);
+}
+function saveData() { AdminStore.save(DATA); }
+function lines(arr) { return (arr || []).join('\n'); }
+function toLines(str) { return String(str || '').split('\n').map(function(s){return s.trim();}).filter(Boolean); }
+
+/* ---------- Auth ---------- */
+function isAuthed() { try { return sessionStorage.getItem('sonnaAdmin') === '1'; } catch(e){ return false; } }
+function renderLogin() {
+  root.innerHTML =
+    '<div class="login-box">' +
+      '<h1>Sonna<span style="color:var(--teal)">ع</span> Admin</h1>' +
+      '<p>Enter the admin password to manage factories, sectors, and search settings.</p>' +
+      '<div class="login-err" id="loginErr">Wrong password. Try again.</div>' +
+      '<input type="password" id="pw" placeholder="Password" autofocus>' +
+      '<button class="btn btn-primary" style="width:100%" onclick="doLogin()">Log in</button>' +
+    '</div>';
+  var pw = document.getElementById('pw');
+  pw.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+}
+function doLogin() {
+  var pw = document.getElementById('pw').value;
+  if (pw === ADMIN_PASSWORD) {
+    try { sessionStorage.setItem('sonnaAdmin','1'); } catch(e){}
+    boot();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+function logout() { try { sessionStorage.removeItem('sonnaAdmin'); } catch(e){} renderLogin(); }
+
+/* ---------- Shell ---------- */
+function boot() {
+  DATA = AdminStore.load();
+  renderApp();
+}
+function renderApp() {
+  var tabs = [['factories','Factories'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  root.innerHTML =
+    '<div class="admin-wrap">' +
+      '<div class="admin-top">' +
+        '<h1>Sonna<span class="brand-ain">ع</span> — Control Panel</h1>' +
+        '<div class="admin-actions">' +
+          '<a class="btn btn-ghost btn-sm" href="index.html" target="_blank">View site ↗</a>' +
+          '<button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tabs">' +
+        tabs.map(function(t){ return '<button class="tab'+(TAB===t[0]?' active':'')+'" onclick="switchTab(\''+t[0]+'\')">'+t[1]+'</button>'; }).join('') +
+      '</div>' +
+      '<div id="tabBody"></div>' +
+    '</div>';
+  renderTab();
+}
+function switchTab(t) { TAB = t; renderApp(); }
+function renderTab() {
+  if (TAB === 'factories') renderFactories();
+  else if (TAB === 'sectors') renderSectors();
+  else if (TAB === 'config') renderConfig();
+  else renderDataTab();
+}
+
+/* ---------- Factories ---------- */
+function sectorName(id) { var s = DATA.industries.find(function(i){return i.id===id;}); return s ? s.en : id; }
+function govName(ix) { var g = DATA.govs[ix]; return g ? g.en : '—'; }
+
+function renderFactories() {
+  var rows = DATA.factories.map(function(f, i){
+    return '<tr>' +
+      '<td><b>'+esc(f.name.en)+'</b><div class="muted" dir="rtl">'+esc(f.name.ar)+'</div></td>' +
+      '<td>'+esc(sectorName(f.industry))+'</td>' +
+      '<td>'+esc(govName(f.govIndex))+'</td>' +
+      '<td>'+esc(f.moq)+'</td>' +
+      '<td>'+(f.featured?'★':'')+'</td>' +
+      '<td><div class="row-actions">' +
+        '<button class="btn btn-ghost btn-sm" onclick="editFactory('+i+')">Edit</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteFactory('+i+')">Delete</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">' +
+        '<div><h2>Factories ('+DATA.factories.length+')</h2><div class="hint" style="margin:0">Add, edit, or remove any factory. Changes save to this browser.</div></div>' +
+        '<button class="btn btn-primary btn-sm" onclick="editFactory(-1)">+ Add factory</button>' +
+      '</div>' +
+      '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Name</th><th>Sector</th><th>Governorate</th><th>MOQ</th><th>Featured</th><th></th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="6" class="muted">No factories yet.</td></tr>') +
+      '</tbody></table></div>' +
+    '</div>';
+}
+
+function factoryServicesFor(sectorId) {
+  var s = DATA.industries.find(function(i){return i.id===sectorId;});
+  return (s && s.services && s.services.en) ? s.services.en : [];
+}
+
+function editFactory(i) {
+  var f = i >= 0 ? DATA.factories[i] : {
+    id: uid(), industry: (DATA.industries[0]||{}).id, govIndex: 0,
+    name:{en:'',ar:''}, desc:{en:'',ar:''}, yr: 2010, moq: 500, emp: '50–100',
+    phone: '+20 10', exp: false, featured: false, certs: [],
+    dailyCapacity: 500, monthlyCapacity: 13000, rating: 4.5, reviewCount: 20,
+    services: [], keywords: ''
+  };
+  var sectorOpts = DATA.industries.map(function(s){ return '<option value="'+esc(s.id)+'"'+(s.id===f.industry?' selected':'')+'>'+esc(s.en)+'</option>'; }).join('');
+  var govOpts = DATA.govs.map(function(g,ix){ return '<option value="'+ix+'"'+(ix===f.govIndex?' selected':'')+'>'+esc(g.en)+'</option>'; }).join('');
+  var certList = DATA.certs.map(function(c){ var on = f.certs.indexOf(c)>=0; return '<label><input type="checkbox" class="fcert" value="'+esc(c)+'"'+(on?' checked':'')+'> '+esc(c)+'</label>'; }).join('');
+
+  openModal((i<0?'Add':'Edit')+' factory',
+    '<div class="form-grid2">' +
+      fld('Name (English) *', '<input type="text" id="fx_nameEn" value="'+esc(f.name.en)+'">') +
+      fld('Name (Arabic) *', '<input type="text" id="fx_nameAr" dir="rtl" value="'+esc(f.name.ar)+'">') +
+      fld('Sector', '<select id="fx_industry" onchange="refreshFactoryServices()">'+sectorOpts+'</select>') +
+      fld('Governorate', '<select id="fx_gov">'+govOpts+'</select>') +
+      fld('Year established', '<input type="number" id="fx_yr" value="'+esc(f.yr)+'">') +
+      fld('MOQ (min. order)', '<input type="number" id="fx_moq" value="'+esc(f.moq)+'">') +
+      fld('Employees', '<input type="text" id="fx_emp" value="'+esc(f.emp)+'" list="empList"><datalist id="empList"><option>10–50</option><option>50–100</option><option>100–250</option><option>250–500</option><option>500+</option></datalist>') +
+      fld('Phone', '<input type="text" id="fx_phone" value="'+esc(f.phone)+'">') +
+      fld('Daily capacity', '<input type="number" id="fx_daily" value="'+esc(f.dailyCapacity)+'">') +
+      fld('Monthly capacity', '<input type="number" id="fx_monthly" value="'+esc(f.monthlyCapacity)+'">') +
+      fld('Rating (0–5)', '<input type="number" step="0.1" min="0" max="5" id="fx_rating" value="'+esc(f.rating)+'">') +
+      fld('Review count', '<input type="number" id="fx_reviews" value="'+esc(f.reviewCount)+'">') +
+      fld('Description (English)', '<textarea id="fx_descEn">'+esc(f.desc.en)+'</textarea>', true) +
+      fld('Description (Arabic)', '<textarea id="fx_descAr" dir="rtl">'+esc(f.desc.ar)+'</textarea>', true) +
+      fld('Search keywords / tags (comma or space separated)', '<input type="text" id="fx_keywords" value="'+esc(f.keywords)+'" placeholder="e.g. t-shirts cotton export">', true) +
+      '<div class="fld full"><label class="chk-row"><input type="checkbox" id="fx_exp"'+(f.exp?' checked':'')+'> Exports available</label>' +
+        '<label class="chk-row"><input type="checkbox" id="fx_featured"'+(f.featured?' checked':'')+'> Featured on homepage</label></div>' +
+      '<div class="fld full"><label>Certifications</label><div class="check-list">'+ (certList||'<span class="muted">No certifications defined (add some under Search &amp; Filters).</span>') +'</div></div>' +
+      '<div class="fld full"><label>Services offered</label><div class="check-list" id="fx_services">'+servicesChecklist(f.industry, f.services)+'</div></div>' +
+    '</div>',
+    'saveFactory('+i+')');
+}
+
+function servicesChecklist(sectorId, selected) {
+  var avail = factoryServicesFor(sectorId);
+  if (!avail.length) return '<span class="muted">This sector has no services defined yet.</span>';
+  var selNames = (selected||[]).map(function(s){return s.name;});
+  return avail.map(function(s){
+    var on = selNames.indexOf(s.name) >= 0;
+    return '<label><input type="checkbox" class="fsvc" value="'+esc(s.name)+'" data-icon="'+esc(s.icon)+'"'+(on?' checked':'')+'> '+esc(s.name)+'</label>';
+  }).join('');
+}
+function refreshFactoryServices() {
+  var sec = document.getElementById('fx_industry').value;
+  document.getElementById('fx_services').innerHTML = servicesChecklist(sec, []);
+}
+
+function saveFactory(i) {
+  var nameEn = document.getElementById('fx_nameEn').value.trim();
+  var nameAr = document.getElementById('fx_nameAr').value.trim();
+  if (!nameEn || !nameAr) { alert('Please fill in the factory name in both English and Arabic.'); return; }
+  var svc = [];
+  document.querySelectorAll('#fx_services .fsvc:checked').forEach(function(c){ svc.push({ icon: c.getAttribute('data-icon'), name: c.value }); });
+  var certs = [];
+  document.querySelectorAll('.fcert:checked').forEach(function(c){ certs.push(c.value); });
+  var obj = {
+    id: i>=0 ? DATA.factories[i].id : uid(),
+    industry: document.getElementById('fx_industry').value,
+    govIndex: Number(document.getElementById('fx_gov').value),
+    name: { en: nameEn, ar: nameAr },
+    desc: { en: document.getElementById('fx_descEn').value.trim(), ar: document.getElementById('fx_descAr').value.trim() },
+    yr: Number(document.getElementById('fx_yr').value) || 0,
+    moq: Number(document.getElementById('fx_moq').value) || 0,
+    emp: document.getElementById('fx_emp').value.trim(),
+    phone: document.getElementById('fx_phone').value.trim(),
+    exp: document.getElementById('fx_exp').checked,
+    featured: document.getElementById('fx_featured').checked,
+    certs: certs,
+    dailyCapacity: Number(document.getElementById('fx_daily').value) || 0,
+    monthlyCapacity: Number(document.getElementById('fx_monthly').value) || 0,
+    rating: Number(document.getElementById('fx_rating').value) || 0,
+    reviewCount: Number(document.getElementById('fx_reviews').value) || 0,
+    services: svc,
+    keywords: document.getElementById('fx_keywords').value.trim()
+  };
+  if (i >= 0) DATA.factories[i] = obj; else DATA.factories.unshift(obj);
+  saveData(); closeModal(); renderTab();
+}
+function deleteFactory(i) {
+  if (!confirm('Delete "'+DATA.factories[i].name.en+'"? This cannot be undone.')) return;
+  DATA.factories.splice(i,1); saveData(); renderTab();
+}
+
+/* ---------- Sectors ---------- */
+function renderSectors() {
+  var rows = DATA.industries.map(function(s, i){
+    var count = DATA.factories.filter(function(f){return f.industry===s.id;}).length;
+    return '<tr>' +
+      '<td class="ic-cell">'+(window.ICONS[s.iconKey]||window.ICONS.factory)+'</td>' +
+      '<td><b>'+esc(s.en)+'</b><div class="muted" dir="rtl">'+esc(s.ar)+'</div></td>' +
+      '<td><code>'+esc(s.id)+'</code></td>' +
+      '<td>'+count+'</td>' +
+      '<td><div class="row-actions">' +
+        '<button class="btn btn-ghost btn-sm" onclick="editSector('+i+')">Edit</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteSector('+i+')">Delete</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">' +
+        '<div><h2>Sectors ('+DATA.industries.length+')</h2><div class="hint" style="margin:0">These are the industries factories belong to and that appear in the sector filter.</div></div>' +
+        '<button class="btn btn-primary btn-sm" onclick="editSector(-1)">+ Add sector</button>' +
+      '</div>' +
+      '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Icon</th><th>Name</th><th>ID</th><th>Factories</th><th></th></tr></thead><tbody>' +
+        rows +
+      '</tbody></table></div>' +
+    '</div>';
+}
+
+function editSector(i) {
+  var isNew = i < 0;
+  var s = !isNew ? DATA.industries[i] : { id:'', en:'', ar:'', iconKey:'factory', c1:'#0E6B5E', c2:'#12897A', code:'', products:{en:[],ar:[]}, caps:{en:[],ar:[]}, services:{en:[],ar:[]} };
+  var iconOpts = iconKeys().map(function(k){ return '<option value="'+k+'"'+(k===s.iconKey?' selected':'')+'>'+k+'</option>'; }).join('');
+  openModal((isNew?'Add':'Edit')+' sector',
+    '<div class="form-grid2">' +
+      fld('ID (lowercase, no spaces) *', '<input type="text" id="sc_id" value="'+esc(s.id)+'"'+(isNew?'':' readonly style="background:#f0f2f1"')+' placeholder="e.g. jewelry">') +
+      fld('Code (short, e.g. TXT)', '<input type="text" id="sc_code" value="'+esc(s.code)+'">') +
+      fld('Name (English) *', '<input type="text" id="sc_en" value="'+esc(s.en)+'">') +
+      fld('Name (Arabic) *', '<input type="text" id="sc_ar" dir="rtl" value="'+esc(s.ar)+'">') +
+      '<div class="fld"><label>Icon</label><div style="display:flex;gap:10px;align-items:center"><span class="icon-preview" id="sc_iconPrev">'+(window.ICONS[s.iconKey]||'')+'</span><select id="sc_icon" onchange="document.getElementById(\'sc_iconPrev\').innerHTML=window.ICONS[this.value]||\'\'">'+iconOpts+'</select></div></div>' +
+      '<div class="fld"><label>Colors (used for the sector\'s gradient)</label><div style="display:flex;gap:8px"><input type="color" id="sc_c1" value="'+esc(s.c1)+'" style="height:38px;width:50%"><input type="color" id="sc_c2" value="'+esc(s.c2)+'" style="height:38px;width:50%"></div></div>' +
+      fld('Products — English (one per line)', '<textarea id="sc_prodEn">'+esc(lines(s.products.en))+'</textarea>', true) +
+      fld('Products — Arabic (one per line)', '<textarea id="sc_prodAr" dir="rtl">'+esc(lines(s.products.ar))+'</textarea>', true) +
+      fld('Capabilities — English (one per line)', '<textarea id="sc_capEn">'+esc(lines(s.caps.en))+'</textarea>', true) +
+      fld('Capabilities — Arabic (one per line)', '<textarea id="sc_capAr" dir="rtl">'+esc(lines(s.caps.ar))+'</textarea>', true) +
+    '</div>' +
+    '<p class="muted" style="margin-top:10px">Tip: keep the English and Arabic lists in the same order so they line up.</p>',
+    'saveSector('+i+')');
+}
+function saveSector(i) {
+  var isNew = i < 0;
+  var id = document.getElementById('sc_id').value.trim().toLowerCase().replace(/\s+/g,'-');
+  var en = document.getElementById('sc_en').value.trim();
+  var ar = document.getElementById('sc_ar').value.trim();
+  if (!id || !en || !ar) { alert('Please fill in the ID and both names.'); return; }
+  if (isNew && DATA.industries.some(function(x){return x.id===id;})) { alert('A sector with that ID already exists.'); return; }
+  var obj = {
+    id: isNew ? id : DATA.industries[i].id,
+    en: en, ar: ar,
+    iconKey: document.getElementById('sc_icon').value,
+    c1: document.getElementById('sc_c1').value,
+    c2: document.getElementById('sc_c2').value,
+    code: document.getElementById('sc_code').value.trim() || id.slice(0,3).toUpperCase(),
+    products: { en: toLines(document.getElementById('sc_prodEn').value), ar: toLines(document.getElementById('sc_prodAr').value) },
+    caps: { en: toLines(document.getElementById('sc_capEn').value), ar: toLines(document.getElementById('sc_capAr').value) },
+    services: isNew ? { en: [], ar: [] } : (DATA.industries[i].services || { en: [], ar: [] })
+  };
+  if (isNew) DATA.industries.push(obj); else DATA.industries[i] = obj;
+  saveData(); closeModal(); renderTab();
+}
+function deleteSector(i) {
+  var s = DATA.industries[i];
+  var count = DATA.factories.filter(function(f){return f.industry===s.id;}).length;
+  var msg = 'Delete sector "'+s.en+'"?';
+  if (count) msg += '\n\n'+count+' factory(ies) use this sector and will need reassigning.';
+  if (!confirm(msg)) return;
+  DATA.industries.splice(i,1); saveData(); renderTab();
+}
+
+/* ---------- Search & Filters ---------- */
+function renderConfig() {
+  var searchFields = [
+    ['name','Factory name'], ['sector','Sector name'], ['governorate','Governorate'],
+    ['products','Products'], ['capabilities','Capabilities'], ['description','Description'], ['keywords','Custom keywords/tags']
+  ];
+  var filterToggles = [
+    ['industry','Sector filter'], ['gov','Governorate filter'], ['moq','Max. MOQ filter'],
+    ['cert','Certification filter'], ['capacity','Min. capacity filter'], ['exp','Exports-only filter']
+  ];
+  var certPills = DATA.certs.map(function(c,ix){ return '<span class="pill">'+esc(c)+'<button onclick="removeCert('+ix+')" title="Remove">✕</button></span>'; }).join('');
+  var govPills = DATA.govs.map(function(g,ix){ return '<span class="pill">'+esc(g.en)+' / <span dir="rtl">'+esc(g.ar)+'</span><button onclick="removeGov('+ix+')" title="Remove">✕</button></span>'; }).join('');
+
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<h2>Search engine</h2><div class="hint">Choose which fields the search box looks in when someone types a keyword.</div>' +
+      '<div class="check-list">' + searchFields.map(function(f){ var on = DATA.search.fields.indexOf(f[0])>=0; return '<label><input type="checkbox" class="scfield" value="'+f[0]+'"'+(on?' checked':'')+'> '+f[1]+'</label>'; }).join('') + '</div>' +
+    '</div>' +
+    '<div class="panel-card">' +
+      '<h2>Which filters appear</h2><div class="hint">Turn the filters on the factories page on or off.</div>' +
+      '<div class="check-list">' + filterToggles.map(function(f){ var on = DATA.filters[f[0]]!==false; return '<label><input type="checkbox" class="flt" value="'+f[0]+'"'+(on?' checked':'')+'> '+f[1]+'</label>'; }).join('') + '</div>' +
+    '</div>' +
+    '<div class="panel-card">' +
+      '<h2>Certifications (filter options)</h2><div class="hint">These appear in the certification filter and can be assigned to factories.</div>' +
+      '<div class="pill-list">'+(certPills||'<span class="muted">None yet.</span>')+'</div>' +
+      '<div class="inline-add"><div class="fld"><input type="text" id="newCert" placeholder="e.g. ISO 45001"></div><button class="btn btn-ghost btn-sm" onclick="addCert()">Add certification</button></div>' +
+    '</div>' +
+    '<div class="panel-card">' +
+      '<h2>Governorates (filter options)</h2><div class="hint">These appear in the governorate filter and factory forms.</div>' +
+      '<div class="pill-list">'+(govPills||'<span class="muted">None yet.</span>')+'</div>' +
+      '<div class="inline-add"><div class="fld"><label>English</label><input type="text" id="newGovEn" placeholder="e.g. Aswan"></div><div class="fld"><label>Arabic</label><input type="text" id="newGovAr" dir="rtl" placeholder="أسوان"></div><button class="btn btn-ghost btn-sm" onclick="addGov()">Add governorate</button></div>' +
+    '</div>' +
+    '<div class="save-bar"><button class="btn btn-primary" onclick="saveConfig()">Save search &amp; filter settings</button></div>';
+}
+function saveConfig() {
+  var fields = [];
+  document.querySelectorAll('.scfield:checked').forEach(function(c){ fields.push(c.value); });
+  DATA.search.fields = fields;
+  var filters = {};
+  document.querySelectorAll('.flt').forEach(function(c){ filters[c.value] = c.checked; });
+  DATA.filters = filters;
+  saveData();
+  alert('Search & filter settings saved.');
+}
+function addCert() {
+  var v = document.getElementById('newCert').value.trim();
+  if (!v) return;
+  if (DATA.certs.indexOf(v) < 0) DATA.certs.push(v);
+  saveData(); renderTab();
+}
+function removeCert(ix) { DATA.certs.splice(ix,1); saveData(); renderTab(); }
+function addGov() {
+  var en = document.getElementById('newGovEn').value.trim();
+  var ar = document.getElementById('newGovAr').value.trim();
+  if (!en) return;
+  DATA.govs.push({ en: en, ar: ar || en });
+  saveData(); renderTab();
+}
+function removeGov(ix) {
+  if (!confirm('Remove this governorate? Factories set to it will fall back to the first one.')) return;
+  DATA.govs.splice(ix,1);
+  DATA.factories.forEach(function(f){ if (f.govIndex >= DATA.govs.length) f.govIndex = 0; });
+  saveData(); renderTab();
+}
+
+/* ---------- Data & Backup ---------- */
+function renderDataTab() {
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<h2>Publish changes to the live site</h2>' +
+      '<div class="hint">Your edits are saved in <b>this browser only</b>. To make them live for everyone, export the file below and send it to whoever publishes the site (or ask the AI to commit it).</div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+        '<button class="btn btn-primary btn-sm" onclick="exportData()">⬇ Export data (.json)</button>' +
+        '<label class="btn btn-ghost btn-sm" style="cursor:pointer">⬆ Import data<input type="file" accept="application/json" style="display:none" onchange="importData(this)"></label>' +
+      '</div>' +
+    '</div>' +
+    '<div class="panel-card">' +
+      '<h2>Reset</h2>' +
+      '<div class="hint">Discard all your changes in this browser and go back to the original built-in data.</div>' +
+      '<button class="btn btn-sm btn-danger" onclick="resetData()">Reset to default data</button>' +
+    '</div>' +
+    '<div class="panel-card">' +
+      '<h2 class="danger">Security note</h2>' +
+      '<div class="hint" style="margin:0">This panel is protected by a password in the page code, which is fine for keeping casual visitors out but is <b>not strong security</b> on a static site. For a truly private admin with real logins, we would add a small backend — ask when you\'re ready.</div>' +
+    '</div>';
+}
+function exportData() {
+  var blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sonna-data.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(input) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var d = JSON.parse(e.target.result);
+      if (!d.factories || !d.industries) throw new Error('bad file');
+      DATA = d; saveData(); alert('Data imported.'); TAB='factories'; renderApp();
+    } catch(err){ alert('That file could not be read as Sonnaع data.'); }
+  };
+  reader.readAsText(file);
+}
+function resetData() {
+  if (!confirm('Reset to the original built-in data? Your saved changes in this browser will be lost.')) return;
+  AdminStore.clear();
+  location.reload();
+}
+
+/* ---------- Modal + field helpers ---------- */
+function fld(label, input, full) { return '<div class="fld'+(full?' full':'')+'"><label>'+label+'</label>'+input+'</div>'; }
+function openModal(title, bodyHTML, onSave) {
+  var ov = document.createElement('div');
+  ov.className = 'overlay'; ov.id = 'modal';
+  ov.innerHTML =
+    '<div class="modal-box">' +
+      '<h2>'+title+'</h2>' +
+      bodyHTML +
+      '<div class="modal-foot">' +
+        '<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>' +
+        '<button class="btn btn-primary" id="modalSave">Save</button>' +
+      '</div>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov) closeModal(); });
+  document.body.appendChild(ov);
+  document.getElementById('modalSave').setAttribute('onclick', onSave);
+}
+function closeModal() { var m = document.getElementById('modal'); if (m) m.remove(); }
+
+/* ---------- Start ---------- */
+if (isAuthed()) boot(); else renderLogin();
+</script>
+</body>
+</html>
