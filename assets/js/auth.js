@@ -133,32 +133,16 @@
 
   function renderAuth(bd, mode) {
     var isSignup = mode === 'signup';
-    var typeToggle = isSignup
-      ? '<div class="form-field full"><label>' + t('au_choose') + '</label>' +
-          '<div class="acc-type-row">' +
-            '<label class="acc-type"><input type="radio" name="acctype" value="user" checked onchange="window._authTypeChange()"> <span>' + t('au_as_user') + '</span></label>' +
-            '<label class="acc-type"><input type="radio" name="acctype" value="factory" onchange="window._authTypeChange()"> <span>' + t('au_as_factory') + '</span></label>' +
-          '</div></div>'
-      : '';
-    var factoryFields = isSignup
-      ? '<div id="authFactoryFields" style="display:none">' +
-          field(t('au_company'), '<input id="au_company" type="text">') +
-          field(t('au_city'), '<input id="au_city" type="text">') +
-          field(t('au_website') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="au_website" type="text">') +
-          field(t('au_bio') + ' <span class="opt">(' + t('optional') + ')</span>', '<textarea id="au_bio"></textarea>') +
-        '</div>'
-      : '';
     bd.innerHTML =
       '<div class="modal">' +
         '<h2>' + (isSignup ? t('au_signup_title') : t('au_login_title')) + '</h2>' +
+        (isSignup ? '<p class="sub">' + t('au_signup_sub') + '</p>' : '') +
         '<div class="au-err" id="auErr" style="display:none"></div>' +
         '<div class="form-grid">' +
-          typeToggle +
           (isSignup ? field(t('au_name'), '<input id="au_name" type="text">') : '') +
           field(t('au_email'), '<input id="au_email" type="email">') +
           field(t('au_password'), '<input id="au_password" type="password">') +
-          (isSignup ? field(t('au_phone'), '<input id="au_phone" type="text">') : '') +
-          factoryFields +
+          (isSignup ? field(t('au_phone') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="au_phone" type="text">') : '') +
         '</div>' +
         '<div class="modal-actions">' +
           '<button class="btn btn-ghost" id="auSwitch">' + (isSignup ? t('au_have') : t('au_no')) + '</button>' +
@@ -167,10 +151,6 @@
       '</div>';
     bd.querySelector('#auSwitch').onclick = function () { renderAuth(bd, isSignup ? 'login' : 'signup'); };
     bd.querySelector('#auSubmit').onclick = function () { submitAuth(bd, mode); };
-    window._authTypeChange = function () {
-      var v = bd.querySelector('input[name=acctype]:checked').value;
-      var ff = bd.querySelector('#authFactoryFields'); if (ff) ff.style.display = v === 'factory' ? '' : 'none';
-    };
   }
 
   function submitAuth(bd, mode) {
@@ -185,13 +165,24 @@
     if (mode === 'login') {
       Auth.login(email, pw).then(function () { window.location.reload(); }).catch(done);
     } else {
-      var type = bd.querySelector('input[name=acctype]:checked').value;
       var fields = { full_name: v('au_name'), phone: v('au_phone') };
-      if (type === 'factory') { fields.company = v('au_company'); fields.city = v('au_city'); fields.website = v('au_website'); fields.bio = v('au_bio'); }
-      Auth.signup(email, pw, type, fields).then(function (r) {
+      Auth.signup(email, pw, 'user', fields).then(function (r) {
         if (r.needConfirm) { bd.querySelector('.modal').innerHTML = '<h2>' + t('au_signup_title') + '</h2><p class="sub">' + t('au_confirm') + '</p><div class="modal-actions"><button class="btn btn-primary" onclick="this.closest(\'.modal-backdrop\').remove()">OK</button></div>'; }
-        else { window.location.reload(); }
+        else { window.location.href = 'account.html'; }   // land in the dashboard
       }).catch(done);
     }
   }
+
+  // Gate body for members-only pages (factories / requests)
+  window.Auth.gateHTML = function () {
+    return '<div class="container" style="padding:64px 24px;text-align:center;max-width:520px">' +
+      '<span class="ci" style="width:56px;height:56px;background:var(--teal-tint);color:var(--teal);border-radius:16px;display:inline-grid;place-items:center;margin-bottom:14px">' + ICONS.user + '</span>' +
+      '<h1 style="margin-bottom:10px">' + t('gate_title') + '</h1>' +
+      '<p class="muted">' + t('gate_msg') + '</p>' +
+      '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+        '<button class="btn btn-primary" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>' +
+        '<button class="btn btn-ghost" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
+      '</div>' +
+    '</div>';
+  };
 })();
