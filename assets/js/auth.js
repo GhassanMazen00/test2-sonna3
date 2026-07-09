@@ -115,7 +115,33 @@
           .then(function (rows) { AUTH.profile = Array.isArray(rows) ? rows[0] : rows; writeCache(); return AUTH.profile; });
       });
     },
-    refreshProfile: function () { return ensureProfile(); }
+    refreshProfile: function () { return ensureProfile(); },
+
+    // ---- The signed-in user's factory (the 'factories' table) ----
+    myFactory: function () {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/factories?owner=eq.' + AUTH.session.user.id + '&select=*&order=created_at.desc', { headers: restHeaders(tok) })
+          .then(function (r) { if (!r.ok) throw new Error('factory ' + r.status); return r.json(); })
+          .then(function (rows) { return (rows && rows[0]) || null; });
+      });
+    },
+    createFactory: function (name, sector, gov) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/factories', {
+          method: 'POST', headers: restHeaders(tok, { Prefer: 'return=representation' }),
+          body: JSON.stringify({ owner: AUTH.session.user.id, name: name, sector: sector, gov: gov, data: {}, verified: false })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
+          .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
+      });
+    },
+    updateMyFactory: function (id, patch) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/factories?id=eq.' + id, {
+          method: 'PATCH', headers: restHeaders(tok, { Prefer: 'return=representation' }), body: JSON.stringify(patch)
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
+          .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
+      });
+    }
   };
 
   // ---------- Login / Sign-up modal ----------

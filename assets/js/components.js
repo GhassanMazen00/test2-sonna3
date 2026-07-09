@@ -94,12 +94,21 @@ function footerHTML() {
   '</div></footer>';
 }
 
+// Verified / unverified badge (unverified shows a hover tooltip explaining why)
+function verifyBadge(f) {
+  if (f.verified === false) {
+    return '<span class="vbadge v-no" title="' + esc(t('badge_unverified_tip')) + '">' + ICONS.clock + ' ' + t('badge_unverified') + '</span>';
+  }
+  return '<span class="vbadge v-yes">' + ICONS.check + ' ' + t('badge_verified') + '</span>';
+}
+
 // Factory card
 function factoryCardHTML(f) {
   var i = ind(f.industry);
   return '<a href="factory-detail.html?id=' + f.id + '" class="factory-card">' +
     '<div class="cover" style="' + (f.cover ? 'background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + '">' +
       '<span class="fcode">' + factoryCode(f) + '</span>' +
+      '<span class="cover-badge">' + verifyBadge(f) + '</span>' +
       (f.cover ? '' : '<span class="cover-ic">' + i.icon + '</span>') +
       (f.logo
         ? '<div class="flogo" style="background-image:url(\'' + f.logo + '\');background-size:cover;background-position:center"></div>'

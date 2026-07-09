@@ -91,6 +91,10 @@ var root = document.getElementById('root');
 var SB_TOKEN = null;
 var SEARCH = {};        // per-tab search text
 var EDIT_FX = null;     // factory being edited (holds its media while the form is open)
+var _FAC_EDIT = null;   // the factory object currently in the form
+var _FAC_ONSAVE = null; // what to do when the factory form is saved
+var SUBS = [];          // user-submitted factories (from the 'factories' table)
+var SUBS_FILTER = 'all';
 
 // Live-filter a table body without rebuilding the search box (keeps focus)
 function onSearch(tab, v) {
@@ -215,7 +219,7 @@ function boot() {
   });
 }
 function renderApp() {
-  var tabs = [['factories','Factories'],['requests','Requests'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['requests','Requests'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
   root.innerHTML =
     '<div class="admin-wrap">' +
       '<div class="admin-top">' +
@@ -236,6 +240,7 @@ function renderApp() {
 function switchTab(t) { TAB = t; renderApp(); }
 function renderTab() {
   if (TAB === 'factories') renderFactories();
+  else if (TAB === 'submissions') renderSubmissions();
   else if (TAB === 'requests') renderRequests();
   else if (TAB === 'sectors') renderSectors();
   else if (TAB === 'config') renderConfig();
@@ -291,7 +296,15 @@ function editFactory(i) {
     services: {en:[],ar:[]}, products: {en:[],ar:[]}, capabilities: {en:[],ar:[]},
     hours: {en:'',ar:''}, keywords: '', whatsapp:'', email:'', website:'', facebook:'', instagram:'', linkedin:''
   };
+  factoryFormFor(f, (i < 0 ? 'Add' : 'Edit') + ' factory', function (obj) {
+    if (i >= 0) DATA.factories[i] = obj; else DATA.factories.unshift(obj);
+    saveData(); closeModal(); renderTab();
+  });
+}
+function factoryFormFor(f, title, onSave) {
   EDIT_FX = { logo: f.logo || '', cover: f.cover || '', media: (f.media || []).slice() };
+  _FAC_EDIT = f;
+  _FAC_ONSAVE = onSave;
   var sd = sectorDef(f.industry);
   // Prefill from the sector's defaults if this factory has none yet
   var prod = nonEmptyList(f.products) ? f.products : { en: (sd.products||{}).en||[], ar: (sd.products||{}).ar||[] };
@@ -304,7 +317,7 @@ function editFactory(i) {
   var sectorOpts = DATA.industries.map(function(s){ return '<option value="'+esc(s.id)+'"'+(s.id===f.industry?' selected':'')+'>'+esc(s.en)+'</option>'; }).join('');
   var govOpts = DATA.govs.map(function(g,ix){ return '<option value="'+ix+'"'+(ix===f.govIndex?' selected':'')+'>'+esc(g.en)+'</option>'; }).join('');
 
-  openModal((i<0?'Add':'Edit')+' factory',
+  openModal(title,
     '<div class="form-grid2">' +
       fld('Name (English) *', '<input type="text" id="fx_nameEn" value="'+esc(f.name.en)+'">') +
       fld('Name (Arabic) *', '<input type="text" id="fx_nameAr" dir="rtl" value="'+esc(f.name.ar)+'">') +
@@ -349,7 +362,7 @@ function editFactory(i) {
         '<span id="fxMediaStatus" class="muted" style="margin-inline-start:10px"></span>' +
       '</div>' +
     '</div>',
-    'saveFactory('+i+')');
+    'submitFactoryForm()');
 }
 
 /* --- Factory media upload UI (uses EDIT_FX while the form is open) --- */
@@ -412,11 +425,12 @@ function removeMedia(ix) {
 }
 
 function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
-function saveFactory(i) {
+// Read the open factory form into a factory object (or null if invalid)
+function readFactoryForm() {
   var nameEn = val('fx_nameEn'), nameAr = val('fx_nameAr');
-  if (!nameEn || !nameAr) { alert('Please fill in the factory name in both English and Arabic.'); return; }
-  var obj = {
-    id: i>=0 ? DATA.factories[i].id : uid(),
+  if (!nameEn || !nameAr) { alert('Please fill in the factory name in both English and Arabic.'); return null; }
+  return {
+    id: (_FAC_EDIT && _FAC_EDIT.id) || uid(),
     industry: document.getElementById('fx_industry').value,
     govIndex: Number(document.getElementById('fx_gov').value),
     name: { en: nameEn, ar: nameAr },
@@ -443,12 +457,117 @@ function saveFactory(i) {
     cover: EDIT_FX ? EDIT_FX.cover : '',
     media: EDIT_FX ? EDIT_FX.media : []
   };
-  if (i >= 0) DATA.factories[i] = obj; else DATA.factories.unshift(obj);
-  saveData(); closeModal(); renderTab();
+}
+function submitFactoryForm() {
+  var obj = readFactoryForm();
+  if (!obj) return;
+  if (typeof _FAC_ONSAVE === 'function') _FAC_ONSAVE(obj);
 }
 function deleteFactory(i) {
   if (!confirm('Delete "'+DATA.factories[i].name.en+'"? This cannot be undone.')) return;
   DATA.factories.splice(i,1); saveData(); renderTab();
+}
+
+/* ---------- Factory submissions (user-created, in the 'factories' table) ---------- */
+function adminPatchFactory(id, body) {
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/factories?id=eq.' + id, {
+      method:'PATCH', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json', Prefer:'return=minimal' },
+      body: JSON.stringify(body)
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||r.status); }); return true; });
+  });
+}
+function adminDeleteFactory(id) {
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/factories?id=eq.' + id, {
+      method:'DELETE', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok }
+    }).then(function(r){ if(!r.ok) throw new Error('delete '+r.status); return true; });
+  });
+}
+function rowToAdminFactory(row) {
+  var d = row.data || {};
+  return {
+    id: row.id, industry: row.sector, govIndex: row.gov,
+    name: d.name || { en: row.name, ar: row.name },
+    desc: d.desc || {en:'',ar:''}, yr: d.yr||0, moq: d.moq||0, emp: d.emp||'', phone: d.phone||'',
+    exp: !!d.exp, featured: !!d.featured, certs: d.certs||[],
+    dailyCapacity: d.dailyCapacity||0, monthlyCapacity: d.monthlyCapacity||0,
+    rating: d.rating||0, reviewCount: d.reviewCount||0,
+    products: d.products||{en:[],ar:[]}, capabilities: d.capabilities||{en:[],ar:[]}, services: d.services||{en:[],ar:[]},
+    hours: d.hours||{en:'',ar:''}, keywords: d.keywords||'',
+    whatsapp: d.whatsapp||'', email: d.email||'', website: d.website||'',
+    facebook: d.facebook||'', instagram: d.instagram||'', linkedin: d.linkedin||'',
+    logo: d.logo||'', cover: d.cover||'', media: d.media||[]
+  };
+}
+function subStatusChip(row) {
+  if (row.verified) return '<span class="chip teal">Verified</span>';
+  if (row.verification_requested) return '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">Verification requested</span>';
+  return '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">Unverified</span>';
+}
+function fmtDate(s) { try { return new Date(s).toLocaleString(); } catch(e){ return s||''; } }
+function findSub(id){ return SUBS.find(function(r){ return String(r.id)===String(id); }); }
+function submissionRows() {
+  var rows = SUBS.filter(function(row){ return SUBS_FILTER==='all' || row.verification_requested; });
+  var out = rows.map(function(row){
+    var i = DATA.industries.find(function(s){return s.id===row.sector;});
+    var info = row.verification_info || {};
+    var infoHtml = row.verification_requested
+      ? '<div class="muted" style="margin-top:6px">Verification form — name: <b>'+esc(info.name||'—')+'</b> · phone: '+esc(info.number||'—')+' · location: '+esc(info.location||'—')+'</div>'
+      : '';
+    return '<tr>' +
+      '<td><b>'+esc(row.name)+'</b>'+infoHtml+'</td>' +
+      '<td>'+esc(i?i.en:row.sector)+'</td>' +
+      '<td>'+esc((DATA.govs[row.gov]||{}).en||'—')+'</td>' +
+      '<td style="white-space:nowrap">'+fmtDate(row.created_at)+'</td>' +
+      '<td>'+subStatusChip(row)+'</td>' +
+      '<td><div class="row-actions">' +
+        (row.verified ? '' : '<button class="btn btn-primary btn-sm" onclick="verifyRow(\''+row.id+'\')">Verify</button>') +
+        '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteSubmission(\''+row.id+'\')">Delete</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  return out || '<tr><td colspan="6" class="muted">No submissions'+(SUBS_FILTER==='requested'?' with a verification request':'')+'.</td></tr>';
+}
+function renderSubmissions() {
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
+        '<div><h2>Factory submissions</h2><div class="hint" style="margin:0">Factories created by users. Verify, edit full details, or delete. New ones show their creation date; verification requests show the form the user filled.</div></div>' +
+        '<select onchange="SUBS_FILTER=this.value;renderSubmissions()" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:9px">' +
+          '<option value="all"'+(SUBS_FILTER==='all'?' selected':'')+'>All submissions</option>' +
+          '<option value="requested"'+(SUBS_FILTER==='requested'?' selected':'')+'>Verification requests</option>' +
+        '</select>' +
+      '</div>' +
+      '<div id="subsBody"><div class="muted" style="padding:20px">Loading…</div></div>' +
+    '</div>';
+  AdminStore.fetchFactoryRows().then(function(rows){
+    SUBS = rows || [];
+    document.getElementById('subsBody').innerHTML =
+      '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Name</th><th>Sector</th><th>Location</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>' +
+      submissionRows() + '</tbody></table></div>';
+  }).catch(function(e){
+    document.getElementById('subsBody').innerHTML = '<div class="muted" style="padding:20px">Could not load submissions: '+esc(e.message||e)+'</div>';
+  });
+}
+function verifyRow(id) {
+  if (!confirm('Mark this factory as verified? It will show a verified badge in the directory.')) return;
+  adminPatchFactory(id, { verified: true, verification_requested: false }).then(function(){ renderSubmissions(); })
+    .catch(function(e){ alert('Could not verify: '+(e.message||e)); });
+}
+function deleteSubmission(id) {
+  var r = findSub(id);
+  if (!confirm('Delete "'+(r?r.name:'this factory')+'"? This removes it from the site.')) return;
+  adminDeleteFactory(id).then(function(){ renderSubmissions(); }).catch(function(e){ alert('Could not delete: '+(e.message||e)); });
+}
+function editSubmittedFactory(id) {
+  var row = findSub(id); if (!row) return;
+  factoryFormFor(rowToAdminFactory(row), 'Edit submitted factory', function(obj){
+    adminPatchFactory(id, { name: obj.name.en, sector: obj.industry, gov: obj.govIndex, data: obj }).then(function(){
+      closeModal(); renderSubmissions();
+    }).catch(function(e){ alert('Could not save: '+(e.message||e)); });
+  });
 }
 
 /* ---------- Requests ---------- */

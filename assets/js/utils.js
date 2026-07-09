@@ -49,7 +49,11 @@ function num(n) {
 
 // Factory code generator
 function factoryCode(f) {
-  return IND_CODE[f.industry] + '-' + String(Number(f.id.slice(1)) + 1).padStart(3, '0');
+  var prefix = IND_CODE[f.industry] || 'FAC';
+  var seq;
+  if (/^f\d+$/.test(f.id)) { seq = String(Number(f.id.slice(1)) + 1).padStart(3, '0'); }
+  else { var digits = String(f.id).replace(/[^0-9]/g, ''); seq = (digits ? digits.slice(0, 4) : '001').padStart(3, '0'); }
+  return prefix + '-' + seq;
 }
 
 // Set language and reload.

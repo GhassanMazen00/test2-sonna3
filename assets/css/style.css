@@ -162,6 +162,11 @@ body::before {
 .verify-benefits { list-style: none; display: grid; gap: 10px; margin: 12px 0; }
 .verify-benefits li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
 .verify-benefits .svg-ic { color: var(--teal); flex: none; margin-top: 2px; }
+.vbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+.vbadge .svg-ic { width: .95em; height: .95em; }
+.v-yes { background: var(--teal-tint); color: var(--teal); }
+.v-no { background: var(--amber-soft); color: #8A5A12; cursor: help; }
+.cover-badge { position: absolute; top: 10px; inset-inline-start: 10px; z-index: 2; }
 
 /* ---------- Header ---------- */
 header {

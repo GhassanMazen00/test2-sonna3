@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
               stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
             '</div>' +
             '<div class="badge-row">' +
+              verifyBadge(f) +
               '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
               (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
               f.certs.map(function(c) { return '<span class="chip">' + ICONS.check + ' ' + c + '</span>'; }).join('') +
