@@ -105,6 +105,22 @@ function verifyBadge(f) {
 // Factory card
 function factoryCardHTML(f) {
   var i = ind(f.industry);
+  // Unverified user submissions are teased with name + sector only; everything
+  // else stays hidden until an admin verifies the factory.
+  if (f.verified === false) {
+    return '<a href="factory-detail.html?id=' + f.id + '" class="factory-card">' +
+      '<div class="cover" style="background:' + grad(i.g) + '">' +
+        '<span class="cover-badge">' + verifyBadge(f) + '</span>' +
+        '<span class="cover-ic">' + i.icon + '</span>' +
+        '<div class="flogo">' + L(f.name).charAt(0) + '</div>' +
+      '</div>' +
+      '<div class="body">' +
+        '<h3>' + esc(L(f.name)) + '</h3>' +
+        '<div class="meta"><span>' + i.icon + ' ' + L({en: i.en, ar: i.ar}) + '</span></div>' +
+        '<div class="lock-note" style="margin-top:10px">' + ICONS.clock + ' ' + t('mf_locked') + '</div>' +
+      '</div>' +
+    '</a>';
+  }
   return '<a href="factory-detail.html?id=' + f.id + '" class="factory-card">' +
     '<div class="cover" style="' + (f.cover ? 'background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + '">' +
       '<span class="fcode">' + factoryCode(f) + '</span>' +
