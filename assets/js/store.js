@@ -287,10 +287,14 @@ AdminStore.fetchFactoryRows = function () {
     .catch(function () { return []; });
 };
 
-// Append user factories into the live FACTORIES list (skip ids already present)
+// Append user factories into the live FACTORIES list (skip ids already present).
+// Only VERIFIED submissions are shown publicly — unverified ones stay private to
+// their owner (visible only on their own "my factory" page) until an admin
+// verifies them from the control panel.
 AdminStore.appendUserFactories = function (rows) {
   var self = this;
   (rows || []).forEach(function (row) {
+    if (!row.verified) return;
     if (!FACTORIES.some(function (f) { return String(f.id) === String(row.id); })) {
       FACTORIES.push(self.rowToFactory(row));
     }
