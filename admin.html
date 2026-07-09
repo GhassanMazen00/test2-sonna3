@@ -251,6 +251,28 @@ function renderTab() {
 function sectorName(id) { var s = DATA.industries.find(function(i){return i.id===id;}); return s ? s.en : id; }
 function govName(ix) { var g = DATA.govs[ix]; return g ? g.en : '—'; }
 
+// Verified user submissions live in the 'factories' table (SUBS), not in
+// DATA.factories. Once verified they belong under "Factories" — list them here
+// alongside the admin-managed ones, routing edit/delete to the table handlers.
+function verifiedSubRows() {
+  return SUBS.filter(function(row){ return row.verified; })
+    .filter(function(row){ var i = DATA.industries.find(function(s){return s.id===row.sector;}); return hit(row.name+' '+(i?i.en:row.sector)+' '+((DATA.govs[row.gov]||{}).en||'')+' '+((row.data||{}).keywords||''), 'factories'); })
+    .map(function(row){
+      var i = DATA.industries.find(function(s){return s.id===row.sector;});
+      var d = row.data || {};
+      return '<tr>' +
+        '<td><b>'+esc(row.name)+'</b> <span class="chip teal" style="font-size:10px;padding:2px 7px;vertical-align:middle">Submitted</span></td>' +
+        '<td>'+esc(i?i.en:row.sector)+'</td>' +
+        '<td>'+esc((DATA.govs[row.gov]||{}).en||'—')+'</td>' +
+        '<td>'+esc(d.moq||'—')+'</td>' +
+        '<td></td>' +
+        '<td><div class="row-actions">' +
+          '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteSubmission(\''+row.id+'\')">Delete</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+}
 function factoryRows() {
   var out = DATA.factories.map(function(f, i){ return { f:f, i:i }; })
     .filter(function(o){ var f=o.f; return hit(f.name.en+' '+f.name.ar+' '+sectorName(f.industry)+' '+govName(f.govIndex)+' '+(f.keywords||''), 'factories'); })
@@ -267,13 +289,15 @@ function factoryRows() {
         '</div></td>' +
       '</tr>';
     }).join('');
-  return out || '<tr><td colspan="6" class="muted">No factories match.</td></tr>';
+  var combined = out + verifiedSubRows();
+  return combined || '<tr><td colspan="6" class="muted">No factories match.</td></tr>';
 }
+function factoryCount() { return DATA.factories.length + SUBS.filter(function(r){ return r.verified; }).length; }
 function renderFactories() {
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
-        '<div><h2>Factories ('+DATA.factories.length+')</h2><div class="hint" style="margin:0">Add, edit, or remove any factory. Changes save to the live site.</div></div>' +
+        '<div><h2 id="facCount">Factories ('+factoryCount()+')</h2><div class="hint" style="margin:0">Add, edit, or remove any factory. Verified user submissions appear here too. Changes save to the live site.</div></div>' +
         '<button class="btn btn-primary btn-sm" onclick="editFactory(-1)">+ Add factory</button>' +
       '</div>' +
       searchBar('factories', 'Search factories by name, sector, city, keywords…') +
@@ -281,6 +305,14 @@ function renderFactories() {
         factoryRows() +
       '</tbody></table></div>' +
     '</div>';
+  // Verified submissions live in the factories table — fetch and merge them in.
+  AdminStore.fetchFactoryRows().then(function(rows){
+    SUBS = rows || [];
+    var body = document.getElementById('factoriesBody');
+    if (body) body.innerHTML = factoryRows();
+    var cnt = document.getElementById('facCount');
+    if (cnt) cnt.textContent = 'Factories ('+factoryCount()+')';
+  }).catch(function(){});
 }
 
 function nonEmptyList(o){ return o && ((o.en && o.en.length) || (o.ar && o.ar.length)); }
@@ -508,7 +540,8 @@ function subStatusChip(row) {
 function fmtDate(s) { try { return new Date(s).toLocaleString(); } catch(e){ return s||''; } }
 function findSub(id){ return SUBS.find(function(r){ return String(r.id)===String(id); }); }
 function submissionRows() {
-  var rows = SUBS.filter(function(row){ return SUBS_FILTER==='all' || row.verification_requested; });
+  // Verified factories leave this tab and appear under "Factories" instead.
+  var rows = SUBS.filter(function(row){ return !row.verified && (SUBS_FILTER==='all' || row.verification_requested); });
   var out = rows.map(function(row){
     var i = DATA.industries.find(function(s){return s.id===row.sector;});
     var info = row.verification_info || {};
@@ -559,13 +592,13 @@ function verifyRow(id) {
 function deleteSubmission(id) {
   var r = findSub(id);
   if (!confirm('Delete "'+(r?r.name:'this factory')+'"? This removes it from the site.')) return;
-  adminDeleteFactory(id).then(function(){ renderSubmissions(); }).catch(function(e){ alert('Could not delete: '+(e.message||e)); });
+  adminDeleteFactory(id).then(function(){ renderTab(); }).catch(function(e){ alert('Could not delete: '+(e.message||e)); });
 }
 function editSubmittedFactory(id) {
   var row = findSub(id); if (!row) return;
   factoryFormFor(rowToAdminFactory(row), 'Edit submitted factory', function(obj){
     adminPatchFactory(id, { name: obj.name.en, sector: obj.industry, gov: obj.govIndex, data: obj }).then(function(){
-      closeModal(); renderSubmissions();
+      closeModal(); renderTab();
     }).catch(function(e){ alert('Could not save: '+(e.message||e)); });
   });
 }
