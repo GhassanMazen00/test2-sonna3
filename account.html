@@ -25,38 +25,62 @@
 <script>
 function accField(label, inputHTML) { return '<div class="form-field full"><label>' + label + '</label>' + inputHTML + '</div>'; }
 
-function accountHtml(p, isFactory) {
-  var statusBadge = isFactory
-    ? (p.verified
-        ? '<span class="chip teal">' + ICONS.check + ' ' + t('acc_verified') + '</span>'
-        : '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.clock + ' ' + t('acc_unverified') + '</span>')
-    : '';
-  return '<div class="container" style="max-width:760px;padding:28px 24px 64px">' +
-    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' +
-      '<span class="ci" style="width:52px;height:52px;background:var(--teal-tint);color:var(--teal);border-radius:14px;display:grid;place-items:center">' + ICONS.user + '</span>' +
-      '<div><h1 style="font-size:24px;font-weight:800">' + t('acc_title') + '</h1>' +
-        '<div class="muted">' + esc(p.email || '') + '</div></div>' +
-    '</div>' +
-    '<div class="panel" style="margin-bottom:16px">' +
-      '<div class="spec-grid">' +
-        '<div class="spec"><div class="k">' + t('acc_type') + '</div><div class="v">' + (isFactory ? t('acc_type_factory') : t('acc_type_user')) + '</div></div>' +
-        (isFactory ? '<div class="spec"><div class="k">' + t('acc_status') + '</div><div class="v">' + statusBadge + '</div></div>' : '') +
+function factoryStatusChip(p) {
+  if (p.verified) return '<span class="chip teal">' + ICONS.check + ' ' + t('acc_verified') + '</span>';
+  if (p.verification_requested) return '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.clock + ' ' + t('mf_req_done') + '</span>';
+  return '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.clock + ' ' + t('acc_unverified') + '</span>';
+}
+
+function factorySection(p) {
+  if (p.factory && p.factory.name) {
+    var i = ind(p.factory.sector);
+    var gov = GOVS[p.factory.gov];
+    return '<div class="panel" style="margin-bottom:16px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">' +
+        '<h2>' + t('fac_section') + '</h2>' + factoryStatusChip(p) +
       '</div>' +
-      (isFactory && !p.verified ? '<p class="muted" style="margin-top:12px">' + t('acc_unverified_note') + '</p>' : '') +
+      '<div class="spec-grid">' +
+        '<div class="spec"><div class="k">' + t('fac_name') + '</div><div class="v">' + esc(p.factory.name) + '</div></div>' +
+        '<div class="spec"><div class="k">' + t('fac_sector') + '</div><div class="v">' + esc(L({en:i.en,ar:i.ar})) + '</div></div>' +
+        '<div class="spec"><div class="k">' + t('fac_location') + '</div><div class="v">' + (gov ? esc(L(gov)) : '—') + '</div></div>' +
+      '</div>' +
+      '<div style="margin-top:14px"><a class="btn btn-primary btn-sm" href="my-factory.html">' + t('fac_view') + ' ' + (LANG==='ar'?'←':'→') + '</a></div>' +
+    '</div>';
+  }
+  var sectorOpts = INDUSTRIES.map(function(s){ return '<option value="'+esc(s.id)+'">'+esc(L({en:s.en,ar:s.ar}))+'</option>'; }).join('');
+  var govOpts = GOVS.map(function(g,ix){ return '<option value="'+ix+'">'+esc(L(g))+'</option>'; }).join('');
+  return '<div class="panel" style="margin-bottom:16px">' +
+    '<h2>' + t('fac_have_q') + '</h2>' +
+    '<p class="muted" style="margin:6px 0 14px">' + t('fac_have_sub') + '</p>' +
+    '<div class="form-grid">' +
+      accField(t('fac_name'), '<input id="nf_name" type="text">') +
+      accField(t('fac_sector'), '<select id="nf_sector">'+sectorOpts+'</select>') +
+      accField(t('fac_location'), '<select id="nf_gov">'+govOpts+'</select>') +
     '</div>' +
+    '<div style="margin-top:14px"><button class="btn btn-primary" id="nf_create" onclick="createFactory()">' + t('fac_create_btn') + '</button></div>' +
+  '</div>';
+}
+
+function dashboardHtml(p) {
+  return '<div class="container" style="max-width:820px;padding:28px 24px 64px">' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">' +
+      '<span class="ci" style="width:52px;height:52px;background:var(--teal-tint);color:var(--teal);border-radius:14px;display:grid;place-items:center">' + ICONS.user + '</span>' +
+      '<div><h1 style="font-size:24px;font-weight:800">' + t('acc_title') + '</h1><div class="muted">' + esc(p.full_name || p.email || '') + '</div></div>' +
+    '</div>' +
+    '<div class="dash-actions">' +
+      '<a class="btn btn-ghost" href="factories.html">' + ICONS.factory + ' ' + t('dash_browse') + '</a>' +
+      '<button class="btn btn-ghost" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('dash_post') + '</button>' +
+    '</div>' +
+    factorySection(p) +
     '<div class="panel">' +
-      '<h2 style="margin-bottom:14px">' + t('acc_title') + '</h2>' +
+      '<h2 style="margin-bottom:14px">' + t('dash_profile') + '</h2>' +
       '<div class="form-grid">' +
         accField(t('au_name'), '<input id="ac_name" type="text" value="' + esc(p.full_name || '') + '">') +
         accField(t('au_phone'), '<input id="ac_phone" type="text" value="' + esc(p.phone || '') + '">') +
-        (isFactory ? accField(t('au_company'), '<input id="ac_company" type="text" value="' + esc(p.company || '') + '">') : '') +
-        (isFactory ? accField(t('au_city'), '<input id="ac_city" type="text" value="' + esc(p.city || '') + '">') : '') +
-        (isFactory ? accField(t('au_website'), '<input id="ac_website" type="text" value="' + esc(p.website || '') + '">') : '') +
-        (isFactory ? accField(t('au_bio'), '<textarea id="ac_bio">' + esc(p.bio || '') + '</textarea>') : '') +
       '</div>' +
       '<div class="modal-actions" style="margin-top:16px">' +
         '<button class="btn btn-ghost" onclick="Auth.logout()">' + t('logout') + '</button>' +
-        '<button class="btn btn-primary" id="ac_save" onclick="saveAccount(' + (isFactory ? 'true' : 'false') + ')">' + t('acc_save') + '</button>' +
+        '<button class="btn btn-primary" id="ac_save" onclick="saveAccount()">' + t('acc_save') + '</button>' +
       '</div>' +
     '</div>' +
   '</div>';
@@ -67,27 +91,32 @@ function renderAccount() {
   var body;
   if (!window.Auth || !Auth.isLoggedIn()) {
     body = '<div class="container" style="padding:64px 24px;text-align:center;max-width:520px">' +
-      '<span class="ci" style="width:56px;height:56px;background:var(--teal-tint);color:var(--teal);border-radius:16px;display:inline-grid;place-items:center;margin-bottom:14px">' + ICONS.user + '</span>' +
       '<h1 style="margin-bottom:10px">' + t('acc_title') + '</h1>' +
       '<p class="muted">' + t('acc_login_needed') + '</p>' +
       '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center">' +
         '<button class="btn btn-primary" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
         '<button class="btn btn-ghost" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>' +
-      '</div>' +
-    '</div>';
+      '</div></div>';
   } else {
-    var p = Auth.profile() || {};
-    body = accountHtml(p, p.account_type === 'factory');
+    body = dashboardHtml(Auth.profile() || {});
   }
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + body + '</main>' + footerHTML();
 }
 
-function saveAccount(isFactory) {
+function createFactory() {
+  var name = (document.getElementById('nf_name').value || '').trim();
+  if (!name) { alert(t('fac_name')); return; }
+  var factory = { name: name, sector: document.getElementById('nf_sector').value, gov: Number(document.getElementById('nf_gov').value), created_at: new Date().toISOString() };
+  var btn = document.getElementById('nf_create'); btn.disabled = true; btn.textContent = '…';
+  Auth.updateProfile({ factory: factory }).then(function(){ window.location.href = 'my-factory.html'; })
+    .catch(function(e){ btn.disabled = false; btn.textContent = t('fac_create_btn'); alert('Could not create: ' + (e.message || e)); });
+}
+
+function saveAccount() {
   var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : undefined; };
-  var fields = { full_name: v('ac_name'), phone: v('ac_phone') };
-  if (isFactory) { fields.company = v('ac_company'); fields.city = v('ac_city'); fields.website = v('ac_website'); fields.bio = v('ac_bio'); }
   var btn = document.getElementById('ac_save'); btn.disabled = true; btn.textContent = '…';
-  Auth.updateProfile(fields).then(function(){ btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function(){ btn.textContent = t('acc_save'); }, 2000); })
+  Auth.updateProfile({ full_name: v('ac_name'), phone: v('ac_phone') })
+    .then(function(){ btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function(){ btn.textContent = t('acc_save'); }, 2000); })
     .catch(function(e){ btn.disabled = false; btn.textContent = t('acc_save'); alert('Could not save changes: ' + (e.message || e)); });
 }
 
@@ -97,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   renderAccount();
-  // Refresh profile from the server, then re-render (verification status may have changed)
   if (window.Auth && Auth.isLoggedIn()) { Auth.refreshProfile().then(renderAccount).catch(function(){}); }
 });
 </script>

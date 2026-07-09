@@ -33,6 +33,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
 
   var app = document.getElementById('app');
+
+  // Members-only: require login to view requests
+  if (!window.Auth || !Auth.isLoggedIn()) {
+    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
+    return;
+  }
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
     '<div class="page-head">' +
       '<div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +

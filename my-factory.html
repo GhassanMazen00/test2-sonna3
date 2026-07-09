@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();</script>
+<title>صفحة مصنعي | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script>
+function lockedPanel(title) {
+  return '<div class="panel locked-panel">' +
+    '<h2>' + title + '</h2>' +
+    '<div class="lock-note">' + ICONS.clock + ' ' + t('mf_locked_note') + '</div>' +
+  '</div>';
+}
+
+function verifyBox(p) {
+  if (p.verified) {
+    return '<div class="panel verify-cta">' +
+      '<div style="display:flex;align-items:center;gap:10px"><span class="chip teal">' + ICONS.check + ' ' + t('acc_verified') + '</span></div>' +
+    '</div>';
+  }
+  if (p.verification_requested) {
+    return '<div class="panel">' +
+      '<div class="lock-note" style="color:var(--ink)">' + ICONS.clock + ' <b>' + t('mf_req_done') + '</b></div>' +
+      '<p class="muted" style="margin-top:8px">' + t('ver_requested_note') + '</p>' +
+    '</div>';
+  }
+  return '<div class="panel verify-cta">' +
+    '<h2>' + t('ver_title') + '</h2>' +
+    '<p style="margin-top:6px">' + t('ver_intro') + '</p>' +
+    '<ul class="verify-benefits">' +
+      '<li>' + ICONS.check + ' ' + t('ver_b1') + '</li>' +
+      '<li>' + ICONS.check + ' ' + t('ver_b2') + '</li>' +
+      '<li>' + ICONS.check + ' ' + t('ver_b3') + '</li>' +
+      '<li>' + ICONS.check + ' ' + t('ver_b4') + '</li>' +
+    '</ul>' +
+    '<button class="btn btn-primary" id="reqVerifyBtn" onclick="requestVerification()">' + t('ver_submit') + '</button>' +
+  '</div>';
+}
+
+function renderMyFactory() {
+  var app = document.getElementById('app');
+  if (!window.Auth || !Auth.isLoggedIn()) {
+    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
+    return;
+  }
+  var p = Auth.profile() || {};
+  if (!p.factory || !p.factory.name) {
+    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
+      '<div class="container" style="padding:64px 24px;text-align:center;max-width:520px">' +
+        '<p class="muted">' + t('mf_no_factory') + '</p>' +
+        '<a class="btn btn-primary" style="margin-top:16px" href="account.html">' + t('fac_create') + '</a>' +
+      '</div>' + '</main>' + footerHTML();
+    return;
+  }
+  var i = ind(p.factory.sector);
+  var gov = GOVS[p.factory.gov];
+  app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
+    '<div class="container" style="margin-top:14px">' +
+      (p.verified ? '' : '<div class="au-err" style="background:var(--amber-soft);color:#8A5A12;margin-bottom:14px">' + ICONS.clock + ' ' + t('mf_unverified_banner') + '</div>') +
+      '<div class="profile-cover" style="background:' + grad(i.g) + ';border-radius:20px">' +
+        '<span class="cover-ic">' + i.icon + '</span>' +
+      '</div>' +
+      '<div class="profile-top">' +
+        '<div class="profile-card">' +
+          '<div class="profile-logo">' + esc(String(p.factory.name).charAt(0)) + '</div>' +
+          '<div class="profile-main">' +
+            '<h1>' + esc(p.factory.name) + '</h1>' +
+            '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
+              i.icon + ' ' + esc(L({en:i.en,ar:i.ar})) + (gov ? ' · ' + ICONS.pin + ' ' + esc(L(gov)) : '') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="profile-layout">' +
+        '<div>' +
+          verifyBox(p) +
+          lockedPanel(t('about')) +
+          lockedPanel(t('products')) +
+          lockedPanel(t('capabilities')) +
+          lockedPanel(t('services_title')) +
+          lockedPanel(t('gallery')) +
+        '</div>' +
+        '<aside class="contact-panel">' +
+          lockedPanel(t('contact_title')) +
+        '</aside>' +
+      '</div>' +
+    '</div>' +
+  '</main>' + footerHTML();
+}
+
+function requestVerification() {
+  var btn = document.getElementById('reqVerifyBtn'); if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  Auth.updateProfile({ verification_requested: true }).then(renderMyFactory)
+    .catch(function(e){ if (btn) { btn.disabled = false; btn.textContent = t('ver_submit'); } alert('Could not send request: ' + (e.message || e)); });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') LANG = savedLang;
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  renderMyFactory();
+  if (window.Auth && Auth.isLoggedIn()) { Auth.refreshProfile().then(renderMyFactory).catch(function(){}); }
+});
+</script>
+</body>
+</html>

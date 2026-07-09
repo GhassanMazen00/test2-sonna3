@@ -36,7 +36,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  
+
+  // Members-only: require login to browse factories
+  if (!window.Auth || !Auth.isLoggedIn()) {
+    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
+    return;
+  }
+
   // Get FILTERS from localStorage if available
   var savedFilters = localStorage.getItem('sonnaFilters');
   if (savedFilters) {

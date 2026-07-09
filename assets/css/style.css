@@ -154,6 +154,14 @@ body::before {
 .acc-type input { accent-color: var(--teal); }
 .acc-type:has(input:checked) { border-color: var(--teal); background: var(--teal-tint); }
 .au-err { background: #FEE4E2; color: #B42318; font-size: 13px; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; }
+.dash-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.locked-panel { opacity: .55; }
+.lock-note { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 13px; }
+.lock-note .svg-ic { color: var(--amber); }
+.verify-cta { background: linear-gradient(135deg, var(--teal-tint), #fff); border: 1.5px solid var(--teal); }
+.verify-benefits { list-style: none; display: grid; gap: 10px; margin: 12px 0; }
+.verify-benefits li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.verify-benefits .svg-ic { color: var(--teal); flex: none; margin-top: 2px; }
 
 /* ---------- Header ---------- */
 header {
