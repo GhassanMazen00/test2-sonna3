@@ -37,6 +37,10 @@ const STR = {
     ver_b4: "Upload photos and videos, and appear in the public directory with a verified badge",
     ver_submit: "Request verification",
     ver_requested_note: "Request received — our team will contact you to arrange a visit and verify your factory.",
+    badge_verified: "Verified", badge_unverified: "Unverified",
+    badge_unverified_tip: "This business hasn't been confirmed or verified by the platform yet.",
+    vf_form_title: "Request verification", vf_form_sub: "Fill in your details and our team will contact you to visit and verify your factory.",
+    vf_name: "Your name", vf_number: "Phone number", vf_location: "Location / address", vf_submit: "Submit request",
     eyebrow: "Egypt's manufacturing directory",
     slides: [
       [ICONS.factory, "Egypt's Manufacturing Directory", "We connect traders, brands, and businesses with trusted manufacturers across Egypt."],
@@ -165,6 +169,10 @@ const STR = {
     ver_b4: "رفع الصور والفيديوهات والظهور في الدليل بعلامة موثّق",
     ver_submit: "اطلب التوثيق",
     ver_requested_note: "تم استلام طلبك — سيتواصل معك فريقنا لترتيب زيارة وتوثيق مصنعك.",
+    badge_verified: "موثّق", badge_unverified: "غير موثّق",
+    badge_unverified_tip: "لم تؤكّد المنصة أو توثّق هذا النشاط بعد.",
+    vf_form_title: "طلب التوثيق", vf_form_sub: "املأ بياناتك وسيتواصل معك فريقنا لزيارة مصنعك وتوثيقه.",
+    vf_name: "الاسم", vf_number: "رقم الهاتف", vf_location: "الموقع / العنوان", vf_submit: "إرسال الطلب",
     eyebrow: "دليل التصنيع المصري",
     slides: [
       [ICONS.factory, "دليل التصنيع المصري", "نربط التجار والعلامات التجارية والشركات بمصانع موثوقة في جميع أنحاء مصر."],

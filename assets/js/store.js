@@ -168,7 +168,8 @@ var AdminStore = {
           hours: a.hours || { en: '', ar: '' },
           whatsapp: a.whatsapp || '', email: a.email || '', website: a.website || '',
           facebook: a.facebook || '', instagram: a.instagram || '', linkedin: a.linkedin || '',
-          logo: a.logo || '', cover: a.cover || '', media: a.media || []
+          logo: a.logo || '', cover: a.cover || '', media: a.media || [],
+          verified: true, userSubmitted: false   // admin-managed factories are verified
         });
       });
     }
@@ -254,6 +255,55 @@ AdminStore.deleteFile = function (publicUrl, token) {
   }).catch(function () { });
 };
 
+// ---- User-submitted factories (the 'factories' table) ----
+var FACTORIES_URL = function () { return SUPABASE_URL + '/rest/v1/factories'; };
+
+// Convert a factories-table row into the runtime factory shape used by the site
+AdminStore.rowToFactory = function (row) {
+  var g = GOVS[row.gov] || GOVS[0];
+  var d = row.data || {};
+  return {
+    id: row.id, industry: row.sector, gov: g, govIndex: row.gov,
+    name: d.name || { en: row.name, ar: row.name },
+    desc: d.desc || { en: '', ar: '' },
+    yr: Number(d.yr) || 0, moq: Number(d.moq) || 0, emp: d.emp || '', phone: d.phone || '',
+    exp: !!d.exp, featured: false,
+    certs: d.certs || [], dailyCapacity: Number(d.dailyCapacity) || 0, monthlyCapacity: Number(d.monthlyCapacity) || 0,
+    rating: Number(d.rating) || 0, reviewCount: Number(d.reviewCount) || 0,
+    services: normalizeServices(d.services), products: d.products || { en: [], ar: [] }, capabilities: d.capabilities || { en: [], ar: [] },
+    hours: d.hours || { en: '', ar: '' }, keywords: d.keywords || '',
+    whatsapp: d.whatsapp || '', email: d.email || '', website: d.website || '',
+    facebook: d.facebook || '', instagram: d.instagram || '', linkedin: d.linkedin || '',
+    logo: d.logo || '', cover: d.cover || '', media: d.media || [],
+    verified: !!row.verified, userSubmitted: true, ownerId: row.owner
+  };
+};
+
+// Fetch all rows from the factories table (public read)
+AdminStore.fetchFactoryRows = function () {
+  if (!this.remoteEnabled()) return Promise.resolve([]);
+  return fetch(FACTORIES_URL() + '?select=*&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+    .then(function (r) { if (!r.ok) throw new Error('factories ' + r.status); return r.json(); })
+    .catch(function () { return []; });
+};
+
+// Append user factories into the live FACTORIES list (skip ids already present)
+AdminStore.appendUserFactories = function (rows) {
+  var self = this;
+  (rows || []).forEach(function (row) {
+    if (!FACTORIES.some(function (f) { return String(f.id) === String(row.id); })) {
+      FACTORIES.push(self.rowToFactory(row));
+    }
+  });
+};
+
+function withTimeout(p, ms, fallback) {
+  return new Promise(function (resolve) {
+    var done = false; var t = setTimeout(function () { if (!done) { done = true; resolve(fallback); } }, ms);
+    p.then(function (v) { if (!done) { done = true; clearTimeout(t); resolve(v); } }).catch(function () { if (!done) { done = true; clearTimeout(t); resolve(fallback); } });
+  });
+}
+
 // Apply remote data if usable, else fall back to the local cache, else defaults
 AdminStore.applyDataOrFallback = function (remote) {
   if (remote && (remote.factories || remote.industries)) {
@@ -271,12 +321,13 @@ AdminStore.applyDataOrFallback = function (remote) {
 // but never hang or break — fall back to cache/built-in data if it's slow/down.
 AdminStore.bootstrap = function () {
   var self = this;
-  return new Promise(function (resolve) {
-    if (!self.remoteEnabled()) { resolve(self.applyDataOrFallback(null)); return; }
-    var settled = false;
-    var finish = function (remote) { if (settled) return; settled = true; clearTimeout(timer); resolve(self.applyDataOrFallback(remote)); };
-    var timer = setTimeout(function () { finish(null); }, 3500);
-    self.fetchRemote().then(finish).catch(function () { finish(null); });
+  if (!self.remoteEnabled()) { self.applyDataOrFallback(null); return Promise.resolve('default'); }
+  var contentP = withTimeout(self.fetchRemote(), 3500, null);
+  var facsP = withTimeout(self.fetchFactoryRows(), 3500, []);
+  return Promise.all([contentP, facsP]).then(function (res) {
+    self.applyDataOrFallback(res[0]);
+    self.appendUserFactories(res[1] || []);
+    return true;
   });
 };
 
