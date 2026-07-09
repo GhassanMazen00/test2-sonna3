@@ -54,7 +54,21 @@ document.addEventListener('DOMContentLoaded', function() {
   
   var id = ind(f.industry);
   var slug = f.name.en.toLowerCase().replace(/[^a-z]+/g, '');
-  
+  // Unverified user submissions show name + sector only; all other panels are
+  // locked until an admin verifies the factory.
+  var locked = (f.verified === false);
+  function lockedPanel(title) {
+    return '<div class="panel locked-panel"><h2>' + title + '</h2>' +
+      '<div class="lock-note">' + ICONS.clock + ' ' + t('mf_locked_note') + '</div></div>';
+  }
+  function lockedLayout() {
+    return '<div>' +
+      lockedPanel(t('about')) + lockedPanel(t('services_title')) + lockedPanel(t('products')) +
+      lockedPanel(t('capabilities')) + lockedPanel(t('gallery')) + lockedPanel(t('details')) +
+    '</div>' +
+    '<aside class="contact-panel">' + lockedPanel(t('contact_title')) + '</aside>';
+  }
+
   function stars(rating) {
     var s = '';
     for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? ICONS.star : ICONS.starOutline;
@@ -85,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
     '</div>' +
     '<div class="container" style="margin-top:14px">' +
       '<div class="profile-cover" style="' + (f.cover ? 'background:#0000;background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(id.g)) + ';border-radius:20px">' +
-        '<span class="pcode">' + factoryCode(f) + '</span>' +
+        (locked ? '' : '<span class="pcode">' + factoryCode(f) + '</span>') +
         (f.cover ? '' : '<span class="cover-ic">' + id.icon + '</span>') +
       '</div>' +
       '<div class="profile-top">' +
@@ -96,24 +110,27 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="profile-main">' +
             '<h1>' + esc(L(f.name)) + '</h1>' +
             '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
-              id.icon + ' ' + L({en: id.en, ar: id.ar}) + ' · ' + ICONS.pin + ' ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr) +
+              id.icon + ' ' + L({en: id.en, ar: id.ar}) + (locked ? '' : ' · ' + ICONS.pin + ' ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr)) +
             '</div>' +
-            '<div class="rating-stars" style="margin-top:8px">' +
-              stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
-            '</div>' +
-            '<div class="badge-row">' +
-              verifyBadge(f) +
-              '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
-              (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
-              f.certs.map(function(c) { return '<span class="chip">' + ICONS.check + ' ' + c + '</span>'; }).join('') +
-              '<span class="capacity-badge daily">' + ICONS.chartBar + ' ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
-              '<span class="capacity-badge monthly">' + ICONS.chartLine + ' ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
-            '</div>' +
+            (locked
+              ? '<div class="badge-row">' + verifyBadge(f) + '</div>'
+              : '<div class="rating-stars" style="margin-top:8px">' +
+                  stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
+                '</div>' +
+                '<div class="badge-row">' +
+                  verifyBadge(f) +
+                  '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
+                  (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
+                  f.certs.map(function(c) { return '<span class="chip">' + ICONS.check + ' ' + c + '</span>'; }).join('') +
+                  '<span class="capacity-badge daily">' + ICONS.chartBar + ' ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
+                  '<span class="capacity-badge monthly">' + ICONS.chartLine + ' ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
+                '</div>') +
           '</div>' +
         '</div>' +
       '</div>' +
       
       '<div class="profile-layout">' +
+        (locked ? lockedLayout() :
         '<div>' +
           '<div class="panel">' +
             '<h2>' + t('about') + '</h2>' +
@@ -186,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '</div>'
               : '') +
           '</div>' +
-        '</aside>' +
+        '</aside>') +
       '</div>' +
     '</div>' +
   '</main>' +
