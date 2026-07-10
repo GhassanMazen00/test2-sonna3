@@ -3762,3 +3762,12 @@ footer li button:hover {
 @media (max-width: 520px) {
   .chat-panel { width: 100%; }
 }
+
+/* Danger zone / destructive buttons (account deletion, etc.) */
+.btn-danger {
+  background: #C0392B;
+  color: #fff;
+  border: 1.5px solid #C0392B;
+}
+.btn-danger:hover { background: #A93226; border-color: #A93226; }
+.danger-zone { border: 1.5px solid #F3C7C2; background: #FDF4F3; }

@@ -45,7 +45,13 @@ function factorySection(fac) {
         '<div class="spec"><div class="k">' + t('fac_sector') + '</div><div class="v">' + esc(L({en:i.en,ar:i.ar})) + '</div></div>' +
         '<div class="spec"><div class="k">' + t('fac_location') + '</div><div class="v">' + (gov ? esc(L(gov)) : '—') + '</div></div>' +
       '</div>' +
-      '<div style="margin-top:14px"><a class="btn btn-primary btn-sm" href="my-factory.html">' + t('fac_view') + ' ' + (LANG==='ar'?'←':'→') + '</a></div>' +
+      (fac.deletion_requested
+        ? '<div class="lock-note" style="margin-top:14px;color:#B4322A">' + ICONS.clock + ' ' + t('fac_del_pending') + '</div>'
+        : '') +
+      '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">' +
+        '<a class="btn btn-primary btn-sm" href="my-factory.html">' + t('fac_view') + ' ' + (LANG==='ar'?'←':'→') + '</a>' +
+        (fac.deletion_requested ? '' : '<button class="btn btn-ghost btn-sm" onclick="requestFactoryDeletion(\'' + esc(fac.id) + '\')">' + t('fac_del_request') + '</button>') +
+      '</div>' +
     '</div>';
   }
   var sectorOpts = INDUSTRIES.map(function(s){ return '<option value="'+esc(s.id)+'">'+esc(L({en:s.en,ar:s.ar}))+'</option>'; }).join('');
@@ -84,6 +90,11 @@ function dashboardHtml(p, fac) {
         '<button class="btn btn-primary" id="ac_save" onclick="saveAccount()">' + t('acc_save') + '</button>' +
       '</div>' +
     '</div>' +
+    '<div class="panel danger-zone" style="margin-top:16px">' +
+      '<h2 style="margin-bottom:6px">' + t('acc_danger') + '</h2>' +
+      '<p class="muted" style="margin-bottom:14px">' + t('acc_delete_note') + '</p>' +
+      '<button class="btn btn-danger" id="acc_del" onclick="deleteMyAccount()">' + t('acc_delete_btn') + '</button>' +
+    '</div>' +
   '</div>';
 }
 
@@ -121,6 +132,22 @@ function saveAccount() {
   Auth.updateProfile({ full_name: v('ac_name'), phone: v('ac_phone') })
     .then(function(){ btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function(){ btn.textContent = t('acc_save'); }, 2000); })
     .catch(function(e){ btn.disabled = false; btn.textContent = t('acc_save'); alert('Could not save changes: ' + (e.message || e)); });
+}
+
+function requestFactoryDeletion(id) {
+  if (!confirm(t('fac_del_confirm'))) return;
+  Auth.requestFactoryDeletion(id)
+    .then(function(){ toast(t('fac_del_done')); renderAccount(); })
+    .catch(function(e){ alert('Could not send request: ' + (e.message || e)); });
+}
+
+function deleteMyAccount() {
+  if (!confirm(t('acc_delete_confirm'))) return;
+  if (!confirm(t('acc_delete_confirm2'))) return;
+  var btn = document.getElementById('acc_del'); btn.disabled = true; btn.textContent = '…';
+  Auth.deleteAccount()
+    .then(function(){ alert(t('acc_delete_ok')); window.location.href = 'index.html'; })
+    .catch(function(e){ btn.disabled = false; btn.textContent = t('acc_delete_btn'); alert('Could not delete account: ' + (e.message || e)); });
 }
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -261,7 +261,7 @@ function verifiedSubRows() {
       var i = DATA.industries.find(function(s){return s.id===row.sector;});
       var d = row.data || {};
       return '<tr>' +
-        '<td><b>'+esc(row.name)+'</b> <span class="chip teal" style="font-size:10px;padding:2px 7px;vertical-align:middle">Submitted</span></td>' +
+        '<td><b>'+esc(row.name)+'</b> <span class="chip teal" style="font-size:10px;padding:2px 7px;vertical-align:middle">Submitted</span>'+deletionChip(row)+'</td>' +
         '<td>'+esc(i?i.en:row.sector)+'</td>' +
         '<td>'+esc((DATA.govs[row.gov]||{}).en||'—')+'</td>' +
         '<td>'+esc(d.moq||'—')+'</td>' +
@@ -537,6 +537,12 @@ function subStatusChip(row) {
   if (row.verification_requested) return '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">Verification requested</span>';
   return '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">Unverified</span>';
 }
+// Red chip shown when the owner has requested their factory page be deleted.
+function deletionChip(row) {
+  return row.deletion_requested
+    ? ' <span class="chip" style="background:#FBE3E1;color:#B4322A">Deletion requested</span>'
+    : '';
+}
 function fmtDate(s) { try { return new Date(s).toLocaleString(); } catch(e){ return s||''; } }
 function findSub(id){ return SUBS.find(function(r){ return String(r.id)===String(id); }); }
 function submissionRows() {
@@ -553,7 +559,7 @@ function submissionRows() {
       '<td>'+esc(i?i.en:row.sector)+'</td>' +
       '<td>'+esc((DATA.govs[row.gov]||{}).en||'—')+'</td>' +
       '<td style="white-space:nowrap">'+fmtDate(row.created_at)+'</td>' +
-      '<td>'+subStatusChip(row)+'</td>' +
+      '<td>'+subStatusChip(row)+deletionChip(row)+'</td>' +
       '<td><div class="row-actions">' +
         (row.verified ? '' : '<button class="btn btn-primary btn-sm" onclick="verifyRow(\''+row.id+'\')">Verify</button>') +
         '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
