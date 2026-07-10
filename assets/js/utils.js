@@ -102,18 +102,24 @@ function closeMobileMenu() {
   document.body.style.overflow = '';
 }
 
-// Request form modal
+// Request form modal — posts a live manufacturing request to Supabase, with
+// optional sample media uploads. Requires the user to be logged in.
 function openRequestForm() {
+  if (window.Auth && Auth.ready && Auth.ready() && !Auth.isLoggedIn()) {
+    if (window.openAuthModal) openAuthModal('login');
+    return;
+  }
   var bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   bd.addEventListener('click', function(e) {
     if (e.target === bd) bd.remove();
   });
-  
-  bd.innerHTML = 
+
+  bd.innerHTML =
     '<div class="modal">' +
       '<h2>' + t('new_req') + '</h2>' +
       '<p class="sub">' + t('new_req_sub') + '</p>' +
+      '<div class="au-err" id="fq_err" style="display:none"></div>' +
       '<div class="form-grid">' +
         '<div class="form-field full">' +
           '<label>' + t('fr_title') + ' *</label>' +
@@ -145,7 +151,8 @@ function openRequestForm() {
         '</div>' +
         '<div class="form-field full">' +
           '<label>' + t('fr_files') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
-          '<div class="upload-box">' + t('fr_files_note') + '</div>' +
+          '<input id="fq_files" type="file" accept="image/*,video/*" multiple>' +
+          '<div class="muted" id="fq_files_list" style="font-size:12.5px;margin-top:6px">' + t('fr_files_note') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="modal-actions">' +
@@ -153,35 +160,48 @@ function openRequestForm() {
         '<button class="btn btn-primary" id="fq_submit">' + t('publish') + '</button>' +
       '</div>' +
     '</div>';
-  
+
   document.body.appendChild(bd);
-  
+
+  var filesInput = bd.querySelector('#fq_files');
+  var filesList = bd.querySelector('#fq_files_list');
+  filesInput.onchange = function () {
+    var names = Array.prototype.map.call(filesInput.files, function (f) { return f.name; });
+    filesList.textContent = names.length ? names.join(', ') : t('fr_files_note');
+  };
+
+  var showErr = function (m) { var e = bd.querySelector('#fq_err'); e.textContent = m; e.style.display = 'block'; };
+
   bd.querySelector('#fq_cancel').onclick = function() { bd.remove(); };
   bd.querySelector('#fq_submit').onclick = function() {
     var v = function(id) { return bd.querySelector(id).value.trim(); };
     var title = v('#fq_title'), desc = v('#fq_desc'), qty = v('#fq_qty'), contact = v('#fq_contact');
-    
-    if (!title || !desc || !qty || !contact) {
-      toast(t('fill_required'));
-      return;
-    }
-    
-    REQUESTS.unshift({
-      id: 'r' + Date.now(),
-      icon: ICONS.note,
-      days: 0,
-      qty: qty,
-      budget: v('#fq_budget') || null,
-      title: { en: title, ar: title },
-      desc: { en: desc, ar: desc },
-      material: { en: v('#fq_mat') || '—', ar: v('#fq_mat') || '—' },
-      gov: Number(bd.querySelector('#fq_gov').value),
-      by: { en: 'Sonnaع user', ar: 'مستخدم صُنّاع' },
-      contact: contact
+    if (!title || !desc || !qty || !contact) { showErr(t('fill_required')); return; }
+    if (!(window.Auth && Auth.isLoggedIn())) { if (window.openAuthModal) openAuthModal('login'); return; }
+
+    var btn = bd.querySelector('#fq_submit'); btn.disabled = true; btn.textContent = '…';
+
+    // Upload any chosen sample media first, then create the request row.
+    var files = Array.prototype.slice.call(filesInput.files || []);
+    var uploads = files.map(function (f) {
+      return Auth.uploadRequestMedia(f).then(function (url) {
+        return { url: url, type: (f.type && f.type.indexOf('video') === 0) ? 'video' : 'image' };
+      });
     });
-    
-    bd.remove();
-    toast(t('published'));
-    setTimeout(function() { window.location.href = 'requests.html'; }, 500);
+
+    Promise.all(uploads).then(function (media) {
+      return Auth.createRequest({
+        title: title, description: desc, qty: qty,
+        budget: v('#fq_budget') || null, material: v('#fq_mat') || null,
+        gov: Number(bd.querySelector('#fq_gov').value), contact: contact, media: media
+      });
+    }).then(function () {
+      bd.remove();
+      toast(t('published'));
+      setTimeout(function() { window.location.href = 'requests.html'; }, 500);
+    }).catch(function (e) {
+      btn.disabled = false; btn.textContent = t('publish');
+      showErr((t('req_post_fail') || 'Could not post request') + ': ' + (e.message || e));
+    });
   };
 }

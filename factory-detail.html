@@ -22,6 +22,7 @@
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   AdminStore.bootstrap().then(function() {
@@ -179,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="panel">' +
             '<h2>' + t('contact_title') + '</h2>' +
             '<p style="margin-bottom:14px;font-size:13px">' + t('contact_sub') + '</p>' +
+            (f.ownerId ? '<button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="Chat.openWith(\'' + esc(f.ownerId) + '\',\'' + esc(L(f.name)).replace(/\x27/g, '&#39;') + '\')">' + ICONS.chat + ' ' + t('msg_supplier') + '</button>' : '') +
             '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
               '<span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span>' +
               '<span>' + t('call') + '<small dir="ltr">' + f.phone + '</small></span>' +
