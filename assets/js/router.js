@@ -147,30 +147,10 @@ function renderHomePage() {
         '</div>' +
         '<div class="requests-carousel" id="reqCarousel">' +
           '<div class="requests-track" id="reqTrack">' +
-            REQUESTS.map(function(r) {
-              return '<a href="request-detail.html?id=' + r.id + '" class="request-card-new">' +
-                '<div class="req-meta">' +
-                  '<span class="req-badge"><span class="pulse"></span>' + t('requests_new') + '</span>' +
-                  '<span class="req-time">' + STR[LANG].days_ago(r.days) + '</span>' +
-                '</div>' +
-                '<div class="req-icon" style="background:radial-gradient(rgba(14,107,94,.08) 1.2px,transparent 1.2px) 0 0/18px 18px,linear-gradient(135deg,#EFF6F4,#E2EFEC)">' + r.icon + '</div>' +
-                '<h3>' + esc(L(r.title)) + '</h3>' +
-                '<p>' + esc(L(r.desc)) + '</p>' +
-                '<div class="req-footer">' +
-                  '<span>' + ICONS.box + ' ' + t('requests_qty') + ': <strong>' + num(r.qty) + '</strong></span>' +
-                  '<span>' + ICONS.pin + ' ' + t('requests_location') + ': ' + L(GOVS[r.gov]) + '</span>' +
-                '</div>' +
-              '</a>';
-            }).join('') +
+            '<div class="muted" style="padding:30px;width:100%;text-align:center">…</div>' +
           '</div>' +
         '</div>' +
-        '<div class="carousel-controls">' +
-          '<button class="carousel-arrow" id="reqPrev">‹</button>' +
-          Array.from({length: Math.ceil(REQUESTS.length / 3)}, function(_, i) {
-            return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" data-page="' + i + '"></button>';
-          }).join('') +
-          '<button class="carousel-arrow" id="reqNext">›</button>' +
-        '</div>' +
+        '<div class="carousel-controls" id="reqControls"></div>' +
       '</div>' +
     '</section>' +
     // Consultant section (paid feature — matched to the sector you choose)
@@ -229,7 +209,7 @@ function renderHomePage() {
   // Initialize homepage features
   initHeroSlider();
   initFeaturedRotation();
-  initRequestsCarousel();
+  loadHomeRequests();     // pull the latest live requests from Supabase
   initFloatRotation();
 
   // If arriving via a #consultant link (e.g. from another page), scroll to the
@@ -240,6 +220,54 @@ function renderHomePage() {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 60);
   }
+}
+
+// A home "latest requests" card built from a live Supabase request row.
+function homeRequestCard(r) {
+  var gov = (r.gov != null && GOVS[r.gov]) ? L(GOVS[r.gov]) : '—';
+  var days = Math.max(0, Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000));
+  var hasImg = r.media && r.media.length && r.media[0].type !== 'video';
+  var icon = hasImg
+    ? '<div class="req-icon" style="background-image:url(\'' + r.media[0].url + '\');background-size:cover;background-position:center"></div>'
+    : '<div class="req-icon" style="background:radial-gradient(rgba(14,107,94,.08) 1.2px,transparent 1.2px) 0 0/18px 18px,linear-gradient(135deg,#EFF6F4,#E2EFEC)">' + ICONS.clipboard + '</div>';
+  return '<a href="request-detail.html?id=' + encodeURIComponent(r.id) + '" class="request-card-new">' +
+    '<div class="req-meta">' +
+      '<span class="req-badge"><span class="pulse"></span>' + t('requests_new') + '</span>' +
+      '<span class="req-time">' + STR[LANG].days_ago(days) + '</span>' +
+    '</div>' +
+    icon +
+    '<h3>' + esc(r.title || '') + '</h3>' +
+    '<p>' + esc(r.description || '') + '</p>' +
+    '<div class="req-footer">' +
+      '<span>' + ICONS.box + ' ' + t('requests_qty') + ': <strong>' + esc(r.qty || '—') + '</strong></span>' +
+      '<span>' + ICONS.pin + ' ' + t('requests_location') + ': ' + gov + '</span>' +
+    '</div>' +
+  '</a>';
+}
+
+// Fetch the latest requests from Supabase and fill the home carousel.
+function loadHomeRequests() {
+  if (!window.AdminStore || !AdminStore.fetchRequests) return;
+  AdminStore.fetchRequests().then(function (rows) {
+    var track = document.getElementById('reqTrack');
+    var controls = document.getElementById('reqControls');
+    if (!track) return;
+    rows = (rows || []).slice(0, 9);   // newest first (query orders by created_at desc)
+    if (!rows.length) {
+      track.innerHTML = '<div class="empty" style="margin:0;width:100%"><div class="big">' + ICONS.clipboard + '</div><b>' + t('req_none') + '</b><p>' + t('req_none_sub') + '</p></div>';
+      if (controls) controls.innerHTML = '';
+      return;
+    }
+    track.innerHTML = rows.map(homeRequestCard).join('');
+    if (controls) {
+      controls.innerHTML = '<button class="carousel-arrow" id="reqPrev">‹</button>' +
+        Array.from({ length: Math.ceil(rows.length / 3) }, function (_, i) {
+          return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" data-page="' + i + '"></button>';
+        }).join('') +
+        '<button class="carousel-arrow" id="reqNext">›</button>';
+    }
+    initRequestsCarousel();
+  });
 }
 
 // Ticker items

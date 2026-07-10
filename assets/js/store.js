@@ -299,7 +299,7 @@ AdminStore.rowToFactory = function (row) {
     name: d.name || { en: row.name, ar: row.name },
     desc: d.desc || { en: '', ar: '' },
     yr: Number(d.yr) || 0, moq: Number(d.moq) || 0, emp: d.emp || '', phone: d.phone || '',
-    exp: !!d.exp, featured: false,
+    exp: !!d.exp, featured: !!d.featured,
     certs: d.certs || [], dailyCapacity: Number(d.dailyCapacity) || 0, monthlyCapacity: Number(d.monthlyCapacity) || 0,
     rating: Number(d.rating) || 0, reviewCount: Number(d.reviewCount) || 0,
     services: normalizeServices(d.services), products: d.products || { en: [], ar: [] }, capabilities: d.capabilities || { en: [], ar: [] },
