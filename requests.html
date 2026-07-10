@@ -22,7 +22,38 @@
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
 <script>
+function daysAgo(iso) {
+  var ms = Date.now() - new Date(iso).getTime();
+  return Math.max(0, Math.floor(ms / 86400000));
+}
+// A live request row (from Supabase) rendered as a card. The "Message poster"
+// button opens a chat tagged with this request; it is hidden on your own posts.
+function liveRequestCard(r) {
+  var me = window.Chat && Chat.myId ? Chat.myId() : null;
+  var mine = me && String(r.owner) === String(me);
+  var gov = (r.gov != null && GOVS[r.gov]) ? L(GOVS[r.gov]) : '—';
+  var hasMedia = r.media && r.media.length;
+  var thumb = hasMedia && r.media[0].type !== 'video'
+    ? '<div class="thumb" style="background-image:url(\'' + r.media[0].url + '\');background-size:cover;background-position:center"></div>'
+    : '<div class="thumb">' + ICONS.clipboard + '</div>';
+  var titleAttr = esc(String(r.title || '')).replace(/'/g, '&#39;');
+  return '<div class="request-card" onclick="location.href=\'request-detail.html?id=' + encodeURIComponent(r.id) + '\'" style="cursor:pointer">' +
+    thumb +
+    '<h3>' + esc(r.title || '') + '</h3>' +
+    '<div class="desc">' + esc(r.description || '') + '</div>' +
+    '<div class="foot">' +
+      '<span>' + ICONS.box + ' ' + t('qty') + ': <b>' + esc(r.qty || '—') + '</b></span>' +
+      '<span>' + ICONS.pin + ' ' + gov + '</span>' +
+      '<span>' + ICONS.clock + ' ' + STR[LANG].days_ago(daysAgo(r.created_at)) + '</span>' +
+    '</div>' +
+    (mine
+      ? '<div class="req-owner-tag">' + ICONS.user + ' ' + t('req_yours') + '</div>'
+      : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>') +
+  '</div>';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   AdminStore.bootstrap().then(function() {
   var savedLang = localStorage.getItem('sonnaLang');
@@ -50,27 +81,23 @@ document.addEventListener('DOMContentLoaded', function() {
       '</div>' +
     '</div>' +
     '<div class="container req-layout">' +
-      '<div class="card-grid">' +
-        (REQUESTS.length === 0
-          ? '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><b>' + t('no_results') + '</b><p>' + t('no_results_sub') + '</p></div>'
-          : REQUESTS.map(function(r) {
-              return '<a href="request-detail.html?id=' + r.id + '" class="request-card">' +
-                '<div class="thumb">' + r.icon + '</div>' +
-                '<h3>' + esc(L(r.title)) + '</h3>' +
-                '<div class="desc">' + esc(L(r.desc)) + '</div>' +
-                '<div class="foot">' +
-                  '<span>' + ICONS.box + ' ' + t('qty') + ': <b>' + num(r.qty) + '</b></span>' +
-                  '<span>' + ICONS.pin + ' ' + L(GOVS[r.gov]) + '</span>' +
-                  '<span>' + ICONS.clock + ' ' + STR[LANG].days_ago(r.days) + '</span>' +
-                '</div>' +
-              '</a>';
-            }).join('')
-        ) +
+      '<div class="card-grid" id="reqGrid">' +
+        '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><p>…</p></div>' +
       '</div>' +
     '</div>' +
   '</main>' +
-  '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
   footerHTML();
+
+  AdminStore.fetchRequests().then(function (rows) {
+    var grid = document.getElementById('reqGrid');
+    if (!grid) return;
+    if (rows && rows.length) {
+      grid.innerHTML = rows.map(liveRequestCard).join('');
+    } else {
+      grid.innerHTML = '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><b>' + t('req_none') + '</b><p>' + t('req_none_sub') + '</p></div>';
+    }
+    if (window.updateChatBadge) updateChatBadge();
+  });
   });
 });
 </script>

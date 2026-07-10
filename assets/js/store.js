@@ -242,6 +242,38 @@ AdminStore.uploadFile = function (file, token) {
   });
 };
 
+// Upload any file to Supabase Storage under a given path prefix, resolving to
+// its public URL. Works for any logged-in user (see storage RLS in the SQL).
+AdminStore.uploadPublic = function (file, token, prefix) {
+  if (!this.remoteEnabled()) return Promise.reject(new Error('no config'));
+  var bucket = window.SUPABASE_BUCKET || 'media';
+  var safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  var path = (prefix || 'misc') + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '-' + safe;
+  return fetch(SUPABASE_URL + '/storage/v1/object/' + bucket + '/' + path, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+    body: file
+  }).then(function (r) {
+    if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('upload ' + r.status)); });
+    return SUPABASE_URL + '/storage/v1/object/public/' + bucket + '/' + path;
+  });
+};
+
+// ---- Manufacturing requests (the public 'requests' table) ----
+AdminStore.fetchRequests = function () {
+  if (!this.remoteEnabled()) return Promise.resolve([]);
+  return fetch(SUPABASE_URL + '/rest/v1/requests?select=*&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+    .then(function (r) { if (!r.ok) throw new Error('requests ' + r.status); return r.json(); })
+    .catch(function () { return []; });
+};
+AdminStore.getRequest = function (id) {
+  if (!this.remoteEnabled()) return Promise.resolve(null);
+  return fetch(SUPABASE_URL + '/rest/v1/requests?select=*&id=eq.' + encodeURIComponent(id), { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+    .then(function (r) { if (!r.ok) throw new Error('request ' + r.status); return r.json(); })
+    .then(function (rows) { return (rows && rows[0]) || null; })
+    .catch(function () { return null; });
+};
+
 // Best-effort delete of a previously uploaded file (by its public URL)
 AdminStore.deleteFile = function (publicUrl, token) {
   if (!this.remoteEnabled() || !publicUrl) return Promise.resolve();

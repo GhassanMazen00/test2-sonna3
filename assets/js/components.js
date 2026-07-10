@@ -29,7 +29,8 @@ function headerHTML() {
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\')">عربي</button>' +
       '</div>' +
       (window.Auth && Auth.isLoggedIn()
-        ? '<a href="account.html" class="btn btn-ghost btn-sm desktop-only nav-account">' + ICONS.user + ' ' + t('my_account') + '</a>'
+        ? '<a href="messages.html" class="header-quick-btn desktop-only-flex nav-messages" aria-label="' + t('nav_messages') + '" style="position:relative">' + ICONS.chat + '<span class="msg-badge" style="display:none"></span></a>' +
+          '<a href="account.html" class="btn btn-ghost btn-sm desktop-only nav-account">' + ICONS.user + ' ' + t('my_account') + '</a>'
         : '<button class="btn btn-ghost btn-sm desktop-only" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
           '<button class="btn btn-primary btn-sm desktop-only" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>') +
       '<button class="mobile-menu-btn" onclick="openMobileMenu()" aria-label="Menu">' + ICONS.menu + '</button>' +
@@ -58,7 +59,8 @@ function mobileMenuHTML() {
       '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
       '<a href="' + consultHref + '" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
       (window.Auth && Auth.isLoggedIn()
-        ? '<a href="account.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.user + ' ' + t('my_account') + '</a>'
+        ? '<a href="messages.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.chat + ' ' + t('nav_messages') + ' <span class="msg-badge" style="display:none"></span></a>' +
+          '<a href="account.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.user + ' ' + t('my_account') + '</a>'
         : '') +
       '<div class="mobile-menu-divider"></div>' +
       (window.Auth && Auth.isLoggedIn()

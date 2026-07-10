@@ -141,6 +141,37 @@
         }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
           .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
       });
+    },
+
+    // ---- Manufacturing requests (owned by the signed-in user) ----
+    displayName: function () {
+      var p = AUTH.profile || {};
+      var email = AUTH.session && AUTH.session.user ? AUTH.session.user.email : '';
+      return p.full_name || (email ? String(email).split('@')[0] : '') || 'User';
+    },
+    uploadRequestMedia: function (file) {
+      return freshToken().then(function (tok) { return AdminStore.uploadPublic(file, tok, 'requests'); });
+    },
+    createRequest: function (fields) {
+      return freshToken().then(function (tok) {
+        var row = Object.assign({ owner: AUTH.session.user.id, owner_name: window.Auth.displayName() }, fields || {});
+        return fetch(SUPABASE_URL + '/rest/v1/requests', {
+          method: 'POST', headers: restHeaders(tok, { Prefer: 'return=representation' }), body: JSON.stringify(row)
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
+          .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
+      });
+    },
+    myRequests: function () {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/requests?owner=eq.' + AUTH.session.user.id + '&select=*&order=created_at.desc', { headers: restHeaders(tok) })
+          .then(function (r) { if (!r.ok) throw new Error('requests ' + r.status); return r.json(); });
+      });
+    },
+    deleteRequest: function (id) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/requests?id=eq.' + id, { method: 'DELETE', headers: restHeaders(tok) })
+          .then(function (r) { if (!r.ok) throw new Error('delete ' + r.status); return true; });
+      });
     }
   };
 
