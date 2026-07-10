@@ -259,6 +259,20 @@ AdminStore.uploadPublic = function (file, token, prefix) {
   });
 };
 
+// ---- Page view counts (once per account) ----
+// Records a view (if logged in) and returns the item's total count. Pass the
+// user's access token to have the view counted; anon calls just read the total.
+AdminStore.recordView = function (type, id, token) {
+  if (!this.remoteEnabled()) return Promise.resolve(null);
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/record_view', {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + (token || SUPABASE_ANON_KEY), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_type: type, p_id: String(id) })
+  }).then(function (r) { if (!r.ok) throw new Error('view ' + r.status); return r.json(); })
+    .then(function (n) { return (typeof n === 'number') ? n : Number(n) || 0; })
+    .catch(function () { return null; });
+};
+
 // ---- Manufacturing requests (the public 'requests' table) ----
 AdminStore.fetchRequests = function () {
   if (!this.remoteEnabled()) return Promise.resolve([]);

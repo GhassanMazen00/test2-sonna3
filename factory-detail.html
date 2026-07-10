@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   f.certs.map(function(c) { return '<span class="chip">' + ICONS.check + ' ' + c + '</span>'; }).join('') +
                   '<span class="capacity-badge daily">' + ICONS.chartBar + ' ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
                   '<span class="capacity-badge monthly">' + ICONS.chartLine + ' ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
+                  '<span class="chip">' + ICONS.eye + ' <span id="facViews">…</span> ' + t('views') + '</span>' +
                 '</div>') +
           '</div>' +
         '</div>' +
@@ -179,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
         '<aside class="contact-panel">' +
           '<div class="panel">' +
             '<h2>' + t('contact_title') + '</h2>' +
-            '<p style="margin-bottom:14px;font-size:13px">' + t('contact_sub') + '</p>' +
             (f.ownerId ? '<button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="Chat.openWith(\'' + esc(f.ownerId) + '\',\'' + esc(L(f.name)).replace(/\x27/g, '&#39;') + '\')">' + ICONS.chat + ' ' + t('msg_supplier') + '</button>' : '') +
             '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
               '<span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span>' +
@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
   '</main>' +
   '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
   footerHTML();
+  if (!locked && window.loadViews) loadViews('factory', f.id, 'facViews');
   });
 });
 </script>

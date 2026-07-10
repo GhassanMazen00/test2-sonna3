@@ -248,11 +248,17 @@ function homeRequestCard(r) {
 // Fetch the latest requests from Supabase and fill the home carousel.
 function loadHomeRequests() {
   if (!window.AdminStore || !AdminStore.fetchRequests) return;
-  AdminStore.fetchRequests().then(function (rows) {
+  AdminStore.fetchRequests().then(function (all) {
+    all = all || [];
+
+    // Rebuild the hero bubbles now that we have real requests to mix in.
+    var fc = document.querySelector('.float-chips-container');
+    if (fc) { fc.innerHTML = floatChipsFromSets(buildFloatSets(all)); initFloatRotation(); }
+
     var track = document.getElementById('reqTrack');
     var controls = document.getElementById('reqControls');
     if (!track) return;
-    rows = (rows || []).slice(0, 9);   // newest first (query orders by created_at desc)
+    var rows = all.slice(0, 9);   // newest first (query orders by created_at desc)
     if (!rows.length) {
       track.innerHTML = '<div class="empty" style="margin:0;width:100%"><div class="big">' + ICONS.clipboard + '</div><b>' + t('req_none') + '</b><p>' + t('req_none_sub') + '</p></div>';
       if (controls) controls.innerHTML = '';
@@ -277,17 +283,56 @@ function tickerItemsHTML() {
   }).join('');
 }
 
-// Float chips
-function floatChipsHTML() {
-  var sets = t('float_sets');
-  return sets.map(function(set, si) {
+// Float chips — built from REAL data: a mix of the latest requests (with a
+// live "time ago" from their date) and random factories, cycled through 3 sets
+// of 3. Always emits the same 9 chips even when there isn't enough data yet
+// (the pool is cycled to fill), so the rotation layout never breaks.
+var FLOAT_SETS = 3, FLOAT_PER = 3;
+
+function relTimeShort(iso) {
+  var s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 3600) { var m = Math.max(1, Math.floor(s / 60)); return LANG === 'ar' ? ('منذ ' + m + ' دقيقة') : (m + ' min ago'); }
+  if (s < 86400) { var h = Math.floor(s / 3600); return LANG === 'ar' ? ('منذ ' + h + ' ساعة') : (h + ' hr ago'); }
+  return STR[LANG].days_ago(Math.floor(s / 86400));
+}
+function factoryChip(f) {
+  var i = ind(f.industry);
+  var sub = f.emp
+    ? (f.gov ? L(f.gov) + ' · ' : '') + f.emp + (LANG === 'ar' ? ' عامل' : ' workers')
+    : (f.gov ? L(f.gov) : L({ en: i.en, ar: i.ar }));
+  return [i.icon, L(f.name), sub];
+}
+function requestChip(r) {
+  return [ICONS.clipboard, (LANG === 'ar' ? 'طلب جديد: ' : 'New request: ') + (r.title || ''), relTimeShort(r.created_at)];
+}
+function buildFloatSets(reqRows) {
+  var need = FLOAT_SETS * FLOAT_PER;
+  var reqs = (reqRows || []).slice(0, 6).map(requestChip);
+  var facs = FACTORIES.slice().sort(function () { return Math.random() - 0.5; }).map(factoryChip);
+  var pool = [], ri = 0, fi = 0;
+  while (ri < reqs.length || fi < facs.length) {          // interleave requests & factories
+    if (ri < reqs.length) pool.push(reqs[ri++]);
+    if (fi < facs.length) pool.push(facs[fi++]);
+  }
+  if (!pool.length) (t('float_sets') || []).forEach(function (set) { set.forEach(function (c) { pool.push(c); }); });
+  if (!pool.length) return [];
+  var chips = [];
+  for (var k = 0; k < need; k++) chips.push(pool[k % pool.length]);   // cycle to a fixed count
+  var sets = [];
+  for (var s = 0; s < FLOAT_SETS; s++) sets.push(chips.slice(s * FLOAT_PER, (s + 1) * FLOAT_PER));
+  return sets;
+}
+function floatChipsFromSets(sets) {
+  return sets.map(function (set, si) {
     return '<div class="float-chip-set set' + (si + 1) + (si === 0 ? ' visible' : ' hidden') + '" data-set="' + si + '">' +
-      set.map(function(chip, fi) {
-        return '<div class="float-chip fc' + (fi + 1) + '">' + chip[0] + '<span>' + chip[1] + '<small>' + chip[2] + '</small></span></div>';
+      set.map(function (chip, fi) {
+        return '<div class="float-chip fc' + (fi + 1) + '">' + chip[0] + '<span>' + esc(chip[1]) + '<small>' + esc(chip[2]) + '</small></span></div>';
       }).join('') +
     '</div>';
   }).join('');
 }
+// Initial render (factories only — requests are merged in after they load).
+function floatChipsHTML() { return floatChipsFromSets(buildFloatSets([])); }
 
 // Hero slider
 var rotTimer = null;

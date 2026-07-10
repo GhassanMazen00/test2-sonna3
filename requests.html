@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
     app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
     return;
   }
+  var govOptions = '<option value="">' + t('all') + '</option>' +
+    GOVS.map(function (g, ix) { return '<option value="' + ix + '">' + L(g) + '</option>'; }).join('');
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
     '<div class="page-head">' +
       '<div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
@@ -80,7 +82,18 @@ document.addEventListener('DOMContentLoaded', function() {
         '<button class="btn btn-primary" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('post_request') + '</button>' +
       '</div>' +
     '</div>' +
-    '<div class="container req-layout">' +
+    '<div class="container">' +
+      '<div class="req-toolbar">' +
+        '<div class="req-search">' + ICONS.search +
+          '<input type="text" id="reqSearch" placeholder="' + t('req_search_ph') + '" oninput="onReqFilter(\'q\', this.value)">' +
+        '</div>' +
+        '<select id="reqGovFilter" onchange="onReqFilter(\'gov\', this.value)">' + govOptions + '</select>' +
+        '<select id="reqSort" onchange="onReqFilter(\'sort\', this.value)">' +
+          '<option value="new">' + t('req_sort_new') + '</option>' +
+          '<option value="old">' + t('req_sort_old') + '</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="results-bar"><span class="count"><b id="reqCount">0</b> <span>' + t('results') + '</span></span></div>' +
       '<div class="card-grid" id="reqGrid">' +
         '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><p>…</p></div>' +
       '</div>' +
@@ -89,17 +102,68 @@ document.addEventListener('DOMContentLoaded', function() {
   footerHTML();
 
   AdminStore.fetchRequests().then(function (rows) {
-    var grid = document.getElementById('reqGrid');
-    if (!grid) return;
-    if (rows && rows.length) {
-      grid.innerHTML = rows.map(liveRequestCard).join('');
-    } else {
-      grid.innerHTML = '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><b>' + t('req_none') + '</b><p>' + t('req_none_sub') + '</p></div>';
-    }
+    REQ_ROWS = rows || [];
+    renderReqList();
     if (window.updateChatBadge) updateChatBadge();
   });
   });
 });
+
+var REQ_ROWS = [];
+var REQ_FILTERS = { q: '', gov: '', sort: 'new' };
+
+function onReqFilter(key, value) { REQ_FILTERS[key] = value; renderReqList(); }
+
+// Relevance for a request search — title matches beat description/material/name.
+function reqScore(r, q) {
+  q = String(q || '').toLowerCase().trim();
+  if (!q) return 0;
+  var title = String(r.title || '').toLowerCase();
+  var best = 0;
+  if (title === q) best = 100;
+  else if (title.indexOf(q) === 0) best = 85;
+  else if (new RegExp('\\b' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(title)) best = 72;
+  else if (title.indexOf(q) >= 0) best = 58;
+  var rest = (String(r.description || '') + ' ' + String(r.material || '') + ' ' + String(r.owner_name || '')).toLowerCase();
+  if (rest.indexOf(q) >= 0) best = Math.max(best, 24);
+  return best;
+}
+
+function renderReqList() {
+  var grid = document.getElementById('reqGrid');
+  var countEl = document.getElementById('reqCount');
+  if (!grid) return;
+  var q = (REQ_FILTERS.q || '').toLowerCase().trim();
+  var list = REQ_ROWS.filter(function (r) {
+    if (REQ_FILTERS.gov !== '' && String(r.gov) !== String(REQ_FILTERS.gov)) return false;
+    if (q) {
+      var hay = (String(r.title || '') + ' ' + String(r.description || '') + ' ' + String(r.material || '') + ' ' + String(r.owner_name || '')).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  if (q) {
+    list.sort(function (a, b) {
+      var d = reqScore(b, q) - reqScore(a, q);
+      if (d) return d;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+  } else {
+    list.sort(function (a, b) {
+      return REQ_FILTERS.sort === 'old'
+        ? new Date(a.created_at) - new Date(b.created_at)
+        : new Date(b.created_at) - new Date(a.created_at);
+    });
+  }
+  if (countEl) countEl.textContent = num(list.length);
+  if (!REQ_ROWS.length) {
+    grid.innerHTML = '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><b>' + t('req_none') + '</b><p>' + t('req_none_sub') + '</p></div>';
+  } else if (!list.length) {
+    grid.innerHTML = '<div class="empty"><div class="big">' + ICONS.search + '</div><b>' + t('req_no_match') + '</b></div>';
+  } else {
+    grid.innerHTML = list.map(liveRequestCard).join('');
+  }
+}
 </script>
 </body>
 </html>
