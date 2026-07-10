@@ -182,6 +182,59 @@ function restoreFilters() {
   setVal('sortSelect', FILTERS.sort || 'name');
 }
 
+// ---- Search relevance ranking ----
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+// Damerau (optimal string alignment) similarity ratio 0..1 — counts an adjacent
+// transposition (e.g. "niel" vs "nile") as a single edit, so typos rank well.
+function simRatio(a, b) {
+  a = a || ''; b = b || '';
+  if (!a.length || !b.length) return 0;
+  var m = a.length, n = b.length, d = [], i, j;
+  for (i = 0; i <= m; i++) { d[i] = []; d[i][0] = i; }
+  for (j = 0; j <= n; j++) d[0][j] = j;
+  for (i = 1; i <= m; i++) {
+    for (j = 1; j <= n; j++) {
+      var cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a.charCodeAt(i - 1) === b.charCodeAt(j - 2) && a.charCodeAt(i - 2) === b.charCodeAt(j - 1)) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return 1 - d[m][n] / Math.max(m, n);
+}
+function bestWordSim(name, q) {
+  var best = simRatio(name, q);
+  name.split(/\s+/).forEach(function (w) { var s = simRatio(w, q); if (s > best) best = s; });
+  return best;
+}
+// Higher = better match. Name matches dominate; other fields add a little.
+function relevanceScore(f, q) {
+  q = String(q || '').toLowerCase().trim();
+  if (!q) return 0;
+  var id = ind(f.industry);
+  var best = 0;
+  [f.name.en, f.name.ar].forEach(function (raw) {
+    var n = String(raw || '').toLowerCase();
+    if (!n) return;
+    var sc = 0;
+    if (n === q) sc = 100;
+    else if (n.indexOf(q) === 0) sc = 88;
+    else if (new RegExp('\\b' + escRe(q)).test(n)) sc = 74;   // a word starts with q
+    else if (n.indexOf(q) >= 0) sc = 58;
+    else { var sim = bestWordSim(n, q); sc = sim >= 0.82 ? 46 : sim >= 0.62 ? 30 : 0; }  // typo tolerance
+    if (sc > best) best = sc;
+  });
+  var sector = (id.en + ' ' + id.ar).toLowerCase();
+  if (sector.indexOf(q) >= 0) best = Math.max(best, 26);
+  if (f.gov && (f.gov.en + ' ' + f.gov.ar).toLowerCase().indexOf(q) >= 0) best = Math.max(best, 18);
+  var prod = IND_PRODUCTS[f.industry] || { en: [], ar: [] };
+  var caps = IND_CAPS[f.industry] || { en: [], ar: [] };
+  var extra = (prod.en.concat(prod.ar, caps.en, caps.ar).join(' ') + ' ' + (f.keywords || '')).toLowerCase();
+  if (extra.indexOf(q) >= 0) best = Math.max(best, 12);
+  return best;
+}
+
 function renderFactoryList() {
   var list = FACTORIES.filter(function(f) {
     if (FILTERS.industry && f.industry !== FILTERS.industry) return false;
@@ -205,12 +258,23 @@ function renderFactoryList() {
       if (fields.indexOf('capabilities') >= 0) parts = parts.concat(caps.en, caps.ar);
       if (fields.indexOf('description') >= 0) parts.push(f.desc.en, f.desc.ar);
       if (fields.indexOf('keywords') >= 0 && f.keywords) parts.push(f.keywords);
-      if (parts.join(' ').toLowerCase().indexOf(q) === -1) return false;
+      // Keep it if the query appears in a searched field OR is a close (typo)
+      // match on the name — relevanceScore handles the fuzzy case.
+      var contains = parts.join(' ').toLowerCase().indexOf(q) !== -1;
+      if (!contains && relevanceScore(f, FILTERS.q) <= 0) return false;
     }
     return true;
   });
-  
-  if (FILTERS.sort === 'moq') {
+
+  if (FILTERS.q) {
+    // Searching: closest matches first (exact/starts-with name beats a
+    // buried substring), then break ties by the chosen sort.
+    list.sort(function(a, b) {
+      var d = relevanceScore(b, FILTERS.q) - relevanceScore(a, FILTERS.q);
+      if (d) return d;
+      return FILTERS.sort === 'moq' ? a.moq - b.moq : L(a.name).localeCompare(L(b.name), LANG);
+    });
+  } else if (FILTERS.sort === 'moq') {
     list.sort(function(a, b) { return a.moq - b.moq; });
   } else {
     list.sort(function(a, b) { return L(a.name).localeCompare(L(b.name), LANG); });

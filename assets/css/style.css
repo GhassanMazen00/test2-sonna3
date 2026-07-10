@@ -3771,3 +3771,43 @@ footer li button:hover {
 }
 .btn-danger:hover { background: #A93226; border-color: #A93226; }
 .danger-zone { border: 1.5px solid #F3C7C2; background: #FDF4F3; }
+
+/* Requests page search + filter toolbar */
+.req-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 18px 0 6px;
+}
+.req-search {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+}
+.req-search .svg-ic {
+  position: absolute;
+  inset-inline-start: 12px;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+.req-search input {
+  width: 100%;
+  padding: 10px 14px;
+  padding-inline-start: 38px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+}
+.req-toolbar select {
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  background: var(--card, #fff);
+  color: var(--ink);
+}

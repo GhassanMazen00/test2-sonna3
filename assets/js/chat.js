@@ -197,4 +197,17 @@
     });
   };
   document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { if (window.updateChatBadge) updateChatBadge(); }, 800); });
+
+  // Record a view (once per account) for a factory/request and show the total
+  // in the element with the given id.
+  window.loadViews = function (type, id, elId) {
+    if (!window.AdminStore || !AdminStore.recordView) return;
+    var tokP = (window.Auth && Auth.isLoggedIn()) ? Auth.token().catch(function () { return null; }) : Promise.resolve(null);
+    tokP.then(function (tok) { return AdminStore.recordView(type, id, tok); })
+      .then(function (cnt) {
+        if (cnt == null) return;
+        var el = document.getElementById(elId);
+        if (el) el.textContent = (window.num ? num(cnt) : cnt);
+      });
+  };
 })();

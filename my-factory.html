@@ -69,7 +69,6 @@ function verifiedFactoryHTML(fac) {
   var waNum = (f.whatsapp || f.phone || '').replace(/[^0-9]/g, '');
 
   var contact = '<div class="panel"><h2>' + t('contact_title') + '</h2>' +
-    '<p style="margin-bottom:14px;font-size:13px">' + t('contact_sub') + '</p>' +
     (f.phone ? '<a class="contact-btn" href="tel:' + esc(f.phone.replace(/\s/g, '')) + '"><span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span><span>' + t('call') + '<small dir="ltr">' + esc(f.phone) + '</small></span></a>' : '') +
     (waNum ? '<a class="contact-btn" href="https://wa.me/' + waNum + '" target="_blank"><span class="ci" style="background:#E7F6EC">' + ICONS.chat + '</span><span>' + t('whatsapp') + '<small dir="ltr">' + esc(f.whatsapp || f.phone) + '</small></span></a>' : '') +
     (f.email ? '<a class="contact-btn" href="mailto:' + esc(f.email) + '"><span class="ci" style="background:#FDF0E0">' + ICONS.envelope + '</span><span>' + t('email') + '<small dir="ltr">' + esc(f.email) + '</small></span></a>' : '') +

@@ -265,7 +265,7 @@ function verifiedSubRows() {
         '<td>'+esc(i?i.en:row.sector)+'</td>' +
         '<td>'+esc((DATA.govs[row.gov]||{}).en||'—')+'</td>' +
         '<td>'+esc(d.moq||'—')+'</td>' +
-        '<td></td>' +
+        '<td>'+(d.featured?'★':'')+'</td>' +
         '<td><div class="row-actions">' +
           '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
           '<button class="btn btn-sm btn-danger" onclick="deleteSubmission(\''+row.id+'\')">Delete</button>' +
