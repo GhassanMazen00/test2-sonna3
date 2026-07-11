@@ -80,6 +80,7 @@ function dashboardHtml(p, fac) {
       '<button class="btn btn-ghost" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('dash_post') + '</button>' +
     '</div>' +
     factorySection(fac) +
+    '<div class="panel" id="myRfqPanel" style="margin-bottom:16px"><h2>' + t('myrfq_title') + '</h2>' + loadingHTML() + '</div>' +
     '<div class="panel">' +
       '<h2 style="margin-bottom:14px">' + t('dash_profile') + '</h2>' +
       '<div class="form-grid">' +
@@ -114,7 +115,36 @@ function renderAccount() {
   }
   var p = Auth.profile() || {};
   shell(dashboardHtml(p, null));   // render immediately, then fill in the factory
-  Auth.myFactory().then(function(fac){ shell(dashboardHtml(p, fac)); }).catch(function(){});
+  Auth.myFactory().then(function(fac){ shell(dashboardHtml(p, fac)); loadMyRFQs(); }).catch(function(){ loadMyRFQs(); });
+}
+
+function loadMyRFQs() {
+  var panel = document.getElementById('myRfqPanel');
+  if (!panel || !Auth.myRFQs) return;
+  Auth.myRFQs().then(function (rfqs) {
+    if (!rfqs.length) { panel.innerHTML = '<h2>' + t('myrfq_title') + '</h2><p class="muted">' + t('myrfq_none') + '</p>'; return; }
+    Promise.all(rfqs.map(function (r) { return Auth.rfqQuotes(r.id).then(function (q) { r._quotes = q || []; return r; }); }))
+      .then(function (list) {
+        panel.innerHTML = '<h2>' + t('myrfq_title') + '</h2>' + list.map(buyerRfqCard).join('');
+      });
+  });
+}
+function buyerRfqCard(rfq) {
+  var quotes = rfq._quotes || [];
+  return '<div class="rfq-item">' +
+    '<div class="rfq-top"><b>' + esc(rfq.title || '') + '</b>' +
+      '<span class="rfq-status s-' + esc(rfq.status) + '">' + t('rfq_status_' + rfq.status) + '</span></div>' +
+    '<div class="muted" style="font-size:12.5px">' + esc(rfq.factory_name || '') + ' · ' + t('qty') + ': ' + esc(rfq.qty || '—') + '</div>' +
+    (quotes.length
+      ? '<div class="quote-list">' + quotes.map(function (q) {
+          return '<div class="quote-item">' +
+            '<b>' + t('quote_price') + ': ' + esc(q.price || '—') + '</b>' +
+            (q.lead_time ? ' · ' + t('quote_lead') + ': ' + esc(q.lead_time) : '') +
+            (q.notes ? '<p style="font-size:13px;margin:4px 0 0">' + esc(q.notes) + '</p>' : '') +
+          '</div>';
+        }).join('') + '</div>'
+      : '<p class="muted" style="font-size:12.5px;margin-top:6px">' + t('myrfq_waiting') + '</p>') +
+  '</div>';
 }
 
 function createFactory() {

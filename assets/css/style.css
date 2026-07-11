@@ -3970,3 +3970,35 @@ footer li button:hover {
 .compare-table thead th { font-weight: 800; }
 .compare-table thead a { color: var(--teal); text-decoration: none; }
 .compare-table .cmp-key { color: var(--ink-soft); font-weight: 600; white-space: nowrap; }
+
+/* ============================================
+   PHASE 3b — RFQ / quotes / matching
+   ============================================ */
+.rfq-item {
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.rfq-item:last-child { margin-bottom: 0; }
+.rfq-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
+.rfq-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.rfq-status.s-open   { background: var(--amber-soft); color: #8A5A12; }
+.rfq-status.s-quoted { background: var(--teal-tint); color: var(--teal); }
+.rfq-status.s-closed { background: var(--mist); color: var(--ink-soft); }
+
+.quote-list { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.quote-item {
+  background: var(--teal-tint);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+}
+a.rfq-item { transition: border-color .15s ease, background .15s ease; }
+a.rfq-item:hover { border-color: var(--teal); background: var(--mist); }

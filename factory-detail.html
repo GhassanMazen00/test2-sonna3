@@ -24,6 +24,43 @@
 <script src="assets/js/components.js"></script>
 <script src="assets/js/chat.js"></script>
 <script>
+// ---- Request a quote (RFQ) ----
+function openRFQModal(factoryId, factoryName, ownerId) {
+  if (!(window.Auth && Auth.isLoggedIn())) { if (window.openAuthModal) openAuthModal('login'); return; }
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  bd.innerHTML =
+    '<div class="modal">' +
+      '<h2>' + t('rfq_title') + '</h2>' +
+      '<p class="sub">' + esc(factoryName) + '</p>' +
+      '<div class="au-err" id="rfqErr" style="display:none"></div>' +
+      '<div class="form-grid">' +
+        '<div class="form-field full"><label>' + t('rfq_product') + ' *</label><input id="rfq_title" placeholder="' + t('rfq_product_ph') + '"></div>' +
+        '<div class="form-field full"><label>' + t('rfq_details') + ' *</label><textarea id="rfq_details" rows="3" placeholder="' + t('rfq_details_ph') + '"></textarea></div>' +
+        '<div class="form-field"><label>' + t('rfq_qty') + ' *</label><input id="rfq_qty" type="text" placeholder="1000"></div>' +
+        '<div class="form-field"><label>' + t('rfq_target') + ' <span class="opt">(' + t('optional') + ')</span></label><input id="rfq_target" type="text"></div>' +
+        '<div class="form-field full"><label>' + t('rfq_needed') + ' <span class="opt">(' + t('optional') + ')</span></label><input id="rfq_needed" type="text" placeholder="' + t('rfq_needed_ph') + '"></div>' +
+      '</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
+        '<button class="btn btn-primary" id="rfqSubmit">' + t('rfq_send') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(bd);
+  bd.querySelector('#rfqSubmit').onclick = function () {
+    var v = function (id) { var e = bd.querySelector('#' + id); return e ? e.value.trim() : ''; };
+    var title = v('rfq_title'), details = v('rfq_details'), qty = v('rfq_qty');
+    var err = bd.querySelector('#rfqErr');
+    if (!title || !details || !qty) { err.textContent = t('fill_required'); err.style.display = 'block'; return; }
+    var btn = bd.querySelector('#rfqSubmit'); btn.disabled = true; btn.textContent = '…';
+    Auth.createRFQ({ id: factoryId, name: factoryName, ownerId: ownerId },
+      { title: title, details: details, qty: qty, target_price: v('rfq_target') || null, needed_by: v('rfq_needed') || null })
+      .then(function () { bd.remove(); toast(t('rfq_sent')); })
+      .catch(function (e2) { btn.disabled = false; btn.textContent = t('rfq_send'); err.textContent = (t('rfq_fail') || 'Could not send') + ': ' + (e2.message || e2); err.style.display = 'block'; });
+  };
+}
+
 function starsHTML(rating) {
   var s = ''; for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? ICONS.star : ICONS.starOutline; return s;
 }
@@ -298,7 +335,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>' +
                 '<button class="btn btn-ghost" style="width:100%" onclick="openAuthModal(\'login\')">' + t('login') + '</button>'
               : (
-            (f.ownerId ? '<button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="Chat.openWith(\'' + esc(f.ownerId) + '\',\'' + esc(L(f.name)).replace(/\x27/g, '&#39;') + '\')">' + ICONS.chat + ' ' + t('msg_supplier') + '</button>' : '') +
+            (f.ownerId && (!window.Chat || String(Chat.myId()) !== String(f.ownerId))
+              ? '<button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="Chat.openWith(\'' + esc(f.ownerId) + '\',\'' + esc(L(f.name)).replace(/\x27/g, '&#39;') + '\')">' + ICONS.chat + ' ' + t('msg_supplier') + '</button>' +
+                '<button class="btn btn-ghost" style="width:100%;margin-bottom:12px" onclick="openRFQModal(\'' + esc(f.id) + '\',\'' + esc(L(f.name)).replace(/\x27/g, '&#39;') + '\',\'' + esc(f.ownerId) + '\')">' + ICONS.clipboard + ' ' + t('rfq_cta') + '</button>'
+              : '') +
             '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
               '<span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span>' +
               '<span>' + t('call') + '<small dir="ltr">' + f.phone + '</small></span>' +
