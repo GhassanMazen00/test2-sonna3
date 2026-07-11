@@ -3905,3 +3905,68 @@ footer li button:hover {
 .star-btn .svg-ic { width: 30px; height: 30px; }
 .star-btn.on { color: var(--amber); }
 .star-btn:hover { transform: scale(1.08); }
+
+/* ============================================
+   PHASE 3a — favorites & compare
+   ============================================ */
+/* Heart button on cards / covers */
+.fav-btn {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: 12px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,.9);
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  transition: transform .15s ease, color .15s ease;
+  z-index: 2;
+}
+.fav-btn:hover { transform: scale(1.1); }
+.fav-btn.on { color: #E23D6E; }
+.fav-btn .svg-ic { width: 18px; height: 18px; }
+
+.shortlist-item { position: relative; }
+.compare-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+/* Sticky compare bar */
+.compare-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 14px 20px;
+  background: var(--card, #fff);
+  border-top: 1.5px solid var(--line);
+  box-shadow: 0 -6px 24px rgba(0,0,0,.08);
+}
+
+/* Compare table */
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.compare-table th, .compare-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+.compare-table thead th { font-weight: 800; }
+.compare-table thead a { color: var(--teal); text-decoration: none; }
+.compare-table .cmp-key { color: var(--ink-soft); font-weight: 600; white-space: nowrap; }

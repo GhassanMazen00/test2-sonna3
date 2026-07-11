@@ -192,6 +192,29 @@
       return this.updateMyFactory(id, { deletion_requested: true });
     },
 
+    // ---- Favorites / shortlist ----
+    myFavorites: function () {
+      if (!this.isLoggedIn()) return Promise.resolve([]);
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/favorites?select=factory_id&user_id=eq.' + AUTH.session.user.id, { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows || []).map(function (x) { return x.factory_id; }); });
+      }).catch(function () { return []; });
+    },
+    addFavorite: function (factoryId) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/favorites', {
+          method: 'POST', headers: restHeaders(tok, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+          body: JSON.stringify({ user_id: AUTH.session.user.id, factory_id: factoryId })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      });
+    },
+    removeFavorite: function (factoryId) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/favorites?user_id=eq.' + AUTH.session.user.id + '&factory_id=eq.' + factoryId, { method: 'DELETE', headers: restHeaders(tok) })
+          .then(function (r) { if (!r.ok) throw new Error('delete ' + r.status); return true; });
+      });
+    },
+
     // Have I messaged this factory's owner? (gates the "write a review" UI;
     // the same rule is enforced server-side in RLS).
     hasMessaged: function (ownerId) {

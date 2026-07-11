@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();</script>
+<title>قائمتي | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script>
+var COMPARE = new Set();
+
+function shortlistCard(f) {
+  var checked = COMPARE.has(String(f.id)) ? ' checked' : '';
+  return '<div class="shortlist-item">' +
+    '<label class="compare-check"><input type="checkbox" onchange="toggleCompare(\'' + esc(String(f.id)) + '\', this.checked)"' + checked + '> ' + t('cmp_select') + '</label>' +
+    factoryCardHTML(f) +
+  '</div>';
+}
+
+function toggleCompare(id, on) {
+  id = String(id);
+  if (on) {
+    if (COMPARE.size >= 3) { toast(t('cmp_max')); render(); return; }
+    COMPARE.add(id);
+  } else { COMPARE.delete(id); }
+  updateCompareBar();
+}
+
+function updateCompareBar() {
+  var bar = document.getElementById('cmpBar');
+  if (!bar) return;
+  bar.style.display = COMPARE.size >= 2 ? '' : 'none';
+  var c = document.getElementById('cmpCount'); if (c) c.textContent = COMPARE.size;
+}
+
+function num2(n) { return (n || n === 0) ? num(n) : '—'; }
+function openCompare() {
+  var list = FACTORIES.filter(function (f) { return COMPARE.has(String(f.id)); });
+  if (list.length < 2) return;
+  var rows = [
+    ['cmp_sector', function (f) { var i = ind(f.industry); return esc(L({ en: i.en, ar: i.ar })); }],
+    ['fac_location', function (f) { return f.gov ? esc(L(f.gov)) : '—'; }],
+    ['moq', function (f) { return num2(f.moq) + ' ' + t('units'); }],
+    ['daily_capacity', function (f) { return num2(f.dailyCapacity); }],
+    ['monthly_capacity', function (f) { return num2(f.monthlyCapacity); }],
+    ['employees', function (f) { return esc(f.emp || '—'); }],
+    ['established', function (f) { return num2(f.yr); }],
+    ['exports', function (f) { return f.exp ? '✓' : '—'; }],
+    ['certifications', function (f) { return (f.certs && f.certs.length) ? esc(f.certs.join(', ')) : '—'; }],
+    ['rating_reviews', function (f) { return f.reviewCount > 0 ? f.rating + ' (' + num(f.reviewCount) + ')' : t('new_badge'); }]
+  ];
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  bd.innerHTML = '<div class="modal" style="max-width:900px">' +
+    '<h2>' + t('cmp_title') + '</h2>' +
+    '<div style="overflow-x:auto"><table class="compare-table"><thead><tr><th></th>' +
+      list.map(function (f) { return '<th><a href="factory-detail.html?id=' + f.id + '">' + esc(L(f.name)) + '</a></th>'; }).join('') +
+    '</tr></thead><tbody>' +
+      rows.map(function (row) {
+        return '<tr><td class="cmp-key">' + t(row[0]) + '</td>' + list.map(function (f) { return '<td>' + row[1](f) + '</td>'; }).join('') + '</tr>';
+      }).join('') +
+    '</tbody></table></div>' +
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button></div>' +
+  '</div>';
+  document.body.appendChild(bd);
+}
+
+// Re-render when a heart is toggled off from within this page.
+window.onFavoritesChanged = function () { render(); };
+
+function render() {
+  var app = document.getElementById('app');
+  if (!window.Auth || !Auth.isLoggedIn()) {
+    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
+    return;
+  }
+  var list = FACTORIES.filter(function (f) { return isFav(f.id); });
+  // Drop any compare selections no longer in the shortlist.
+  COMPARE.forEach(function (id) { if (!list.some(function (f) { return String(f.id) === id; })) COMPARE.delete(id); });
+
+  app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
+    '<div class="page-head"><div class="container">' +
+      '<h1>' + ICONS.heart + ' ' + t('fav_shortlist') + '</h1>' +
+      '<p>' + t('fav_sub') + '</p>' +
+    '</div></div>' +
+    '<div class="container" style="padding-bottom:80px">' +
+      (list.length
+        ? '<div class="card-grid">' + list.map(shortlistCard).join('') + '</div>'
+        : '<div class="empty"><div class="big">' + ICONS.heart + '</div><b>' + t('fav_empty') + '</b><p>' + t('fav_empty_sub') + '</p>' +
+          '<a class="btn btn-primary" style="margin-top:14px" href="factories.html">' + t('dash_browse') + '</a></div>') +
+    '</div>' +
+    '<div class="compare-bar" id="cmpBar" style="display:none">' +
+      '<span>' + t('cmp_selected') + ': <b id="cmpCount">0</b></span>' +
+      '<button class="btn btn-primary" onclick="openCompare()">' + ICONS.scale + ' ' + t('cmp_open') + '</button>' +
+    '</div>' +
+  '</main>' + footerHTML();
+  updateCompareBar();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') LANG = savedLang;
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  if (!window.Auth || !Auth.isLoggedIn()) { render(); return; }
+  AdminStore.bootstrap().then(function () { loadFavorites(function () { render(); }); });
+});
+</script>
+</body>
+</html>
