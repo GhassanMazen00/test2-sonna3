@@ -192,6 +192,36 @@
       return this.updateMyFactory(id, { deletion_requested: true });
     },
 
+    // Have I messaged this factory's owner? (gates the "write a review" UI;
+    // the same rule is enforced server-side in RLS).
+    hasMessaged: function (ownerId) {
+      if (!ownerId || !this.isLoggedIn()) return Promise.resolve(false);
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/messages?select=id&sender=eq.' + AUTH.session.user.id + '&recipient=eq.' + ownerId + '&limit=1', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows || []).length > 0; });
+      }).catch(function () { return false; });
+    },
+
+    // My own review of a factory, if any.
+    myReview: function (factoryId) {
+      if (!this.isLoggedIn()) return Promise.resolve(null);
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/reviews?select=*&factory_id=eq.' + encodeURIComponent(factoryId) + '&reviewer=eq.' + AUTH.session.user.id, { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows && rows[0]) || null; });
+      }).catch(function () { return null; });
+    },
+
+    // Create or update my review (upsert on the factory_id+reviewer unique key).
+    submitReview: function (factoryId, rating, body) {
+      return freshToken().then(function (tok) {
+        var row = { factory_id: factoryId, reviewer: AUTH.session.user.id, reviewer_name: window.Auth.displayName(), rating: rating, body: body || '' };
+        return fetch(SUPABASE_URL + '/rest/v1/reviews', {
+          method: 'POST', headers: restHeaders(tok, { Prefer: 'resolution=merge-duplicates,return=representation' }), body: JSON.stringify(row)
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
+          .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
+      });
+    },
+
     // Permanently delete the signed-in user's account and all their data.
     deleteAccount: function () {
       return freshToken().then(function (tok) {

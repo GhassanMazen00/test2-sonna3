@@ -168,7 +168,9 @@ function factoryCardHTML(f) {
         '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + '</span>' +
         (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
         f.certs.slice(0, 1).map(function(c) { return '<span class="chip">' + esc(c) + '</span>'; }).join('') +
-        '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.star + ' ' + num(f.rating) + '</span>' +
+        (f.reviewCount > 0
+          ? '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.star + ' ' + num(f.rating) + ' (' + num(f.reviewCount) + ')</span>'
+          : '<span class="chip">' + t('new_badge') + '</span>') +
       '</div>' +
     '</div>' +
   '</a>';
