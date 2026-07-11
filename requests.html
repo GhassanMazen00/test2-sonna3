@@ -45,12 +45,14 @@ function liveRequestCard(r) {
     '<div class="desc">' + esc(r.description || '') + '</div>' +
     '<div class="foot">' +
       '<span>' + ICONS.box + ' ' + t('qty') + ': <b>' + esc(r.qty || '—') + '</b></span>' +
-      '<span>' + ICONS.pin + ' ' + gov + '</span>' +
+      (signedIn() ? '<span>' + ICONS.pin + ' ' + gov + '</span>' : '') +
       '<span>' + ICONS.clock + ' ' + STR[LANG].days_ago(daysAgo(r.created_at)) + '</span>' +
     '</div>' +
-    (mine
-      ? '<div class="req-owner-tag">' + ICONS.user + ' ' + t('req_yours') + '</div>'
-      : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>') +
+    (!signedIn()
+      ? '<button class="btn btn-ghost btn-sm req-msg-btn" onclick="event.stopPropagation();openAuthModal(\'signup\')">' + ICONS.user + ' ' + t('req_join_to_msg') + '</button>'
+      : mine
+        ? '<div class="req-owner-tag">' + ICONS.user + ' ' + t('req_yours') + '</div>'
+        : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>') +
   '</div>';
 }
 
@@ -65,11 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var app = document.getElementById('app');
 
-  // Members-only: require login to view requests
-  if (!window.Auth || !Auth.isLoggedIn()) {
-    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
-    return;
-  }
   var govOptions = '<option value="">' + t('all') + '</option>' +
     GOVS.map(function (g, ix) { return '<option value="' + ix + '">' + L(g) + '</option>'; }).join('');
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
@@ -83,11 +80,12 @@ document.addEventListener('DOMContentLoaded', function() {
       '</div>' +
     '</div>' +
     '<div class="container">' +
+      signupNudge(t('nudge_requests')) +
       '<div class="req-toolbar">' +
         '<div class="req-search">' + ICONS.search +
           '<input type="text" id="reqSearch" placeholder="' + t('req_search_ph') + '" oninput="onReqFilter(\'q\', this.value)">' +
         '</div>' +
-        '<select id="reqGovFilter" onchange="onReqFilter(\'gov\', this.value)">' + govOptions + '</select>' +
+        (signedIn() ? '<select id="reqGovFilter" onchange="onReqFilter(\'gov\', this.value)">' + govOptions + '</select>' : '') +
         '<select id="reqSort" onchange="onReqFilter(\'sort\', this.value)">' +
           '<option value="new">' + t('req_sort_new') + '</option>' +
           '<option value="old">' + t('req_sort_old') + '</option>' +
@@ -95,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
       '</div>' +
       '<div class="results-bar"><span class="count"><b id="reqCount">0</b> <span>' + t('results') + '</span></span></div>' +
       '<div class="card-grid" id="reqGrid">' +
-        '<div class="empty"><div class="big">' + ICONS.clipboard + '</div><p>…</p></div>' +
+        loadingHTML() +
       '</div>' +
     '</div>' +
   '</main>' +

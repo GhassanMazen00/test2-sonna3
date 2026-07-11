@@ -33,12 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
 
-  // Members-only: require login to view factory pages
-  if (!window.Auth || !Auth.isLoggedIn()) {
-    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
-    return;
-  }
-
   var params = new URLSearchParams(window.location.search);
   var factoryId = params.get('id');
   
@@ -111,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="profile-main">' +
             '<h1>' + esc(L(f.name)) + '</h1>' +
             '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
-              id.icon + ' ' + L({en: id.en, ar: id.ar}) + (locked ? '' : ' · ' + ICONS.pin + ' ' + L(f.gov) + ' · ' + t('est') + ' ' + num(f.yr)) +
+              id.icon + ' ' + L({en: id.en, ar: id.ar}) + (locked ? '' : (signedIn() ? ' · ' + ICONS.pin + ' ' + L(f.gov) : '') + ' · ' + t('est') + ' ' + num(f.yr)) +
             '</div>' +
             (locked
               ? '<div class="badge-row">' + verifyBadge(f) + '</div>'
@@ -169,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<div class="spec-grid">' +
               '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + num(f.yr) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + f.emp + '</div></div>' +
-              '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">' + ICONS.pin + ' ' + L(f.gov) + '</div></div>' +
+              (signedIn() ? '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">' + ICONS.pin + ' ' + L(f.gov) + '</div></div>' : '') +
               '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + esc(hoursTxt) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +
               '<div class="spec"><div class="k">' + t('certifications') + '</div><div class="v">' + (f.certs.length ? f.certs.join(' · ') : '—') + '</div></div>' +
@@ -180,6 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
         '<aside class="contact-panel">' +
           '<div class="panel">' +
             '<h2>' + t('contact_title') + '</h2>' +
+            (!signedIn()
+              ? '<p style="margin-bottom:14px;font-size:13px;color:var(--ink-soft)">' + t('contact_locked') + '</p>' +
+                '<button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>' +
+                '<button class="btn btn-ghost" style="width:100%" onclick="openAuthModal(\'login\')">' + t('login') + '</button>'
+              : (
             (f.ownerId ? '<button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="Chat.openWith(\'' + esc(f.ownerId) + '\',\'' + esc(L(f.name)).replace(/\x27/g, '&#39;') + '\')">' + ICONS.chat + ' ' + t('msg_supplier') + '</button>' : '') +
             '<a class="contact-btn" href="tel:' + f.phone.replace(/\s/g, '') + '">' +
               '<span class="ci" style="background:var(--teal-tint)">' + ICONS.phone + '</span>' +
@@ -203,7 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   (f.instagram ? '<a class="chip" href="' + esc(f.instagram) + '" target="_blank">Instagram</a>' : '') +
                   (f.linkedin ? '<a class="chip" href="' + esc(f.linkedin) + '" target="_blank">LinkedIn</a>' : '') +
                 '</div>'
-              : '') +
+              : '')
+            )) +
           '</div>' +
         '</aside>') +
       '</div>' +

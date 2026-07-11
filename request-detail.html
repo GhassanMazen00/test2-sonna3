@@ -44,7 +44,13 @@ function renderRequest(r) {
       '</div></div>'
     : '';
 
-  var contactBox = mine
+  var contactBox = !signedIn()
+    ? '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
+        '<h2>' + t('req_interested') + '</h2>' +
+        '<p style="font-size:13px;margin-bottom:12px">' + t('req_join_note') + '</p>' +
+        '<button class="btn btn-primary" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button> ' +
+        '<button class="btn btn-ghost" onclick="openAuthModal(\'login\')">' + t('login') + '</button></div>'
+    : mine
     ? '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('contact_requester') + '</h2>' +
         '<p style="font-weight:600;color:var(--ink)" dir="ltr">' + esc(r.contact || '') + '</p>' +
@@ -79,7 +85,7 @@ function renderRequest(r) {
           '<div class="spec"><div class="k">' + t('qty') + '</div><div class="v">' + esc(r.qty || '—') + ' ' + t('units') + '</div></div>' +
           '<div class="spec"><div class="k">' + t('budget') + '</div><div class="v">' + (r.budget ? esc(r.budget) + ' ' + t('egp') : t('budget_na')) + '</div></div>' +
           '<div class="spec"><div class="k">' + t('materials') + '</div><div class="v">' + esc(r.material || '—') + '</div></div>' +
-          '<div class="spec"><div class="k">' + t('deliver_to') + '</div><div class="v">' + ICONS.pin + ' ' + gov + '</div></div>' +
+          (signedIn() ? '<div class="spec"><div class="k">' + t('deliver_to') + '</div><div class="v">' + ICONS.pin + ' ' + gov + '</div></div>' : '') +
         '</div>' +
         mediaHTML +
         contactBox +
@@ -99,12 +105,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
-
-  // Members-only: require login to view request details
-  if (!window.Auth || !Auth.isLoggedIn()) {
-    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
-    return;
-  }
 
   var params = new URLSearchParams(window.location.search);
   var requestId = params.get('id');
