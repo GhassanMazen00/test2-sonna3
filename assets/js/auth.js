@@ -264,14 +264,27 @@
       });
     },
 
-    // Have I messaged this factory's owner? (gates the "write a review" UI;
-    // the same rule is enforced server-side in RLS).
-    hasMessaged: function (ownerId) {
+    // Can I review this factory? Requires a two-way conversation: I messaged the
+    // owner AND the owner replied. (Mirrors the RLS rule.)
+    canReview: function (ownerId) {
       if (!ownerId || !this.isLoggedIn()) return Promise.resolve(false);
+      var me = AUTH.session.user.id;
       return freshToken().then(function (tok) {
-        return fetch(SUPABASE_URL + '/rest/v1/messages?select=id&sender=eq.' + AUTH.session.user.id + '&recipient=eq.' + ownerId + '&limit=1', { headers: restHeaders(tok) })
-          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows || []).length > 0; });
+        return fetch(SUPABASE_URL + '/rest/v1/messages?select=sender,recipient&or=(and(sender.eq.' + me + ',recipient.eq.' + ownerId + '),and(sender.eq.' + ownerId + ',recipient.eq.' + me + '))', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (rows) {
+            var sent = false, replied = false;
+            (rows || []).forEach(function (m) {
+              if (String(m.sender) === String(me)) sent = true;
+              if (String(m.sender) === String(ownerId)) replied = true;
+            });
+            return sent && replied;
+          });
       }).catch(function () { return false; });
+    },
+    // Upload a CSV/PDF quote attachment; resolves to its public URL.
+    uploadQuoteFile: function (file) {
+      return freshToken().then(function (tok) { return AdminStore.uploadPublic(file, tok, 'quotes'); });
     },
 
     // My own review of a factory, if any.

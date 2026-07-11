@@ -4034,3 +4034,22 @@ a.rfq-item:hover { border-color: var(--teal); background: var(--mist); }
   gap: 16px;
 }
 @media (max-width: 700px) { .dash-cols { grid-template-columns: 1fr; } }
+
+/* Review disclaimer (collapsible) */
+.review-disclaimer {
+  background: var(--mist);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+}
+.review-disclaimer summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.review-disclaimer summary .svg-ic { width: 14px; height: 14px; }
+.review-disclaimer p { margin-top: 8px; color: var(--ink-soft); line-height: 1.6; }

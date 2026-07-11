@@ -90,9 +90,9 @@ function loadFactoryReviews(factoryId, ownerId, factoryName) {
   Promise.all([
     AdminStore.fetchReviews(factoryId),
     (window.Auth && Auth.isLoggedIn()) ? Auth.myReview(factoryId) : Promise.resolve(null),
-    (window.Auth && Auth.isLoggedIn() && ownerId) ? Auth.hasMessaged(ownerId) : Promise.resolve(false)
+    (window.Auth && Auth.isLoggedIn() && ownerId) ? Auth.canReview(ownerId) : Promise.resolve(false)
   ]).then(function (res) {
-    var reviews = res[0] || [], mine = res[1], messaged = res[2];
+    var reviews = res[0] || [], mine = res[1], canRev = res[2];
     var isOwner = window.Auth && Auth.user() && ownerId && String(Auth.user().id) === String(ownerId);
     var avg = reviews.length ? Math.round(reviews.reduce(function (s, r) { return s + r.rating; }, 0) / reviews.length * 10) / 10 : 0;
 
@@ -106,12 +106,15 @@ function loadFactoryReviews(factoryId, ownerId, factoryName) {
     if (isOwner) { cta = ''; }
     else if (!(window.Auth && Auth.isLoggedIn())) {
       cta = '<button class="btn btn-ghost btn-sm" onclick="openAuthModal(\'login\')">' + t('review_signin') + '</button>';
-    } else if (!messaged) {
+    } else if (!canRev) {
       cta = '<p class="muted" style="font-size:13px">' + ICONS.chat + ' ' + t('review_need_msg') + '</p>';
     } else {
       cta = '<button class="btn btn-primary btn-sm" onclick="openReviewModal(\'' + esc(factoryId) + '\',\'' + esc(String(factoryName)).replace(/\x27/g, '&#39;') + '\')">' +
         (mine ? t('review_edit') : t('review_write')) + '</button>';
     }
+    // Always-visible disclaimer explaining how reviews work.
+    var disclaimer = '<details class="review-disclaimer"><summary>' + ICONS.clipboard + ' ' + t('review_how') + '</summary>' +
+      '<p>' + t('review_disclaimer') + '</p></details>';
 
     var list = reviews.length
       ? '<div class="review-list">' + reviews.map(function (r) {
@@ -124,7 +127,7 @@ function loadFactoryReviews(factoryId, ownerId, factoryName) {
         }).join('') + '</div>'
       : '';
 
-    panel.innerHTML = head + summary + '<div style="margin-bottom:14px">' + cta + '</div>' + list;
+    panel.innerHTML = head + summary + '<div style="margin-bottom:10px">' + cta + '</div>' + disclaimer + list;
   });
 }
 
@@ -145,6 +148,7 @@ function openReviewModal(factoryId, factoryName) {
         '</div>' +
         '<div class="form-field full" style="margin-top:12px"><label>' + t('review_comment') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
           '<textarea id="rvBody" rows="4">' + (mine ? esc(mine.body || '') : '') + '</textarea></div>' +
+        '<p class="muted" style="font-size:12px;margin-top:4px">' + t('review_modal_note') + '</p>' +
         '<div class="modal-actions">' +
           '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
           '<button class="btn btn-primary" id="rvSubmit">' + t('review_submit') + '</button>' +

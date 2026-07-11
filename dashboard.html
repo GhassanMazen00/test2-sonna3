@@ -40,6 +40,62 @@ function relTime(iso) {
 }
 function starsMini(rating) { var s = ''; for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? ICONS.star : ICONS.starOutline; return s; }
 
+// Incoming RFQ card with a respond action (factory owner).
+function rfqOwnerCard(rfq) {
+  return '<div class="rfq-item">' +
+    '<div class="rfq-top"><b>' + esc(rfq.title || '') + '</b>' +
+      '<span class="rfq-status s-' + esc(rfq.status) + '">' + t('rfq_status_' + rfq.status) + '</span></div>' +
+    '<div class="muted" style="font-size:12.5px">' + t('by') + ' ' + esc(rfq.buyer_name || 'User') + ' · ' + t('qty') + ': ' + esc(rfq.qty || '—') +
+      (rfq.target_price ? ' · ' + t('rfq_target') + ': ' + esc(rfq.target_price) : '') +
+      (rfq.needed_by ? ' · ' + t('rfq_needed') + ': ' + esc(rfq.needed_by) : '') + '</div>' +
+    (rfq.details ? '<p style="font-size:13.5px;margin:6px 0">' + esc(rfq.details) + '</p>' : '') +
+    (rfq.status !== 'closed' ? '<button class="btn btn-primary btn-sm" onclick="openQuoteModal(\'' + esc(rfq.id) + '\')">' + t('rfq_respond') + '</button>' : '') +
+  '</div>';
+}
+
+function openQuoteModal(rfqId) {
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  bd.innerHTML =
+    '<div class="modal">' +
+      '<h2>' + t('quote_title') + '</h2>' +
+      '<p class="sub">' + t('quote_sub') + '</p>' +
+      '<div class="au-err" id="qErr" style="display:none"></div>' +
+      '<div class="form-grid">' +
+        '<div class="form-field"><label>' + t('quote_price') + '</label><input id="q_price" type="text" placeholder="' + t('quote_price_ph') + '"></div>' +
+        '<div class="form-field"><label>' + t('quote_lead') + '</label><input id="q_lead" type="text" placeholder="' + t('quote_lead_ph') + '"></div>' +
+        '<div class="form-field full"><label>' + t('quote_notes') + '</label><textarea id="q_notes" rows="3"></textarea></div>' +
+        '<div class="form-field full"><label>' + t('quote_file') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
+          '<input id="q_file" type="file" accept=".csv,.pdf,application/pdf,text/csv">' +
+          '<div class="muted" style="font-size:12px;margin-top:4px">' + t('quote_file_note') + '</div></div>' +
+      '</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
+        '<button class="btn btn-primary" id="qSubmit">' + t('quote_send') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(bd);
+  bd.querySelector('#qSubmit').onclick = function () {
+    var v = function (id) { var e = bd.querySelector('#' + id); return e ? e.value.trim() : ''; };
+    var price = v('q_price'), notes = v('q_notes');
+    var fileInput = bd.querySelector('#q_file');
+    var file = fileInput && fileInput.files && fileInput.files[0];
+    var err = bd.querySelector('#qErr');
+    // Require at least a price, notes, or an attached file.
+    if (!price && !notes && !file) { err.textContent = t('quote_need_something'); err.style.display = 'block'; return; }
+    var btn = bd.querySelector('#qSubmit'); btn.disabled = true; btn.textContent = '…';
+    var up = file ? Auth.uploadQuoteFile(file).then(function (url) { return { file_url: url, file_name: file.name }; }) : Promise.resolve({});
+    up.then(function (fileFields) {
+      return Auth.sendQuote(rfqId, Object.assign({ price: price || null, lead_time: v('q_lead') || null, notes: notes || '' }, fileFields));
+    }).then(function () {
+      bd.remove(); toast(t('quote_sent')); renderDashboard();
+    }).catch(function (e2) {
+      btn.disabled = false; btn.textContent = t('quote_send'); err.textContent = (e2.message || e2); err.style.display = 'block';
+    });
+  };
+}
+
 function renderDashboard() {
   if (!window.Auth || !Auth.isLoggedIn()) { shell(Auth.gateHTML()); return; }
   shell('<div class="container" style="padding:50px 24px">' + loadingHTML(t('dash_loading')) + '</div>');
@@ -59,13 +115,18 @@ function renderDashboard() {
       AdminStore.fetchResponseStats(me),
       AdminStore.fetchReviews(fac.id),
       Auth.token().then(function (tok) { return AdminStore.fetchSaveCount(fac.id, tok); }).catch(function () { return 0; }),
-      Auth.incomingRFQs()
+      Auth.incomingRFQs(),
+      AdminStore.fetchRequests()
     ]).then(function (res) {
       var views = res[0] || 0;
       var stats = res[1] || {};
       var reviews = res[2] || [];
       var saves = res[3] || 0;
       var rfqs = res[4] || [];
+      var matches = (res[5] || []).filter(function (r) {
+        if (String(r.owner) === String(me)) return false;
+        return (r.sector && r.sector === fac.sector) || (r.gov != null && String(r.gov) === String(fac.gov));
+      }).slice(0, 6);
       var openRfqs = rfqs.filter(function (r) { return r.status === 'open'; }).length;
       var avgRating = reviews.length ? Math.round(reviews.reduce(function (s, r) { return s + r.rating; }, 0) / reviews.length * 10) / 10 : 0;
 
@@ -78,7 +139,6 @@ function renderDashboard() {
       }
 
       var recentReviews = reviews.slice(0, 3);
-      var recentRfqs = rfqs.slice(0, 3);
 
       shell(
         '<div class="container" style="padding:24px 24px 64px;max-width:960px">' +
@@ -102,17 +162,21 @@ function renderDashboard() {
 
           respLine +
 
+          '<div class="panel"><h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
+            (rfqs.length ? rfqs.map(rfqOwnerCard).join('') : '<p class="muted">' + t('rfq_none') + '</p>') +
+          '</div>' +
+
           '<div class="dash-cols">' +
             '<div class="panel"><h2>' + t('dash_recent_reviews') + '</h2>' +
               (recentReviews.length
                 ? recentReviews.map(function (r) { return '<div class="rfq-item"><div class="rfq-top"><b>' + esc(r.reviewer_name || 'User') + '</b><span class="review-stars">' + starsMini(r.rating) + '</span></div>' + (r.body ? '<p style="font-size:13.5px;margin:4px 0 0">' + esc(r.body) + '</p>' : '') + '</div>'; }).join('')
                 : '<p class="muted">' + t('no_reviews_yet') + '</p>') +
             '</div>' +
-            '<div class="panel"><h2>' + t('rfq_incoming') + '</h2>' +
-              (recentRfqs.length
-                ? recentRfqs.map(function (r) { return '<div class="rfq-item"><div class="rfq-top"><b>' + esc(r.title || '') + '</b><span class="rfq-status s-' + esc(r.status) + '">' + t('rfq_status_' + r.status) + '</span></div><div class="muted" style="font-size:12.5px">' + t('by') + ' ' + esc(r.buyer_name || 'User') + ' · ' + relTime(r.created_at) + '</div></div>'; }).join('') +
-                  '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="my-factory.html">' + t('dash_manage_rfqs') + '</a>'
-                : '<p class="muted">' + t('rfq_none') + '</p>') +
+            '<div class="panel"><h2>' + t('match_title') + '</h2>' +
+              '<p class="muted" style="font-size:12.5px;margin-bottom:10px">' + t('match_sub') + '</p>' +
+              (matches.length
+                ? matches.map(function (r) { return '<a class="rfq-item" href="request-detail.html?id=' + encodeURIComponent(r.id) + '" style="display:block;text-decoration:none;color:inherit"><b>' + esc(r.title || '') + '</b><div class="muted" style="font-size:12.5px">' + t('qty') + ': ' + esc(r.qty || '—') + (GOVS[r.gov] ? ' · ' + esc(L(GOVS[r.gov])) : '') + '</div></a>'; }).join('')
+                : '<p class="muted">' + t('match_none') + '</p>') +
             '</div>' +
           '</div>' +
         '</div>'

@@ -142,6 +142,7 @@ function buyerRfqCard(rfq) {
             '<b>' + t('quote_price') + ': ' + esc(q.price || '—') + '</b>' +
             (q.lead_time ? ' · ' + t('quote_lead') + ': ' + esc(q.lead_time) : '') +
             (q.notes ? '<p style="font-size:13px;margin:4px 0 0">' + esc(q.notes) + '</p>' : '') +
+            (q.file_url ? '<a href="' + encodeURI(q.file_url) + '" target="_blank" class="chip" style="margin-top:6px;display:inline-flex">' + ICONS.clipboard + ' ' + esc(q.file_name || t('quote_file')) + '</a>' : '') +
           '</div>';
         }).join('') + '</div>'
       : '<p class="muted" style="font-size:12.5px;margin-top:6px">' + t('myrfq_waiting') + '</p>') +
