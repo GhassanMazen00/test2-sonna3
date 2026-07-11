@@ -36,7 +36,7 @@ function liveRequestCard(r) {
   var gov = (r.gov != null && GOVS[r.gov]) ? L(GOVS[r.gov]) : '—';
   var hasMedia = r.media && r.media.length;
   var thumb = hasMedia && r.media[0].type !== 'video'
-    ? '<div class="thumb" style="background-image:url(\'' + r.media[0].url + '\');background-size:cover;background-position:center"></div>'
+    ? '<div class="thumb" style="background-image:url(\'' + safeUrl(r.media[0].url) + '\');background-size:cover;background-position:center"></div>'
     : '<div class="thumb">' + ICONS.clipboard + '</div>';
   var titleAttr = esc(String(r.title || '')).replace(/'/g, '&#39;');
   return '<div class="request-card" onclick="location.href=\'request-detail.html?id=' + encodeURIComponent(r.id) + '\'" style="cursor:pointer">' +

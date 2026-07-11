@@ -77,11 +77,11 @@ function verifiedFactoryHTML(fac) {
 
   return '<div class="container" style="margin-top:14px">' +
       '<div class="au-err" style="background:var(--teal-tint);color:var(--teal);margin-bottom:14px">' + ICONS.check + ' ' + t('mf_verified_banner') + '</div>' +
-      '<div class="profile-cover" style="' + (f.cover ? 'background:#0000;background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + ';border-radius:20px">' +
+      '<div class="profile-cover" style="' + (f.cover ? 'background:#0000;background-image:url(\'' + safeUrl(f.cover) + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + ';border-radius:20px">' +
         '<span class="pcode">' + factoryCode(f) + '</span>' + (f.cover ? '' : '<span class="cover-ic">' + i.icon + '</span>') +
       '</div>' +
       '<div class="profile-top"><div class="profile-card">' +
-        (f.logo ? '<div class="profile-logo" style="background-image:url(\'' + f.logo + '\');background-size:cover;background-position:center"></div>' : '<div class="profile-logo">' + esc(L(f.name).charAt(0)) + '</div>') +
+        (f.logo ? '<div class="profile-logo" style="background-image:url(\'' + safeUrl(f.logo) + '\');background-size:cover;background-position:center"></div>' : '<div class="profile-logo">' + esc(L(f.name).charAt(0)) + '</div>') +
         '<div class="profile-main">' +
           '<h1>' + esc(L(f.name)) + ' <span style="vertical-align:middle">' + verifyBadge(f) + '</span></h1>' +
           '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' + i.icon + ' ' + esc(L({en:i.en,ar:i.ar})) + (GOVS[fac.gov] ? ' · ' + ICONS.pin + ' ' + esc(L(GOVS[fac.gov])) : '') + '</div>' +
@@ -97,7 +97,7 @@ function verifiedFactoryHTML(fac) {
         '<div class="panel"><h2>' + t('capabilities') + '</h2><div class="chip-row">' + L(capList).map(function (p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div></div>' +
         '<div class="panel"><h2>' + t('gallery') + '</h2><div class="gallery">' +
           ((f.media && f.media.length)
-            ? f.media.map(function (m) { return m.type === 'video' ? '<div class="ph"><video src="' + m.url + '" controls playsinline style="width:100%;height:100%;object-fit:cover"></video></div>' : '<a class="ph" href="' + m.url + '" target="_blank" style="background-image:url(\'' + m.url + '\');background-size:cover;background-position:center"></a>'; }).join('')
+            ? f.media.map(function (m) { return m.type === 'video' ? '<div class="ph"><video src="' + encodeURI(m.url) + '" controls playsinline style="width:100%;height:100%;object-fit:cover"></video></div>' : '<a class="ph" href="' + encodeURI(m.url) + '" target="_blank" style="background-image:url(\'' + safeUrl(m.url) + '\');background-size:cover;background-position:center"></a>'; }).join('')
             : [0,1,2,3,4,5].map(function (n) { return '<div class="ph" style="background:' + grad(i.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? ICONS.camera : i.icon) + '</div>'; }).join('')) +
         '</div></div>' +
         '<div class="panel"><h2>' + t('details') + '</h2><div class="spec-grid">' +
@@ -178,7 +178,7 @@ function submitVerify(bd) {
   var info = { name: v('vf_name'), number: v('vf_number'), location: v('vf_location'), submitted_at: new Date().toISOString() };
   if (!info.name || !info.number) { var er = bd.querySelector('#vfErr'); er.textContent = t('fill_required'); er.style.display = 'block'; return; }
   var btn = bd.querySelector('#vf_submit'); btn.disabled = true; btn.textContent = '…';
-  Auth.updateMyFactory(MY_FAC.id, { verification_requested: true, verification_info: info }).then(function () {
+  Auth.submitVerification(MY_FAC.id, info).then(function () {
     bd.remove(); renderMyFactory();
   }).catch(function (e) { btn.disabled = false; btn.textContent = t('vf_submit'); alert('Could not send request: ' + (e.message || e)); });
 }

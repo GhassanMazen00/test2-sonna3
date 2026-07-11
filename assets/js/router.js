@@ -19,9 +19,16 @@
 })();
 
 function renderHomePage() {
-  var featured = FACTORIES.filter(function(f) { return f.featured; });
+  // Only feature verified factories — an unverified one would open to a locked
+  // page, so it shouldn't be showcased in full on the home page.
+  var featured = FACTORIES.filter(function(f) { return f.featured && f.verified !== false; });
   var app = document.getElementById('app');
-  
+
+  // Real counts for the hero stats (no more hardcoded numbers).
+  var statFactories = FACTORIES.length;
+  var statIndustries = (function(){ var s = {}; FACTORIES.forEach(function(f){ s[f.industry] = 1; }); return Object.keys(s).length; })();
+  var statGovs = (function(){ var s = {}; FACTORIES.forEach(function(f){ if (f.govIndex != null) s[f.govIndex] = 1; }); return Object.keys(s).length; })();
+
   // Set language direction
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
@@ -60,9 +67,9 @@ function renderHomePage() {
           '</div>' +
         '</div>' +
         '<div class="hero-stats">' +
-          '<div class="hero-stat"><b>' + num(50) + '+</b><span>' + t('stat_factories') + '</span></div>' +
-          '<div class="hero-stat"><b>' + num(14) + '</b><span>' + t('stat_industries') + '</span></div>' +
-          '<div class="hero-stat"><b>' + num(16) + '</b><span>' + t('stat_governorates') + '</span></div>' +
+          '<div class="hero-stat"><b>' + num(statFactories) + '</b><span>' + t('stat_factories') + '</span></div>' +
+          '<div class="hero-stat"><b>' + num(statIndustries) + '</b><span>' + t('stat_industries') + '</span></div>' +
+          '<div class="hero-stat"><b>' + num(statGovs) + '</b><span>' + t('stat_governorates') + '</span></div>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -201,9 +208,8 @@ function renderHomePage() {
       '</div>' +
     '</section>' +
   '</main>' +
-  '<div class="container" style="padding:0 24px 28px"><p style="font-size:12px;color:var(--ink-soft);text-align:center">' + t('demo_note') + '</p></div>' +
   footerHTML();
-  
+
   app.innerHTML = html;
   
   // Initialize homepage features
@@ -228,7 +234,7 @@ function homeRequestCard(r) {
   var days = Math.max(0, Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000));
   var hasImg = r.media && r.media.length && r.media[0].type !== 'video';
   var icon = hasImg
-    ? '<div class="req-icon" style="background-image:url(\'' + r.media[0].url + '\');background-size:cover;background-position:center"></div>'
+    ? '<div class="req-icon" style="background-image:url(\'' + safeUrl(r.media[0].url) + '\');background-size:cover;background-position:center"></div>'
     : '<div class="req-icon" style="background:radial-gradient(rgba(14,107,94,.08) 1.2px,transparent 1.2px) 0 0/18px 18px,linear-gradient(135deg,#EFF6F4,#E2EFEC)">' + ICONS.clipboard + '</div>';
   return '<a href="request-detail.html?id=' + encodeURIComponent(r.id) + '" class="request-card-new">' +
     '<div class="req-meta">' +
@@ -308,7 +314,8 @@ function requestChip(r) {
 function buildFloatSets(reqRows) {
   var need = FLOAT_SETS * FLOAT_PER;
   var reqs = (reqRows || []).slice(0, 6).map(requestChip);
-  var facs = FACTORIES.slice().sort(function () { return Math.random() - 0.5; }).map(factoryChip);
+  var facs = FACTORIES.filter(function (f) { return f.verified !== false; })
+    .sort(function () { return Math.random() - 0.5; }).map(factoryChip);
   var pool = [], ri = 0, fi = 0;
   while (ri < reqs.length || fi < facs.length) {          // interleave requests & factories
     if (ri < reqs.length) pool.push(reqs[ri++]);

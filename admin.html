@@ -94,6 +94,7 @@ var EDIT_FX = null;     // factory being edited (holds its media while the form 
 var _FAC_EDIT = null;   // the factory object currently in the form
 var _FAC_ONSAVE = null; // what to do when the factory form is saved
 var SUBS = [];          // user-submitted factories (from the 'factories' table)
+var VERIF = {};         // verification info per factory id (admin-only table)
 var SUBS_FILTER = 'all';
 
 // Live-filter a table body without rebuilding the search box (keeps focus)
@@ -207,16 +208,28 @@ function doLogin() {
 function logout() { try { sessionStorage.removeItem('sbSession'); } catch(e){} SB_TOKEN = null; renderLogin(); }
 
 /* ---------- Shell ---------- */
+function renderNotAuthorized() {
+  root.innerHTML =
+    '<div class="login-box">' +
+      '<h1>Sonna<span style="color:var(--teal)">ع</span> Admin</h1>' +
+      '<p>This account is not authorized to manage the site. Ask an administrator to add you, or log in with an admin account.</p>' +
+      '<button class="btn btn-primary" style="width:100%" onclick="logout()">Log out</button>' +
+    '</div>';
+}
 function boot() {
   root.innerHTML = '<div style="padding:60px;text-align:center;color:var(--ink-soft)">Loading…</div>';
-  AdminStore.fetchRemote().then(function(remote){
-    DATA = (remote && (remote.factories || remote.industries)) ? remote : AdminStore.defaults();
-    if (!DATA.requests) DATA.requests = AdminStore.defaults().requests;   // migrate older saves
-    renderApp();
-  }).catch(function(){
-    DATA = AdminStore.defaults();
-    renderApp();
-  });
+  // Gate the panel on the admin allowlist (server-enforced too, via RLS).
+  getFreshToken().then(function(tok){ return AdminStore.amIAdmin(tok); }).then(function(isAdmin){
+    if (!isAdmin) { renderNotAuthorized(); return; }
+    AdminStore.fetchRemote().then(function(remote){
+      DATA = (remote && (remote.factories || remote.industries)) ? remote : AdminStore.defaults();
+      if (!DATA.requests) DATA.requests = AdminStore.defaults().requests;   // migrate older saves
+      renderApp();
+    }).catch(function(){
+      DATA = AdminStore.defaults();
+      renderApp();
+    });
+  }).catch(function(){ renderNotAuthorized(); });
 }
 function renderApp() {
   var tabs = [['factories','Factories'],['submissions','Factory submissions'],['requests','Requests'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
@@ -550,7 +563,7 @@ function submissionRows() {
   var rows = SUBS.filter(function(row){ return !row.verified && (SUBS_FILTER==='all' || row.verification_requested); });
   var out = rows.map(function(row){
     var i = DATA.industries.find(function(s){return s.id===row.sector;});
-    var info = row.verification_info || {};
+    var info = VERIF[row.id] || {};
     var infoHtml = row.verification_requested
       ? '<div class="muted" style="margin-top:6px">Verification form — name: <b>'+esc(info.name||'—')+'</b> · phone: '+esc(info.number||'—')+' · location: '+esc(info.location||'—')+'</div>'
       : '';
@@ -581,8 +594,10 @@ function renderSubmissions() {
       '</div>' +
       '<div id="subsBody"><div class="muted" style="padding:20px">Loading…</div></div>' +
     '</div>';
-  AdminStore.fetchFactoryRows().then(function(rows){
-    SUBS = rows || [];
+  Promise.all([AdminStore.fetchFactoryRows(), getFreshToken().then(function(tok){ return AdminStore.fetchVerifications(tok); }).catch(function(){ return {}; })])
+    .then(function(res){
+    SUBS = res[0] || [];
+    VERIF = res[1] || {};
     document.getElementById('subsBody').innerHTML =
       '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Name</th><th>Sector</th><th>Location</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>' +
       submissionRows() + '</tbody></table></div>';

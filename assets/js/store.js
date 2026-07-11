@@ -278,7 +278,7 @@ AdminStore.fetchRequests = function () {
   if (!this.remoteEnabled()) return Promise.resolve([]);
   return fetch(SUPABASE_URL + '/rest/v1/requests?select=*&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
     .then(function (r) { if (!r.ok) throw new Error('requests ' + r.status); return r.json(); })
-    .catch(function () { return []; });
+    .catch(function (e) { if (window.console) console.warn('fetchRequests failed:', e.message || e); return []; });
 };
 AdminStore.getRequest = function (id) {
   if (!this.remoteEnabled()) return Promise.resolve(null);
@@ -325,12 +325,34 @@ AdminStore.rowToFactory = function (row) {
   };
 };
 
+// Public columns only — never request verification info here (it lives in a
+// separate, admin-only table now).
+var FACTORY_PUBLIC_COLS = 'id,owner,name,sector,gov,data,verified,verification_requested,deletion_requested,created_at';
+
 // Fetch all rows from the factories table (public read)
 AdminStore.fetchFactoryRows = function () {
   if (!this.remoteEnabled()) return Promise.resolve([]);
-  return fetch(FACTORIES_URL() + '?select=*&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+  return fetch(FACTORIES_URL() + '?select=' + FACTORY_PUBLIC_COLS + '&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
     .then(function (r) { if (!r.ok) throw new Error('factories ' + r.status); return r.json(); })
-    .catch(function () { return []; });
+    .catch(function (e) { if (window.console) console.warn('fetchFactoryRows failed:', e.message || e); return []; });
+};
+
+// Is the logged-in admin actually on the allowlist? (admin.html gate)
+AdminStore.amIAdmin = function (token) {
+  if (!this.remoteEnabled()) return Promise.resolve(false);
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/am_i_admin', {
+    method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: '{}'
+  }).then(function (r) { return r.ok ? r.json() : false; }).then(function (v) { return !!v; }).catch(function () { return false; });
+};
+
+// Admin-only: verification submissions (name/phone/location), keyed by factory id.
+AdminStore.fetchVerifications = function (token) {
+  if (!this.remoteEnabled()) return Promise.resolve({});
+  return fetch(SUPABASE_URL + '/rest/v1/factory_verifications?select=*', {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token }
+  }).then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+    var map = {}; (rows || []).forEach(function (v) { map[v.factory_id] = v; }); return map;
+  }).catch(function () { return {}; });
 };
 
 // Append user factories into the live FACTORIES list (skip ids already present).

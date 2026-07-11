@@ -41,6 +41,15 @@ function grad(g) {
   return 'linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ')';
 }
 
+// Make a user-supplied URL safe to drop inside url('...') in an inline style,
+// so it can't break out of the quotes/parens and inject CSS. Percent-encodes
+// the dangerous characters explicitly (encodeURIComponent leaves ' ( ) intact).
+function safeUrl(u) {
+  return String(u == null ? '' : u).replace(/[)"'(\\\s<>]/g, function (c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0');
+  });
+}
+
 // Number formatting
 function num(n) {
   var clean = Number(String(n).replace(/,/g, ''));
