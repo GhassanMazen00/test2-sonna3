@@ -49,7 +49,8 @@ function factorySection(fac) {
         ? '<div class="lock-note" style="margin-top:14px;color:#B4322A">' + ICONS.clock + ' ' + t('fac_del_pending') + '</div>'
         : '') +
       '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">' +
-        '<a class="btn btn-primary btn-sm" href="my-factory.html">' + t('fac_view') + ' ' + (LANG==='ar'?'←':'→') + '</a>' +
+        '<a class="btn btn-primary btn-sm" href="dashboard.html">' + ICONS.chartBar + ' ' + t('dash_link') + '</a>' +
+        '<a class="btn btn-ghost btn-sm" href="my-factory.html">' + t('fac_view') + ' ' + (LANG==='ar'?'←':'→') + '</a>' +
         (fac.deletion_requested ? '' : '<button class="btn btn-ghost btn-sm" onclick="requestFactoryDeletion(\'' + esc(fac.id) + '\')">' + t('fac_del_request') + '</button>') +
       '</div>' +
     '</div>';

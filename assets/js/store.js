@@ -309,6 +309,24 @@ AdminStore.recordView = function (type, id, token) {
     .catch(function () { return null; });
 };
 
+// Read-only total view count (does not record a view).
+AdminStore.fetchViewCount = function (type, id) {
+  if (!this.remoteEnabled()) return Promise.resolve(0);
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/get_view_count', {
+    method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_type: type, p_id: String(id) })
+  }).then(function (r) { return r.ok ? r.json() : 0; }).then(function (n) { return Number(n) || 0; }).catch(function () { return 0; });
+};
+
+// How many users shortlisted a factory (owner dashboard metric).
+AdminStore.fetchSaveCount = function (factoryId, token) {
+  if (!this.remoteEnabled()) return Promise.resolve(0);
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/factory_save_count', {
+    method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + (token || SUPABASE_ANON_KEY), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_factory: factoryId })
+  }).then(function (r) { return r.ok ? r.json() : 0; }).then(function (n) { return Number(n) || 0; }).catch(function () { return 0; });
+};
+
 // ---- Manufacturing requests (the public 'requests' table) ----
 AdminStore.fetchRequests = function () {
   if (!this.remoteEnabled()) return Promise.resolve([]);

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();</script>
+<title>لوحة المصنع | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script>
+function shell(body) { document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + body + '</main>' + footerHTML(); }
+
+function statTile(icon, value, label, accent) {
+  return '<div class="stat-tile' + (accent ? ' accent' : '') + '">' +
+    '<span class="stat-ic">' + icon + '</span>' +
+    '<span class="stat-num">' + value + '</span>' +
+    '<span class="stat-lbl">' + esc(label) + '</span>' +
+  '</div>';
+}
+
+function relTime(iso) {
+  var s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+  return STR[LANG].days_ago(s);
+}
+function starsMini(rating) { var s = ''; for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? ICONS.star : ICONS.starOutline; return s; }
+
+function renderDashboard() {
+  if (!window.Auth || !Auth.isLoggedIn()) { shell(Auth.gateHTML()); return; }
+  shell('<div class="container" style="padding:50px 24px">' + loadingHTML(t('dash_loading')) + '</div>');
+
+  Auth.myFactory().then(function (fac) {
+    if (!fac) {
+      shell('<div class="container" style="padding:64px 24px;text-align:center;max-width:520px">' +
+        '<p class="muted">' + t('mf_no_factory') + '</p>' +
+        '<a class="btn btn-primary" style="margin-top:16px" href="account.html">' + t('fac_create') + '</a></div>');
+      return;
+    }
+    var i = ind(fac.sector);
+    var me = Auth.user().id;
+
+    Promise.all([
+      AdminStore.fetchViewCount('factory', fac.id),
+      AdminStore.fetchResponseStats(me),
+      AdminStore.fetchReviews(fac.id),
+      Auth.token().then(function (tok) { return AdminStore.fetchSaveCount(fac.id, tok); }).catch(function () { return 0; }),
+      Auth.incomingRFQs()
+    ]).then(function (res) {
+      var views = res[0] || 0;
+      var stats = res[1] || {};
+      var reviews = res[2] || [];
+      var saves = res[3] || 0;
+      var rfqs = res[4] || [];
+      var openRfqs = rfqs.filter(function (r) { return r.status === 'open'; }).length;
+      var avgRating = reviews.length ? Math.round(reviews.reduce(function (s, r) { return s + r.rating; }, 0) / reviews.length * 10) / 10 : 0;
+
+      var respLine = '';
+      if (stats && stats.threads >= 3 && stats.rate != null) {
+        var mins = stats.avg_minutes;
+        var within = mins == null ? '' : (mins < 60 ? Math.max(1, Math.round(mins)) + ' ' + t('resp_min') : mins < 1440 ? Math.round(mins / 60) + ' ' + t('resp_hr') : Math.round(mins / 1440) + ' ' + t('resp_day'));
+        respLine = '<div class="panel"><h2>' + t('dash_response') + '</h2>' +
+          '<p>' + ICONS.chat + ' ' + t('resp_rate').replace('{rate}', stats.rate) + (within ? ' · ' + t('resp_within').replace('{time}', within) : '') + '</p></div>';
+      }
+
+      var recentReviews = reviews.slice(0, 3);
+      var recentRfqs = rfqs.slice(0, 3);
+
+      shell(
+        '<div class="container" style="padding:24px 24px 64px;max-width:960px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">' +
+            '<h1 style="font-size:24px;font-weight:800">' + i.icon + ' ' + esc(fac.name) + '</h1>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+              (fac.verified ? '<a class="btn btn-ghost btn-sm" href="factory-detail.html?id=' + encodeURIComponent(fac.id) + '">' + t('mf_view_public') + '</a>' : '') +
+              '<a class="btn btn-primary btn-sm" href="my-factory.html">' + t('dash_manage') + '</a>' +
+            '</div>' +
+          '</div>' +
+          (fac.verified ? '' : '<div class="au-err" style="background:var(--amber-soft);color:#8A5A12;margin:8px 0 4px">' + ICONS.clock + ' ' + t('mf_unverified_banner') + '</div>') +
+          '<p class="muted" style="margin-bottom:18px">' + t('dash_intro') + '</p>' +
+
+          '<div class="stat-grid">' +
+            statTile(ICONS.eye, num(views), t('dash_views'), true) +
+            statTile(ICONS.chat, num((stats && stats.threads) || 0), t('dash_convos')) +
+            statTile(ICONS.star, reviews.length ? avgRating + ' <small>(' + num(reviews.length) + ')</small>' : t('new_badge'), t('reviews_title')) +
+            statTile(ICONS.heart, num(saves), t('dash_saves')) +
+            statTile(ICONS.clipboard, num(rfqs.length) + (openRfqs ? ' <small>(' + num(openRfqs) + ' ' + t('dash_open') + ')</small>' : ''), t('rfq_incoming')) +
+          '</div>' +
+
+          respLine +
+
+          '<div class="dash-cols">' +
+            '<div class="panel"><h2>' + t('dash_recent_reviews') + '</h2>' +
+              (recentReviews.length
+                ? recentReviews.map(function (r) { return '<div class="rfq-item"><div class="rfq-top"><b>' + esc(r.reviewer_name || 'User') + '</b><span class="review-stars">' + starsMini(r.rating) + '</span></div>' + (r.body ? '<p style="font-size:13.5px;margin:4px 0 0">' + esc(r.body) + '</p>' : '') + '</div>'; }).join('')
+                : '<p class="muted">' + t('no_reviews_yet') + '</p>') +
+            '</div>' +
+            '<div class="panel"><h2>' + t('rfq_incoming') + '</h2>' +
+              (recentRfqs.length
+                ? recentRfqs.map(function (r) { return '<div class="rfq-item"><div class="rfq-top"><b>' + esc(r.title || '') + '</b><span class="rfq-status s-' + esc(r.status) + '">' + t('rfq_status_' + r.status) + '</span></div><div class="muted" style="font-size:12.5px">' + t('by') + ' ' + esc(r.buyer_name || 'User') + ' · ' + relTime(r.created_at) + '</div></div>'; }).join('') +
+                  '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="my-factory.html">' + t('dash_manage_rfqs') + '</a>'
+                : '<p class="muted">' + t('rfq_none') + '</p>') +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    });
+  }).catch(function (e) {
+    shell('<div class="container" style="padding:64px 24px;text-align:center"><p class="muted">' + esc(e.message || e) + '</p></div>');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  var savedLang = localStorage.getItem('sonnaLang');
+  if (savedLang === 'en' || savedLang === 'ar') LANG = savedLang;
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  if (!window.Auth || !Auth.isLoggedIn()) { renderDashboard(); return; }
+  AdminStore.bootstrap().then(renderDashboard).catch(renderDashboard);
+});
+</script>
+</body>
+</html>
