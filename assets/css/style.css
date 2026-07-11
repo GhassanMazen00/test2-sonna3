@@ -4002,3 +4002,35 @@ footer li button:hover {
 }
 a.rfq-item { transition: border-color .15s ease, background .15s ease; }
 a.rfq-item:hover { border-color: var(--teal); background: var(--mist); }
+
+/* ============================================
+   PHASE 4 — factory dashboard
+   ============================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.stat-tile {
+  background: var(--card, #fff);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-tile.accent { border-color: var(--teal-tint); background: linear-gradient(135deg, rgba(14,107,94,.05), transparent); }
+.stat-ic { color: var(--teal); }
+.stat-ic .svg-ic { width: 20px; height: 20px; }
+.stat-num { font-size: 26px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.stat-num small { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+.stat-lbl { font-size: 12.5px; color: var(--ink-soft); }
+
+.dash-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) { .dash-cols { grid-template-columns: 1fr; } }

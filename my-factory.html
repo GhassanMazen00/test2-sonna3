@@ -85,7 +85,10 @@ function verifiedFactoryHTML(fac) {
         '<div class="profile-main">' +
           '<h1>' + esc(L(f.name)) + ' <span style="vertical-align:middle">' + verifyBadge(f) + '</span></h1>' +
           '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' + i.icon + ' ' + esc(L({en:i.en,ar:i.ar})) + (GOVS[fac.gov] ? ' · ' + ICONS.pin + ' ' + esc(L(GOVS[fac.gov])) : '') + '</div>' +
-          '<div style="margin-top:12px"><a class="btn btn-primary btn-sm" href="factory-detail.html?id=' + encodeURIComponent(f.id) + '">' + t('mf_view_public') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a></div>' +
+          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
+            '<a class="btn btn-primary btn-sm" href="factory-detail.html?id=' + encodeURIComponent(f.id) + '">' + t('mf_view_public') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
+            '<a class="btn btn-ghost btn-sm" href="dashboard.html">' + ICONS.chartBar + ' ' + t('dash_link') + '</a>' +
+          '</div>' +
         '</div>' +
       '</div></div>' +
       '<div class="profile-layout"><div>' +
