@@ -24,6 +24,120 @@
 <script src="assets/js/components.js"></script>
 <script src="assets/js/chat.js"></script>
 <script>
+function starsHTML(rating) {
+  var s = ''; for (var i = 0; i < 5; i++) s += i < Math.round(rating) ? ICONS.star : ICONS.starOutline; return s;
+}
+
+// Response-rate chip in the profile header (only meaningful with enough threads).
+function loadResponseStats(ownerId) {
+  if (!ownerId || !AdminStore.fetchResponseStats) return;
+  AdminStore.fetchResponseStats(ownerId).then(function (st) {
+    var el = document.getElementById('respStat');
+    if (!el || !st || !st.threads || st.threads < 3 || st.rate == null) return;
+    var label = ICONS.chat + ' ' + t('resp_rate').replace('{rate}', st.rate);
+    if (st.avg_minutes != null) {
+      var mins = Number(st.avg_minutes);
+      var within = mins < 60 ? Math.max(1, Math.round(mins)) + ' ' + t('resp_min')
+                 : mins < 1440 ? Math.round(mins / 60) + ' ' + t('resp_hr')
+                 : Math.round(mins / 1440) + ' ' + t('resp_day');
+      label += ' · ' + t('resp_within').replace('{time}', within);
+    }
+    el.innerHTML = label; el.style.display = '';
+  });
+}
+
+// Reviews panel: summary, list, and a context-aware "write a review" control.
+function loadFactoryReviews(factoryId, ownerId, factoryName) {
+  var panel = document.getElementById('reviewsPanel');
+  if (!panel) return;
+  Promise.all([
+    AdminStore.fetchReviews(factoryId),
+    (window.Auth && Auth.isLoggedIn()) ? Auth.myReview(factoryId) : Promise.resolve(null),
+    (window.Auth && Auth.isLoggedIn() && ownerId) ? Auth.hasMessaged(ownerId) : Promise.resolve(false)
+  ]).then(function (res) {
+    var reviews = res[0] || [], mine = res[1], messaged = res[2];
+    var isOwner = window.Auth && Auth.user() && ownerId && String(Auth.user().id) === String(ownerId);
+    var avg = reviews.length ? Math.round(reviews.reduce(function (s, r) { return s + r.rating; }, 0) / reviews.length * 10) / 10 : 0;
+
+    var head = '<h2>' + t('reviews_title') + (reviews.length ? ' <span class="rating-count">(' + num(reviews.length) + ')</span>' : '') + '</h2>';
+    var summary = reviews.length
+      ? '<div class="rating-stars" style="margin-bottom:12px">' + starsHTML(avg) + ' <span class="rating-value">' + avg + '</span></div>'
+      : '<p class="muted" style="margin-bottom:12px">' + t('no_reviews_yet') + '</p>';
+
+    // The write-review control depends on who is viewing.
+    var cta = '';
+    if (isOwner) { cta = ''; }
+    else if (!(window.Auth && Auth.isLoggedIn())) {
+      cta = '<button class="btn btn-ghost btn-sm" onclick="openAuthModal(\'login\')">' + t('review_signin') + '</button>';
+    } else if (!messaged) {
+      cta = '<p class="muted" style="font-size:13px">' + ICONS.chat + ' ' + t('review_need_msg') + '</p>';
+    } else {
+      cta = '<button class="btn btn-primary btn-sm" onclick="openReviewModal(\'' + esc(factoryId) + '\',\'' + esc(String(factoryName)).replace(/\x27/g, '&#39;') + '\')">' +
+        (mine ? t('review_edit') : t('review_write')) + '</button>';
+    }
+
+    var list = reviews.length
+      ? '<div class="review-list">' + reviews.map(function (r) {
+          return '<div class="review-item">' +
+            '<div class="review-top"><span class="review-name">' + esc(r.reviewer_name || 'User') + '</span>' +
+              '<span class="review-stars">' + starsHTML(r.rating) + '</span></div>' +
+            (r.body ? '<p class="review-body">' + esc(r.body) + '</p>' : '') +
+            '<div class="review-date">' + new Date(r.created_at).toLocaleDateString() + '</div>' +
+          '</div>';
+        }).join('') + '</div>'
+      : '';
+
+    panel.innerHTML = head + summary + '<div style="margin-bottom:14px">' + cta + '</div>' + list;
+  });
+}
+
+var _REVIEW_CTX = null;
+function openReviewModal(factoryId, factoryName) {
+  Auth.myReview(factoryId).then(function (mine) {
+    _REVIEW_CTX = { factoryId: factoryId, factoryName: factoryName, rating: mine ? mine.rating : 0 };
+    var bd = document.createElement('div');
+    bd.className = 'modal-backdrop';
+    bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+    bd.innerHTML =
+      '<div class="modal">' +
+        '<h2>' + t('review_write') + '</h2>' +
+        '<p class="sub">' + esc(factoryName) + '</p>' +
+        '<div class="au-err" id="rvErr" style="display:none"></div>' +
+        '<div class="star-picker" id="starPicker">' +
+          [1,2,3,4,5].map(function (n) { return '<button type="button" class="star-btn" data-n="' + n + '" onclick="setReviewStars(' + n + ')">' + ICONS.starOutline + '</button>'; }).join('') +
+        '</div>' +
+        '<div class="form-field full" style="margin-top:12px"><label>' + t('review_comment') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
+          '<textarea id="rvBody" rows="4">' + (mine ? esc(mine.body || '') : '') + '</textarea></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
+          '<button class="btn btn-primary" id="rvSubmit">' + t('review_submit') + '</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(bd);
+    setReviewStars(_REVIEW_CTX.rating);
+    bd.querySelector('#rvSubmit').onclick = function () { submitReviewForm(bd); };
+  });
+}
+function setReviewStars(n) {
+  _REVIEW_CTX.rating = n;
+  document.querySelectorAll('#starPicker .star-btn').forEach(function (b) {
+    b.innerHTML = Number(b.dataset.n) <= n ? ICONS.star : ICONS.starOutline;
+    b.classList.toggle('on', Number(b.dataset.n) <= n);
+  });
+}
+function submitReviewForm(bd) {
+  if (!_REVIEW_CTX.rating) { var e = bd.querySelector('#rvErr'); e.textContent = t('review_pick'); e.style.display = 'block'; return; }
+  var body = bd.querySelector('#rvBody').value.trim();
+  var btn = bd.querySelector('#rvSubmit'); btn.disabled = true; btn.textContent = '…';
+  Auth.submitReview(_REVIEW_CTX.factoryId, _REVIEW_CTX.rating, body).then(function () {
+    bd.remove();
+    location.reload();   // refresh reviews list + header aggregate rating
+  }).catch(function (err) {
+    btn.disabled = false; btn.textContent = t('review_submit');
+    var e = bd.querySelector('#rvErr'); e.textContent = (t('review_fail') || 'Could not submit') + ': ' + (err.message || err); e.style.display = 'block';
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   AdminStore.bootstrap().then(function() {
   var savedLang = localStorage.getItem('sonnaLang');
@@ -109,11 +223,14 @@ document.addEventListener('DOMContentLoaded', function() {
             '</div>' +
             (locked
               ? '<div class="badge-row">' + verifyBadge(f) + '</div>'
-              : '<div class="rating-stars" style="margin-top:8px">' +
-                  stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
-                '</div>' +
+              : (f.reviewCount > 0
+                  ? '<div class="rating-stars" style="margin-top:8px">' +
+                      stars(f.rating) + ' <span class="rating-value">' + f.rating + '</span> <span class="rating-count">(' + num(f.reviewCount) + ' ' + t('rating_reviews') + ')</span>' +
+                    '</div>'
+                  : '<div class="rating-stars" style="margin-top:8px;color:var(--ink-soft);font-size:13px">' + t('no_reviews_yet') + '</div>') +
                 '<div class="badge-row">' +
                   verifyBadge(f) +
+                  '<span class="chip" id="respStat" style="display:none"></span>' +
                   '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
                   (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
                   f.certs.map(function(c) { return '<span class="chip">' + ICONS.check + ' ' + c + '</span>'; }).join('') +
@@ -169,8 +286,9 @@ document.addEventListener('DOMContentLoaded', function() {
               '<div class="spec"><div class="k">' + t('certifications') + '</div><div class="v">' + (f.certs.length ? f.certs.join(' · ') : '—') + '</div></div>' +
             '</div>' +
           '</div>' +
+          '<div class="panel" id="reviewsPanel"><h2>' + t('reviews_title') + '</h2>' + loadingHTML() + '</div>' +
         '</div>' +
-        
+
         '<aside class="contact-panel">' +
           '<div class="panel">' +
             '<h2>' + t('contact_title') + '</h2>' +
@@ -211,6 +329,10 @@ document.addEventListener('DOMContentLoaded', function() {
   '</main>' +
   footerHTML();
   if (!locked && window.loadViews) loadViews('factory', f.id, 'facViews');
+  if (!locked) {
+    loadFactoryReviews(f.id, f.ownerId, L(f.name));
+    if (f.ownerId) loadResponseStats(f.ownerId);
+  }
   });
 });
 </script>

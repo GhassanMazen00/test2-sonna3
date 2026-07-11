@@ -259,6 +259,42 @@ AdminStore.uploadPublic = function (file, token, prefix) {
   });
 };
 
+// ---- Reviews & ratings ----
+// All factory rating summaries (avg + count), keyed by factory id.
+AdminStore.fetchRatings = function () {
+  if (!this.remoteEnabled()) return Promise.resolve({});
+  return fetch(SUPABASE_URL + '/rest/v1/factory_ratings?select=*', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (rows) { var m = {}; (rows || []).forEach(function (x) { m[x.factory_id] = { avg: Number(x.avg) || 0, cnt: Number(x.cnt) || 0 }; }); return m; })
+    .catch(function () { return {}; });
+};
+
+// Overlay real review aggregates onto the live FACTORIES list.
+AdminStore.applyRatings = function (map) {
+  if (!map) return;
+  FACTORIES.forEach(function (f) {
+    var r = map[f.id];
+    if (r) { f.rating = r.avg; f.reviewCount = r.cnt; }
+    else { f.reviewCount = 0; }   // no reviews yet
+  });
+};
+
+// Reviews for one factory (newest first).
+AdminStore.fetchReviews = function (factoryId) {
+  if (!this.remoteEnabled()) return Promise.resolve([]);
+  return fetch(SUPABASE_URL + '/rest/v1/reviews?select=*&factory_id=eq.' + encodeURIComponent(factoryId) + '&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
+    .then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; });
+};
+
+// Aggregate response stats for a factory owner (rate %, avg minutes, threads).
+AdminStore.fetchResponseStats = function (ownerId) {
+  if (!this.remoteEnabled() || !ownerId) return Promise.resolve(null);
+  return fetch(SUPABASE_URL + '/rest/v1/rpc/factory_response_stats', {
+    method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_owner: ownerId })
+  }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+};
+
 // ---- Page view counts (once per account) ----
 // Records a view (if logged in) and returns the item's total count. Pass the
 // user's access token to have the view counted; anon calls just read the total.
@@ -395,9 +431,11 @@ AdminStore.bootstrap = function () {
   if (!self.remoteEnabled()) { self.applyDataOrFallback(null); return Promise.resolve('default'); }
   var contentP = withTimeout(self.fetchRemote(), 3500, null);
   var facsP = withTimeout(self.fetchFactoryRows(), 3500, []);
-  return Promise.all([contentP, facsP]).then(function (res) {
+  var ratingsP = withTimeout(self.fetchRatings(), 3500, {});
+  return Promise.all([contentP, facsP, ratingsP]).then(function (res) {
     self.applyDataOrFallback(res[0]);
     self.appendUserFactories(res[1] || []);
+    self.applyRatings(res[2] || {});
     return true;
   });
 };
