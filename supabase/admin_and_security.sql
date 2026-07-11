@@ -11,17 +11,17 @@
 -- ============================================================
 
 -- ---------- 1. Admin allowlist ----------
-create table if not exists public.admins (
+create table if not exists public.site_admins (
   id uuid primary key references auth.users(id) on delete cascade
 );
-alter table public.admins enable row level security;
+alter table public.site_admins enable row level security;
 
 -- is_admin(): true if the current user is in the allowlist. Security-definer so
 -- it can read the admins table without exposing it (no recursion: the table
 -- owner bypasses RLS inside the function).
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.admins where id = auth.uid());
+  select exists (select 1 from public.site_admins where id = auth.uid());
 $$;
 grant execute on function public.is_admin() to anon, authenticated;
 
@@ -32,12 +32,12 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 grant execute on function public.am_i_admin() to authenticated;
 
-drop policy if exists admins_select on public.admins;
-create policy admins_select on public.admins for select using (public.is_admin());
+drop policy if exists site_admins_select on public.site_admins;
+create policy site_admins_select on public.site_admins for select using (public.is_admin());
 -- No insert/update/delete policies: the list is managed only here in SQL.
 
 -- >>> MAKE YOURSELF AN ADMIN (change the email if your admin login differs) <<<
-insert into public.admins (id)
+insert into public.site_admins (id)
   select id from auth.users where email = 'ghasscc@gmail.com'
   on conflict do nothing;
 
