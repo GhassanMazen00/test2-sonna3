@@ -209,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
     '<div class="container" style="margin-top:14px">' +
       '<div class="profile-cover" style="' + (f.cover ? 'background:#0000;background-image:url(\'' + safeUrl(f.cover) + '\');background-size:cover;background-position:center' : 'background:' + grad(id.g)) + ';border-radius:20px">' +
         (locked ? '' : '<span class="pcode">' + factoryCode(f) + '</span>') +
+        (locked ? '' : favBtnHTML(f.id)) +
         (f.cover ? '' : '<span class="cover-ic">' + id.icon + '</span>') +
       '</div>' +
       '<div class="profile-top">' +
@@ -332,6 +333,10 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!locked) {
     loadFactoryReviews(f.id, f.ownerId, L(f.name));
     if (f.ownerId) loadResponseStats(f.ownerId);
+    loadFavorites(function () {
+      var b = document.querySelector('.fav-btn[data-fid="' + f.id + '"]');
+      if (b) { var on = isFav(f.id); b.classList.toggle('on', on); b.innerHTML = on ? ICONS.heartFilled : ICONS.heart; }
+    });
   }
   });
 });

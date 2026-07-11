@@ -47,9 +47,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Build the page
   var html = headerHTML() + mobileMenuHTML() + '<main>' +
     '<div class="page-head">' +
-      '<div class="container">' +
-        '<h1>' + t('dir_title') + '</h1>' +
-        '<p>' + t('dir_sub') + '</p>' +
+      '<div class="container" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
+        '<div>' +
+          '<h1>' + t('dir_title') + '</h1>' +
+          '<p>' + t('dir_sub') + '</p>' +
+        '</div>' +
+        ((window.Auth && Auth.isLoggedIn()) ? '<a class="btn btn-ghost" href="favorites.html">' + ICONS.heart + ' ' + t('fav_shortlist') + '</a>' : '') +
       '</div>' +
     '</div>' +
     '<div class="container dir-layout">' +
@@ -136,9 +139,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Restore filter values
   restoreFilters();
-  
-  // Initial render
-  renderFactoryList();
+
+  // Load the user's shortlist (for heart state), then render.
+  loadFavorites(function () { renderFactoryList(); });
   });
 });
 

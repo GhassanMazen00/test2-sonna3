@@ -109,6 +109,35 @@ function loadingHTML(label) {
   '</div>';
 }
 
+// ---- Favorites / shortlist (client-side cache of the user's saved ids) ----
+window.FAVORITES = window.FAVORITES || null;   // Set of factory ids, null until loaded
+function isFav(id) { return !!(window.FAVORITES && FAVORITES.has(String(id))); }
+function loadFavorites(cb) {
+  if (!signedIn()) { window.FAVORITES = new Set(); if (cb) cb(); return; }
+  Auth.myFavorites().then(function (ids) { window.FAVORITES = new Set(ids.map(String)); if (cb) cb(); })
+    .catch(function () { window.FAVORITES = new Set(); if (cb) cb(); });
+}
+function favBtnHTML(id) {
+  var on = isFav(id);
+  return '<button class="fav-btn' + (on ? ' on' : '') + '" data-fid="' + esc(String(id)) + '" ' +
+    'aria-label="' + t('fav_save') + '" title="' + t('fav_save') + '" onclick="toggleFavorite(event, \'' + esc(String(id)) + '\')">' +
+    (on ? ICONS.heartFilled : ICONS.heart) + '</button>';
+}
+function toggleFavorite(ev, id) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  if (!signedIn()) { if (window.openAuthModal) openAuthModal('login'); return; }
+  if (!window.FAVORITES) window.FAVORITES = new Set();
+  id = String(id);
+  var wasOn = FAVORITES.has(id);
+  if (wasOn) FAVORITES.delete(id); else FAVORITES.add(id);
+  (document.querySelectorAll('.fav-btn[data-fid="' + id + '"]') || []).forEach(function (b) {
+    b.classList.toggle('on', !wasOn); b.innerHTML = !wasOn ? ICONS.heartFilled : ICONS.heart;
+  });
+  var p = wasOn ? Auth.removeFavorite(id) : Auth.addFavorite(id);
+  p.then(function () { if (typeof window.onFavoritesChanged === 'function') window.onFavoritesChanged(); })
+   .catch(function () { if (wasOn) FAVORITES.add(id); else FAVORITES.delete(id); });   // revert on failure
+}
+
 // Slim call-to-join banner shown to logged-out visitors on browse pages.
 function signupNudge(msg) {
   if (signedIn()) return '';
@@ -138,6 +167,7 @@ function factoryCardHTML(f) {
     return '<a href="factory-detail.html?id=' + f.id + '" class="factory-card">' +
       '<div class="cover" style="background:' + grad(i.g) + '">' +
         '<span class="cover-badge">' + verifyBadge(f) + '</span>' +
+        favBtnHTML(f.id) +
         '<span class="cover-ic">' + i.icon + '</span>' +
         '<div class="flogo">' + esc(L(f.name).charAt(0)) + '</div>' +
       '</div>' +
@@ -152,6 +182,7 @@ function factoryCardHTML(f) {
     '<div class="cover" style="' + (f.cover ? 'background-image:url(\'' + safeUrl(f.cover) + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + '">' +
       '<span class="fcode">' + factoryCode(f) + '</span>' +
       '<span class="cover-badge">' + verifyBadge(f) + '</span>' +
+      favBtnHTML(f.id) +
       (f.cover ? '' : '<span class="cover-ic">' + i.icon + '</span>') +
       (f.logo
         ? '<div class="flogo" style="background-image:url(\'' + safeUrl(f.logo) + '\');background-size:cover;background-position:center"></div>'
