@@ -174,6 +174,19 @@
       });
     },
 
+    // Submit a verification request: store the private info in the admin-only
+    // factory_verifications table, then flag the factory as requested.
+    submitVerification: function (factoryId, info) {
+      var self = this;
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/factory_verifications', {
+          method: 'POST',
+          headers: restHeaders(tok, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+          body: JSON.stringify({ factory_id: factoryId, name: info.name, number: info.number, location: info.location, submitted_at: info.submitted_at })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      }).then(function () { return self.updateMyFactory(factoryId, { verification_requested: true }); });
+    },
+
     // Flag the user's factory page for deletion (an admin removes it).
     requestFactoryDeletion: function (id) {
       return this.updateMyFactory(id, { deletion_requested: true });

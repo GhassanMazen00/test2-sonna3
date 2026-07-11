@@ -114,7 +114,7 @@ function factoryCardHTML(f) {
       '<div class="cover" style="background:' + grad(i.g) + '">' +
         '<span class="cover-badge">' + verifyBadge(f) + '</span>' +
         '<span class="cover-ic">' + i.icon + '</span>' +
-        '<div class="flogo">' + L(f.name).charAt(0) + '</div>' +
+        '<div class="flogo">' + esc(L(f.name).charAt(0)) + '</div>' +
       '</div>' +
       '<div class="body">' +
         '<h3>' + esc(L(f.name)) + '</h3>' +
@@ -124,13 +124,13 @@ function factoryCardHTML(f) {
     '</a>';
   }
   return '<a href="factory-detail.html?id=' + f.id + '" class="factory-card">' +
-    '<div class="cover" style="' + (f.cover ? 'background-image:url(\'' + f.cover + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + '">' +
+    '<div class="cover" style="' + (f.cover ? 'background-image:url(\'' + safeUrl(f.cover) + '\');background-size:cover;background-position:center' : 'background:' + grad(i.g)) + '">' +
       '<span class="fcode">' + factoryCode(f) + '</span>' +
       '<span class="cover-badge">' + verifyBadge(f) + '</span>' +
       (f.cover ? '' : '<span class="cover-ic">' + i.icon + '</span>') +
       (f.logo
-        ? '<div class="flogo" style="background-image:url(\'' + f.logo + '\');background-size:cover;background-position:center"></div>'
-        : '<div class="flogo">' + L(f.name).charAt(0) + '</div>') +
+        ? '<div class="flogo" style="background-image:url(\'' + safeUrl(f.logo) + '\');background-size:cover;background-position:center"></div>'
+        : '<div class="flogo">' + esc(L(f.name).charAt(0)) + '</div>') +
     '</div>' +
     '<div class="body">' +
       '<h3>' + esc(L(f.name)) + '</h3>' +
@@ -142,8 +142,8 @@ function factoryCardHTML(f) {
       '<div class="chip-row">' +
         '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + '</span>' +
         (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +
-        f.certs.slice(0, 1).map(function(c) { return '<span class="chip">' + c + '</span>'; }).join('') +
-        '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.star + ' ' + f.rating + '</span>' +
+        f.certs.slice(0, 1).map(function(c) { return '<span class="chip">' + esc(c) + '</span>'; }).join('') +
+        '<span class="chip" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.star + ' ' + num(f.rating) + '</span>' +
       '</div>' +
     '</div>' +
   '</a>';
