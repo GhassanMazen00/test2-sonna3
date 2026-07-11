@@ -138,6 +138,52 @@ function toggleFavorite(ev, id) {
    .catch(function () { if (wasOn) FAVORITES.add(id); else FAVORITES.delete(id); });   // revert on failure
 }
 
+// ---- Media lightbox (photos + videos, viewed in-page) ----
+function galleryItem(m) {
+  if (m.type === 'video') {
+    return '<button type="button" class="ph lb-ph" data-url="' + esc(m.url) + '" data-type="video" onclick="openLightbox(this)">' +
+      '<video src="' + encodeURI(m.url) + '" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>' +
+      '<span class="lb-play">' + ICONS.play + '</span></button>';
+  }
+  return '<button type="button" class="ph lb-ph" data-url="' + esc(m.url) + '" data-type="image" onclick="openLightbox(this)" ' +
+    'style="background-image:url(\'' + safeUrl(m.url) + '\');background-size:cover;background-position:center"></button>';
+}
+function galleryHTML(media) { return (media || []).map(galleryItem).join(''); }
+
+window.openLightbox = function (btn) {
+  var group = btn.closest ? btn.closest('.gallery') : null;
+  var items = group ? Array.prototype.slice.call(group.querySelectorAll('.lb-ph')) : [btn];
+  var media = items.map(function (b) { return { url: b.getAttribute('data-url'), type: b.getAttribute('data-type') }; });
+  var idx = items.indexOf(btn); if (idx < 0) idx = 0;
+
+  var bd = document.createElement('div');
+  bd.className = 'lightbox';
+  function render() {
+    var m = media[idx];
+    var inner = m.type === 'video'
+      ? '<video src="' + encodeURI(m.url) + '" controls autoplay playsinline class="lb-media"></video>'
+      : '<img src="' + encodeURI(m.url) + '" class="lb-media" alt="">';
+    bd.innerHTML = '<button class="lb-close" aria-label="close">' + ICONS.close + '</button>' +
+      (media.length > 1 ? '<button class="lb-nav lb-prev" aria-label="previous">‹</button><button class="lb-nav lb-next" aria-label="next">›</button>' : '') +
+      '<div class="lb-stage">' + inner + '</div>' +
+      (media.length > 1 ? '<div class="lb-count">' + (idx + 1) + ' / ' + media.length + '</div>' : '');
+    bd.querySelector('.lb-close').onclick = close;
+    var p = bd.querySelector('.lb-prev'), n = bd.querySelector('.lb-next');
+    if (p) p.onclick = function (e) { e.stopPropagation(); idx = (idx - 1 + media.length) % media.length; render(); };
+    if (n) n.onclick = function (e) { e.stopPropagation(); idx = (idx + 1) % media.length; render(); };
+  }
+  function close() { document.body.style.overflow = ''; document.removeEventListener('keydown', key); bd.remove(); }
+  function key(e) {
+    if (e.key === 'Escape') close();
+    else if (media.length > 1 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { idx = (idx + (e.key === 'ArrowRight' ? 1 : media.length - 1)) % media.length; render(); }
+  }
+  bd.addEventListener('click', function (e) { if (e.target === bd || (e.target.closest && e.target.closest('.lb-stage') === e.target) ) close(); });
+  document.addEventListener('keydown', key);
+  document.body.appendChild(bd);
+  document.body.style.overflow = 'hidden';
+  render();
+};
+
 // Slim call-to-join banner shown to logged-out visitors on browse pages.
 function signupNudge(msg) {
   if (signedIn()) return '';

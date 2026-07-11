@@ -4053,3 +4053,70 @@ a.rfq-item:hover { border-color: var(--teal); background: var(--mist); }
 }
 .review-disclaimer summary .svg-ic { width: 14px; height: 14px; }
 .review-disclaimer p { margin-top: 8px; color: var(--ink-soft); line-height: 1.6; }
+
+/* ============================================
+   Owner editor + media lightbox
+   ============================================ */
+/* Cert / toggle chips in the editor */
+.cert-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+.cert-chip input { display: none; }
+.cert-chip.on { background: var(--teal-tint); border-color: var(--teal); color: var(--teal); font-weight: 600; }
+
+/* Media pickers */
+.media-pick { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.media-thumb {
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  background: var(--mist) center/cover no-repeat;
+  border: 1.5px solid var(--line);
+  flex-shrink: 0;
+}
+.media-thumb.wide { width: 120px; }
+.media-del {
+  position: absolute;
+  top: 4px; inset-inline-end: 4px;
+  width: 24px; height: 24px;
+  border: none; border-radius: 50%;
+  background: rgba(0,0,0,.6); color: #fff;
+  cursor: pointer; display: grid; place-items: center; z-index: 2;
+}
+.media-del .svg-ic { width: 14px; height: 14px; }
+
+/* Lightbox */
+.lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.92);
+  display: flex; align-items: center; justify-content: center;
+  animation: lbIn .15s ease;
+}
+@keyframes lbIn { from { opacity: 0; } to { opacity: 1; } }
+.lb-stage { max-width: 92vw; max-height: 86vh; display: flex; }
+.lb-media { max-width: 92vw; max-height: 86vh; border-radius: 8px; object-fit: contain; background: #000; }
+.lb-close, .lb-nav {
+  position: absolute; border: none; cursor: pointer;
+  background: rgba(255,255,255,.14); color: #fff;
+  display: grid; place-items: center;
+}
+.lb-close { top: 16px; inset-inline-end: 16px; width: 42px; height: 42px; border-radius: 50%; }
+.lb-close .svg-ic { width: 22px; height: 22px; }
+.lb-nav { top: 50%; transform: translateY(-50%); width: 46px; height: 60px; border-radius: 10px; font-size: 34px; line-height: 1; }
+.lb-prev { inset-inline-start: 14px; }
+.lb-next { inset-inline-end: 14px; }
+.lb-count { position: absolute; bottom: 18px; inset-inline: 0; text-align: center; color: rgba(255,255,255,.8); font-size: 13px; }
+/* Gallery items are buttons now */
+.gallery .lb-ph { border: none; padding: 0; cursor: pointer; position: relative; }
+.lb-play {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: #fff; pointer-events: none;
+}
+.lb-play .svg-ic { width: 34px; height: 34px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
