@@ -89,6 +89,8 @@ function verifiedFactoryHTML(fac) {
         '</div>' +
       '</div></div>' +
       '<div class="profile-layout"><div>' +
+        '<div class="panel" id="ownerRfqPanel"><h2>' + t('rfq_incoming') + '</h2>' + loadingHTML() + '</div>' +
+        '<div class="panel" id="ownerMatchPanel"><h2>' + t('match_title') + '</h2>' + loadingHTML() + '</div>' +
         '<div class="panel"><h2>' + t('about') + '</h2><p>' + (L(f.desc) ? esc(L(f.desc)) : '<span class="muted">—</span>') + '</p></div>' +
         '<div class="panel"><h2>' + t('services_title') + '</h2>' +
           (svcNames.length ? '<div class="services-grid">' + svcNames.map(function (n) { return '<div class="service-card"><span class="svc-icon">' + ICONS.wrench + '</span><span>' + esc(n) + '</span></div>'; }).join('') + '</div>' : '<p>' + t('no_services') + '</p>') +
@@ -112,6 +114,80 @@ function verifiedFactoryHTML(fac) {
     '</div>';
 }
 
+// ---- Owner inbox: incoming RFQs + matching buyer requests ----
+function loadOwnerInbox(fac) {
+  var rfqPanel = document.getElementById('ownerRfqPanel');
+  var matchPanel = document.getElementById('ownerMatchPanel');
+
+  Auth.incomingRFQs().then(function (rfqs) {
+    if (!rfqPanel) return;
+    rfqPanel.innerHTML = '<h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
+      (rfqs.length
+        ? rfqs.map(rfqOwnerCard).join('')
+        : '<p class="muted">' + t('rfq_none') + '</p>');
+  });
+
+  if (AdminStore.fetchRequests) AdminStore.fetchRequests().then(function (rows) {
+    if (!matchPanel) return;
+    var me = window.Auth && Auth.user() ? Auth.user().id : null;
+    var matches = (rows || []).filter(function (r) {
+      if (me && String(r.owner) === String(me)) return false;   // not my own request
+      return (r.sector && r.sector === fac.sector) || (r.gov != null && String(r.gov) === String(fac.gov));
+    }).slice(0, 6);
+    matchPanel.innerHTML = '<h2>' + t('match_title') + '</h2>' +
+      '<p class="muted" style="font-size:12.5px;margin-bottom:10px">' + t('match_sub') + '</p>' +
+      (matches.length
+        ? matches.map(function (r) {
+            return '<a class="rfq-item" href="request-detail.html?id=' + encodeURIComponent(r.id) + '" style="display:block;text-decoration:none;color:inherit">' +
+              '<b>' + esc(r.title || '') + '</b>' +
+              '<div class="muted" style="font-size:12.5px">' + t('qty') + ': ' + esc(r.qty || '—') + (GOVS[r.gov] ? ' · ' + esc(L(GOVS[r.gov])) : '') + '</div>' +
+            '</a>';
+          }).join('')
+        : '<p class="muted">' + t('match_none') + '</p>');
+  });
+}
+function rfqOwnerCard(rfq) {
+  return '<div class="rfq-item">' +
+    '<div class="rfq-top"><b>' + esc(rfq.title || '') + '</b>' +
+      '<span class="rfq-status s-' + esc(rfq.status) + '">' + t('rfq_status_' + rfq.status) + '</span></div>' +
+    '<div class="muted" style="font-size:12.5px">' + t('by') + ' ' + esc(rfq.buyer_name || 'User') + ' · ' + t('qty') + ': ' + esc(rfq.qty || '—') +
+      (rfq.target_price ? ' · ' + t('rfq_target') + ': ' + esc(rfq.target_price) : '') +
+      (rfq.needed_by ? ' · ' + t('rfq_needed') + ': ' + esc(rfq.needed_by) : '') + '</div>' +
+    (rfq.details ? '<p style="font-size:13.5px;margin:6px 0">' + esc(rfq.details) + '</p>' : '') +
+    (rfq.status !== 'closed' ? '<button class="btn btn-primary btn-sm" onclick="openQuoteModal(\'' + esc(rfq.id) + '\')">' + t('rfq_respond') + '</button>' : '') +
+  '</div>';
+}
+function openQuoteModal(rfqId) {
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  bd.innerHTML =
+    '<div class="modal">' +
+      '<h2>' + t('quote_title') + '</h2>' +
+      '<div class="au-err" id="qErr" style="display:none"></div>' +
+      '<div class="form-grid">' +
+        '<div class="form-field"><label>' + t('quote_price') + ' *</label><input id="q_price" type="text" placeholder="' + t('quote_price_ph') + '"></div>' +
+        '<div class="form-field"><label>' + t('quote_lead') + '</label><input id="q_lead" type="text" placeholder="' + t('quote_lead_ph') + '"></div>' +
+        '<div class="form-field full"><label>' + t('quote_notes') + '</label><textarea id="q_notes" rows="3"></textarea></div>' +
+      '</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
+        '<button class="btn btn-primary" id="qSubmit">' + t('quote_send') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(bd);
+  bd.querySelector('#qSubmit').onclick = function () {
+    var v = function (id) { var e = bd.querySelector('#' + id); return e ? e.value.trim() : ''; };
+    var price = v('q_price');
+    var err = bd.querySelector('#qErr');
+    if (!price) { err.textContent = t('quote_need_price'); err.style.display = 'block'; return; }
+    var btn = bd.querySelector('#qSubmit'); btn.disabled = true; btn.textContent = '…';
+    Auth.sendQuote(rfqId, { price: price, lead_time: v('q_lead') || null, notes: v('q_notes') || '' })
+      .then(function () { bd.remove(); toast(t('quote_sent')); if (MY_FAC) loadOwnerInbox(MY_FAC); })
+      .catch(function (e2) { btn.disabled = false; btn.textContent = t('quote_send'); err.textContent = (e2.message || e2); err.style.display = 'block'; });
+  };
+}
+
 function renderMyFactory() {
   if (!window.Auth || !Auth.isLoggedIn()) { shell(Auth.gateHTML()); return; }
   shell('<div class="container" style="padding:60px 24px;text-align:center;color:var(--ink-soft)">…</div>');
@@ -123,7 +199,7 @@ function renderMyFactory() {
         '<a class="btn btn-primary" style="margin-top:16px" href="account.html">' + t('fac_create') + '</a></div>');
       return;
     }
-    if (fac.verified) { shell(verifiedFactoryHTML(fac)); return; }
+    if (fac.verified) { shell(verifiedFactoryHTML(fac)); loadOwnerInbox(fac); return; }
     var i = ind(fac.sector);
     var gov = GOVS[fac.gov];
     shell(

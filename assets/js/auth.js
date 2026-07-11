@@ -192,6 +192,55 @@
       return this.updateMyFactory(id, { deletion_requested: true });
     },
 
+    // ---- RFQ (request for quote) → quotes ----
+    createRFQ: function (factory, fields) {
+      // factory: { id, name, ownerId }
+      return freshToken().then(function (tok) {
+        var row = Object.assign({
+          buyer: AUTH.session.user.id, buyer_name: window.Auth.displayName(),
+          factory_id: factory.id, factory_name: factory.name, factory_owner: factory.ownerId
+        }, fields || {});
+        return fetch(SUPABASE_URL + '/rest/v1/rfqs', {
+          method: 'POST', headers: restHeaders(tok, { Prefer: 'return=representation' }), body: JSON.stringify(row)
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
+          .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
+      });
+    },
+    myRFQs: function () {   // as a buyer
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rfqs?select=*&buyer=eq.' + AUTH.session.user.id + '&order=created_at.desc', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; });
+      }).catch(function () { return []; });
+    },
+    incomingRFQs: function () {   // as a factory owner
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rfqs?select=*&factory_owner=eq.' + AUTH.session.user.id + '&order=created_at.desc', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; });
+      }).catch(function () { return []; });
+    },
+    rfqQuotes: function (rfqId) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/quotes?select=*&rfq_id=eq.' + encodeURIComponent(rfqId) + '&order=created_at.desc', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; });
+      }).catch(function () { return []; });
+    },
+    sendQuote: function (rfqId, fields) {
+      var self = this;
+      return freshToken().then(function (tok) {
+        var row = Object.assign({ rfq_id: rfqId, factory_owner: AUTH.session.user.id }, fields || {});
+        return fetch(SUPABASE_URL + '/rest/v1/quotes', {
+          method: 'POST', headers: restHeaders(tok, { Prefer: 'return=minimal' }), body: JSON.stringify(row)
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      }).then(function () { return self.setRFQStatus(rfqId, 'quoted'); });
+    },
+    setRFQStatus: function (rfqId, status) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rfqs?id=eq.' + rfqId, {
+          method: 'PATCH', headers: restHeaders(tok, { Prefer: 'return=minimal' }), body: JSON.stringify({ status: status })
+        }).then(function (r) { if (!r.ok) throw new Error('status ' + r.status); return true; });
+      });
+    },
+
     // ---- Favorites / shortlist ----
     myFavorites: function () {
       if (!this.isLoggedIn()) return Promise.resolve([]);

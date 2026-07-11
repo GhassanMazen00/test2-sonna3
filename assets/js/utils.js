@@ -154,6 +154,10 @@ function openRequestForm() {
           '<label>' + t('fr_gov') + ' *</label>' +
           '<select id="fq_gov">' + GOVS.map(function(g, ix) { return '<option value="' + ix + '">' + L(g) + '</option>'; }).join('') + '</select>' +
         '</div>' +
+        '<div class="form-field">' +
+          '<label>' + t('fr_sector') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
+          '<select id="fq_sector"><option value="">' + t('all') + '</option>' + INDUSTRIES.map(function(s) { return '<option value="' + esc(s.id) + '">' + L({en: s.en, ar: s.ar}) + '</option>'; }).join('') + '</select>' +
+        '</div>' +
         '<div class="form-field full">' +
           '<label>' + t('fr_contact') + ' *</label>' +
           '<input id="fq_contact" placeholder="' + t('fr_contact_ph') + '">' +
@@ -202,7 +206,8 @@ function openRequestForm() {
       return Auth.createRequest({
         title: title, description: desc, qty: qty,
         budget: v('#fq_budget') || null, material: v('#fq_mat') || null,
-        gov: Number(bd.querySelector('#fq_gov').value), contact: contact, media: media
+        gov: Number(bd.querySelector('#fq_gov').value), sector: bd.querySelector('#fq_sector').value || null,
+        contact: contact, media: media
       });
     }).then(function () {
       bd.remove();
