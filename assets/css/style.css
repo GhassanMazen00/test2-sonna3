@@ -3811,3 +3811,71 @@ footer li button:hover {
   background: var(--card, #fff);
   color: var(--ink);
 }
+
+/* ============================================
+   PHASE 1 — public browsing polish
+   ============================================ */
+
+/* Branded animated loading placeholder (pulsing teal dots) */
+.loading-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 44px 20px;
+  color: var(--ink-soft);
+}
+.loading-dots { display: inline-flex; gap: 7px; }
+.loading-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teal);
+  display: inline-block;
+  animation: loadPulse 1s ease-in-out infinite;
+}
+.loading-dots i:nth-child(2) { animation-delay: .16s; }
+.loading-dots i:nth-child(3) { animation-delay: .32s; }
+.loading-label { font-size: 13px; }
+@keyframes loadPulse {
+  0%, 80%, 100% { transform: scale(.5); opacity: .35; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-dots i { animation: none; opacity: .7; }
+}
+
+/* Card micro-animations */
+.factory-card, .request-card {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  will-change: transform;
+}
+.factory-card:hover, .request-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(14, 107, 94, .12);
+  border-color: var(--teal-tint);
+}
+.factory-card .cover-badge .vbadge { transition: box-shadow .2s ease; }
+.factory-card:hover .cover-badge .v-yes {
+  box-shadow: 0 0 0 3px rgba(14, 107, 94, .15);
+}
+
+/* Guest sign-up nudge banner */
+.signup-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border: 1.5px solid var(--teal-tint);
+  background: linear-gradient(135deg, rgba(14,107,94,.06), rgba(14,107,94,.02));
+  border-radius: 12px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.signup-nudge .svg-ic { width: 16px; height: 16px; color: var(--teal); vertical-align: -3px; }
+.signup-nudge .nudge-actions { display: flex; gap: 8px; flex-shrink: 0; }

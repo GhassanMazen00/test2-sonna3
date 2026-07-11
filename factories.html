@@ -38,12 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
 
-  // Members-only: require login to browse factories
-  if (!window.Auth || !Auth.isLoggedIn()) {
-    app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + Auth.gateHTML() + '</main>' + footerHTML();
-    return;
-  }
-
   // Get FILTERS from localStorage if available
   var savedFilters = localStorage.getItem('sonnaFilters');
   if (savedFilters) {
@@ -76,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
           '</select>' +
         '</div>' : '') +
 
-        (FILTER_CONFIG.gov ?
+        (FILTER_CONFIG.gov && (window.Auth && Auth.isLoggedIn()) ?
         '<div class="f-group">' +
           '<label>' + t('f_gov') + '</label>' +
           '<select id="govFilter" onchange="updateFilter(\'gov\', this.value)">' +
@@ -116,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
       '</aside>' +
       
       '<div>' +
+        signupNudge(t('nudge_factories')) +
         '<div class="results-bar">' +
           '<span class="count"><b id="resultsCount">0</b> <span>' + t('results') + '</span></span>' +
           '<label style="font-size:13px;color:var(--ink-soft)">' +

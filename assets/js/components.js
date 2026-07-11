@@ -96,6 +96,31 @@ function footerHTML() {
   '</div></footer>';
 }
 
+// Is a site visitor signed in? Location, contact channels and messaging are
+// gated behind this — logged-out visitors can browse but not act.
+function signedIn() { return !!(window.Auth && Auth.isLoggedIn()); }
+
+// Branded animated loading placeholder (not a skeleton) — a pulsing dot trio in
+// the platform's teal. Use where data is being fetched.
+function loadingHTML(label) {
+  return '<div class="loading-wrap">' +
+    '<span class="loading-dots"><i></i><i></i><i></i></span>' +
+    (label ? '<span class="loading-label">' + esc(label) + '</span>' : '') +
+  '</div>';
+}
+
+// Slim call-to-join banner shown to logged-out visitors on browse pages.
+function signupNudge(msg) {
+  if (signedIn()) return '';
+  return '<div class="signup-nudge">' +
+    '<span>' + ICONS.user + ' ' + esc(msg) + '</span>' +
+    '<span class="nudge-actions">' +
+      '<button class="btn btn-primary btn-sm" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
+    '</span>' +
+  '</div>';
+}
+
 // Verified / unverified badge (unverified shows a hover tooltip explaining why)
 function verifyBadge(f) {
   if (f.verified === false) {
@@ -135,8 +160,8 @@ function factoryCardHTML(f) {
     '<div class="body">' +
       '<h3>' + esc(L(f.name)) + '</h3>' +
       '<div class="meta">' +
-        '<span>' + i.icon + ' ' + L({en: i.en, ar: i.ar}) + '</span> · ' +
-        '<span>' + ICONS.pin + ' ' + L(f.gov) + '</span>' +
+        '<span>' + i.icon + ' ' + L({en: i.en, ar: i.ar}) + '</span>' +
+        (signedIn() && f.gov ? ' · <span>' + ICONS.pin + ' ' + L(f.gov) + '</span>' : '') +
       '</div>' +
       '<div class="desc">' + esc(L(f.desc)) + '</div>' +
       '<div class="chip-row">' +

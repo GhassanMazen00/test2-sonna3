@@ -154,7 +154,7 @@ function renderHomePage() {
         '</div>' +
         '<div class="requests-carousel" id="reqCarousel">' +
           '<div class="requests-track" id="reqTrack">' +
-            '<div class="muted" style="padding:30px;width:100%;text-align:center">…</div>' +
+            loadingHTML() +
           '</div>' +
         '</div>' +
         '<div class="carousel-controls" id="reqControls"></div>' +
