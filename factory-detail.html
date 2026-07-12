@@ -364,6 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
               : '')
             )) +
           '</div>' +
+          (signedIn() && (!window.Chat || String(Chat.myId()) !== String(f.ownerId)) ? '<div style="text-align:center;margin-top:10px">' + reportBtnHTML('factory', f.id, L(f.name)) + '</div>' : '') +
         '</aside>') +
       '</div>' +
     '</div>' +

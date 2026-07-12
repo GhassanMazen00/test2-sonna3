@@ -15,6 +15,14 @@ const STR = {
     chat_title: "Chat", chat_ph: "Write a message…", chat_send: "Send", chat_empty: "No messages yet — say hello!",
     chat_re: "Re:", chat_ref: "Request", chat_attach: "Attach a file", chat_file: "File", msg_empty: "No messages yet",
     msg_empty_sub: "Message a supplier from their page, or a buyer from their request.",
+    report: "Report", report_title: "Report to Sonnaع", report_sub: "Tell us what's wrong. Our team reviews every report.",
+    report_reason: "Reason", report_details: "More details", report_details_ph: "Anything that helps us review this…",
+    report_submit: "Submit report", report_thanks: "Thanks — your report was sent.", rep_other: "Other",
+    rep_reasons: {
+      factory: ["Fake or misleading information", "Not a real factory", "Inappropriate content", "Spam or advertising", "Wrong contact details", "Other"],
+      request: ["Spam or advertising", "Scam or fraud", "Inappropriate content", "Duplicate post", "Wrong category", "Other"],
+      message: ["Harassment or abuse", "Spam or advertising", "Scam or fraud", "Inappropriate content", "Other"]
+    },
     views: "views", req_search_ph: "Search requests…", req_filter_gov: "Governorate",
     req_sort_new: "Newest", req_sort_old: "Oldest", req_no_match: "No requests match your search.",
     ef_edit: "Edit page", ef_title: "Edit your factory page", ef_sub: "Update any detail. Changes go live immediately.",
@@ -219,6 +227,14 @@ const STR = {
     chat_title: "محادثة", chat_ph: "اكتب رسالة…", chat_send: "إرسال", chat_empty: "لا توجد رسائل بعد — ابدأ المحادثة!",
     chat_re: "بخصوص:", chat_ref: "طلب", chat_attach: "إرفاق ملف", chat_file: "ملف", msg_empty: "لا توجد رسائل بعد",
     msg_empty_sub: "راسل مورّدًا من صفحته، أو مشتريًا من طلبه.",
+    report: "إبلاغ", report_title: "إبلاغ صُنّاع", report_sub: "أخبرنا بالمشكلة. يراجع فريقنا كل بلاغ.",
+    report_reason: "السبب", report_details: "تفاصيل إضافية", report_details_ph: "أي معلومات تساعدنا في المراجعة…",
+    report_submit: "إرسال البلاغ", report_thanks: "شكرًا — تم إرسال بلاغك.", rep_other: "أخرى",
+    rep_reasons: {
+      factory: ["معلومات مضللة أو مزيفة", "ليس مصنعًا حقيقيًا", "محتوى غير لائق", "سبام أو إعلانات", "بيانات تواصل خاطئة", "أخرى"],
+      request: ["سبام أو إعلانات", "احتيال أو نصب", "محتوى غير لائق", "منشور مكرر", "تصنيف خاطئ", "أخرى"],
+      message: ["تحرش أو إساءة", "سبام أو إعلانات", "احتيال أو نصب", "محتوى غير لائق", "أخرى"]
+    },
     views: "مشاهدة", req_search_ph: "ابحث في الطلبات…", req_filter_gov: "المحافظة",
     req_sort_new: "الأحدث", req_sort_old: "الأقدم", req_no_match: "لا توجد طلبات مطابقة لبحثك.",
     ef_edit: "تعديل الصفحة", ef_title: "تعديل صفحة مصنعك", ef_sub: "حدّث أي تفصيلة. تظهر التغييرات فورًا.",

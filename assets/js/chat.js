@@ -128,8 +128,14 @@
       : '';
     var att = attachHTML(m);
     var text = m.body ? '<div class="chat-bubble">' + esc(m.body).replace(/\n/g, '<br>') + '</div>' : '';
+    // Incoming messages can be reported.
+    var report = '';
+    if (!mine && window.openReportModal && window.ICONS) {
+      var excerpt = String(m.body || m.attachment_name || '').slice(0, 200).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+      report = '<button class="msg-report" title="' + tt('report', 'Report') + '" onclick="openReportModal(\'message\',\'' + esc(String(m.id)) + '\',\'' + esc(excerpt) + '\')">' + ICONS.flag + '</button>';
+    }
     return '<div class="chat-msg ' + (mine ? 'me' : 'them') + '">' + tag + att + text +
-      '<div class="chat-time">' + new Date(m.created_at).toLocaleString() + '</div></div>';
+      '<div class="chat-time">' + new Date(m.created_at).toLocaleString() + report + '</div></div>';
   }
 
   function paint(listEl, msgs, me) {

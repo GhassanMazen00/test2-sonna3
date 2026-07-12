@@ -232,7 +232,7 @@ function boot() {
   }).catch(function(){ renderNotAuthorized(); });
 }
 function renderApp() {
-  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['requests','Requests'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
   root.innerHTML =
     '<div class="admin-wrap">' +
       '<div class="admin-top">' +
@@ -255,9 +255,88 @@ function renderTab() {
   if (TAB === 'factories') renderFactories();
   else if (TAB === 'submissions') renderSubmissions();
   else if (TAB === 'requests') renderRequests();
+  else if (TAB === 'reports') renderReports();
   else if (TAB === 'sectors') renderSectors();
   else if (TAB === 'config') renderConfig();
   else renderDataTab();
+}
+
+/* ---------- Reports ---------- */
+var REPORTS = [];
+var REPORTS_FILTER = 'open';
+function adminFetchReports() {
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/reports?select=*&order=created_at.desc', { headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok } })
+      .then(function(r){ return r.ok ? r.json() : []; });
+  });
+}
+function adminUpdateReport(id, patch) {
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/reports?id=eq.' + id, { method:'PATCH', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json', Prefer:'return=minimal' }, body: JSON.stringify(patch) })
+      .then(function(r){ if(!r.ok) throw new Error('update '+r.status); return true; });
+  });
+}
+function adminDeleteReport(id) {
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/reports?id=eq.' + id, { method:'DELETE', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok } })
+      .then(function(r){ if(!r.ok) throw new Error('delete '+r.status); return true; });
+  });
+}
+function reportTargetLink(row) {
+  if (row.target_type === 'factory') return '<a href="factory-detail.html?id=' + encodeURIComponent(row.target_id) + '" target="_blank">View factory ↗</a>';
+  if (row.target_type === 'request') return '<a href="request-detail.html?id=' + encodeURIComponent(row.target_id) + '" target="_blank">View request ↗</a>';
+  return '<span class="muted">message</span>';
+}
+function reportStatusChip(s) {
+  var c = s === 'resolved' ? 'chip teal' : s === 'dismissed' ? 'chip' : 'chip';
+  var style = s === 'open' ? ' style="background:var(--amber-soft);color:#8A5A12"' : '';
+  return '<span class="' + c + '"' + style + '>' + esc(s) + '</span>';
+}
+function reportRows() {
+  var rows = REPORTS.filter(function(r){ return REPORTS_FILTER === 'all' || r.status === REPORTS_FILTER; });
+  var out = rows.map(function(r){
+    return '<tr>' +
+      '<td><span class="chip">' + esc(r.target_type) + '</span></td>' +
+      '<td><b>' + esc(r.reason || '—') + '</b>' + (r.details ? '<div class="muted" style="margin-top:4px">' + esc(r.details) + '</div>' : '') +
+        (r.context ? '<div class="muted" style="margin-top:4px;font-style:italic">"' + esc(r.context) + '"</div>' : '') + '</td>' +
+      '<td>' + esc(r.reporter_name || '—') + '</td>' +
+      '<td style="white-space:nowrap">' + fmtDate(r.created_at) + '</td>' +
+      '<td>' + reportStatusChip(r.status) + '</td>' +
+      '<td><div class="row-actions">' +
+        reportTargetLink(r) +
+        (r.status !== 'resolved' ? '<button class="btn btn-ghost btn-sm" onclick="setReportStatus(\''+r.id+'\',\'resolved\')">Resolve</button>' : '') +
+        (r.status !== 'dismissed' ? '<button class="btn btn-ghost btn-sm" onclick="setReportStatus(\''+r.id+'\',\'dismissed\')">Dismiss</button>' : '') +
+        '<button class="btn btn-sm btn-danger" onclick="deleteReport(\''+r.id+'\')">Delete</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  return out || '<tr><td colspan="6" class="muted">No reports' + (REPORTS_FILTER!=='all' ? ' with this status' : '') + '.</td></tr>';
+}
+function renderReports() {
+  var open = REPORTS.filter(function(r){ return r.status==='open'; }).length;
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
+        '<div><h2>Reports' + (open ? ' (' + open + ' open)' : '') + '</h2><div class="hint" style="margin:0">User reports on factories, requests, and messages.</div></div>' +
+        '<select onchange="REPORTS_FILTER=this.value;document.getElementById(\'reportsBody\').innerHTML=reportRows()" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:9px">' +
+          ['open','resolved','dismissed','all'].map(function(s){ return '<option value="'+s+'"'+(REPORTS_FILTER===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') +
+        '</select>' +
+      '</div>' +
+      '<div id="reportsWrap"><div class="muted" style="padding:20px">Loading…</div></div>' +
+    '</div>';
+  adminFetchReports().then(function(rows){
+    REPORTS = rows || [];
+    document.getElementById('reportsWrap').innerHTML =
+      '<div style="overflow-x:auto"><table class="data"><thead><tr><th>Type</th><th>Reason</th><th>Reporter</th><th>When</th><th>Status</th><th></th></tr></thead><tbody id="reportsBody">' +
+      reportRows() + '</tbody></table></div>';
+  }).catch(function(e){ document.getElementById('reportsWrap').innerHTML = '<div class="muted" style="padding:20px">Could not load reports: '+esc(e.message||e)+'</div>'; });
+}
+function setReportStatus(id, status) {
+  adminUpdateReport(id, { status: status }).then(function(){ renderReports(); }).catch(function(e){ alert('Could not update: '+(e.message||e)); });
+}
+function deleteReport(id) {
+  if (!confirm('Delete this report?')) return;
+  adminDeleteReport(id).then(function(){ renderReports(); }).catch(function(e){ alert('Could not delete: '+(e.message||e)); });
 }
 
 /* ---------- Factories ---------- */
