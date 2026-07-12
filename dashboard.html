@@ -145,8 +145,9 @@ function renderDashboard() {
           '<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">' +
             '<h1 style="font-size:24px;font-weight:800">' + i.icon + ' ' + esc(fac.name) + '</h1>' +
             '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+              (fac.verified ? '<a class="btn btn-primary btn-sm" href="edit-factory.html">' + ICONS.wrench + ' ' + t('ef_edit') + '</a>' : '') +
               (fac.verified ? '<a class="btn btn-ghost btn-sm" href="factory-detail.html?id=' + encodeURIComponent(fac.id) + '">' + t('mf_view_public') + '</a>' : '') +
-              '<a class="btn btn-primary btn-sm" href="my-factory.html">' + t('dash_manage') + '</a>' +
+              '<a class="btn btn-ghost btn-sm" href="my-factory.html">' + t('dash_manage') + '</a>' +
             '</div>' +
           '</div>' +
           (fac.verified ? '' : '<div class="au-err" style="background:var(--amber-soft);color:#8A5A12;margin:8px 0 4px">' + ICONS.clock + ' ' + t('mf_unverified_banner') + '</div>') +

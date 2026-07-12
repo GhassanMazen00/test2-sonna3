@@ -309,11 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<h2>' + t('gallery') + '</h2>' +
             '<div class="gallery">' +
               ((f.media && f.media.length)
-                ? f.media.map(function(m) {
-                    return m.type === 'video'
-                      ? '<div class="ph"><video src="' + encodeURI(m.url) + '" controls playsinline style="width:100%;height:100%;object-fit:cover"></video></div>'
-                      : '<a class="ph" href="' + encodeURI(m.url) + '" target="_blank" style="background-image:url(\'' + safeUrl(m.url) + '\');background-size:cover;background-position:center"></a>';
-                  }).join('')
+                ? galleryHTML(f.media)
                 : [0,1,2,3,4,5].map(function(n) { return '<div class="ph" style="background:' + grad(id.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? ICONS.camera : id.icon) + '</div>'; }).join('')) +
             '</div>' +
           '</div>' +

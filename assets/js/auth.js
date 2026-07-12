@@ -286,6 +286,10 @@
     uploadQuoteFile: function (file) {
       return freshToken().then(function (tok) { return AdminStore.uploadPublic(file, tok, 'quotes'); });
     },
+    // Upload a factory logo/cover/gallery file; resolves to its public URL.
+    uploadFactoryMedia: function (file) {
+      return freshToken().then(function (tok) { return AdminStore.uploadPublic(file, tok, 'factory'); });
+    },
 
     // My own review of a factory, if any.
     myReview: function (factoryId) {

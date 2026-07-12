@@ -35,13 +35,7 @@ function renderRequest(r) {
   var nameAttr = esc(String(r.owner_name || 'User')).replace(/'/g, '&#39;');
 
   var mediaHTML = media.length
-    ? '<div class="panel"><h2>' + t('req_samples') + '</h2><div class="gallery">' +
-        media.map(function (m) {
-          return m.type === 'video'
-            ? '<div class="ph"><video src="' + encodeURI(m.url) + '" controls playsinline style="width:100%;height:100%;object-fit:cover"></video></div>'
-            : '<a class="ph" href="' + encodeURI(m.url) + '" target="_blank" style="background-image:url(\'' + safeUrl(m.url) + '\');background-size:cover;background-position:center"></a>';
-        }).join('') +
-      '</div></div>'
+    ? '<div class="panel"><h2>' + t('req_samples') + '</h2><div class="gallery">' + galleryHTML(media) + '</div></div>'
     : '';
 
   var contactBox = !signedIn()
