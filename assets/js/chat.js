@@ -72,10 +72,12 @@
       var me = myId();
       if (!me) return Promise.reject(new Error('not logged in'));
       opts = opts || {};
+      var att = opts.attachment || {};
       var row = {
         thread_key: threadKey(me, recipient), sender: me, recipient: recipient,
         sender_name: myName(), recipient_name: recipientName || '', body: body,
-        request_id: opts.requestId || null, request_title: opts.requestTitle || null
+        request_id: opts.requestId || null, request_title: opts.requestTitle || null,
+        attachment_url: att.url || null, attachment_name: att.name || null, attachment_type: att.type || null
       };
       return rest('messages', { method: 'POST', body: JSON.stringify(row), prefer: 'return=representation' })
         .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
@@ -105,13 +107,28 @@
   function tt(k, en) { try { return t(k); } catch (e) { return en; } }
   var POLL = null;
 
+  function attachHTML(m) {
+    if (!m.attachment_url) return '';
+    var u = m.attachment_url, safe = window.safeUrl ? safeUrl(u) : u;
+    if (m.attachment_type === 'image') {
+      return '<button type="button" class="chat-att-img lb-ph" data-url="' + esc(u) + '" data-type="image" onclick="openLightbox(this)" style="background-image:url(\'' + safe + '\')"></button>';
+    }
+    if (m.attachment_type === 'video') {
+      return '<button type="button" class="chat-att-img lb-ph" data-url="' + esc(u) + '" data-type="video" onclick="openLightbox(this)">' +
+        '<video src="' + encodeURI(u) + '" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>' +
+        '<span class="lb-play">' + (window.ICONS ? ICONS.play : '▶') + '</span></button>';
+    }
+    return '<a class="chat-att-file" href="' + encodeURI(u) + '" target="_blank" rel="noopener">' +
+      (window.ICONS ? ICONS.download : '') + ' ' + esc(m.attachment_name || tt('chat_file', 'File')) + '</a>';
+  }
   function bubble(m, me) {
     var mine = String(m.sender) === String(me);
     var tag = m.request_id
       ? '<a class="chat-ref" href="request-detail.html?id=' + encodeURIComponent(m.request_id) + '">' + (window.ICONS ? ICONS.clipboard : '') + ' ' + esc(m.request_title || tt('chat_ref', 'Request')) + '</a>'
       : '';
-    return '<div class="chat-msg ' + (mine ? 'me' : 'them') + '">' + tag +
-      '<div class="chat-bubble">' + esc(m.body).replace(/\n/g, '<br>') + '</div>' +
+    var att = attachHTML(m);
+    var text = m.body ? '<div class="chat-bubble">' + esc(m.body).replace(/\n/g, '<br>') + '</div>' : '';
+    return '<div class="chat-msg ' + (mine ? 'me' : 'them') + '">' + tag + att + text +
       '<div class="chat-time">' + new Date(m.created_at).toLocaleString() + '</div></div>';
   }
 
@@ -145,7 +162,10 @@
           '<button class="chat-close" aria-label="Close">' + (window.ICONS ? ICONS.close : '✕') + '</button>' +
         '</div>' +
         '<div class="chat-list" id="chatList"><div class="muted" style="text-align:center;padding:30px">…</div></div>' +
+        '<div class="chat-staged" id="chatStaged" style="display:none"></div>' +
         '<form class="chat-compose" id="chatForm">' +
+          '<input type="file" id="chatFile" accept="image/*,video/*,.pdf,.csv,.doc,.docx,.xls,.xlsx" style="display:none">' +
+          '<button type="button" class="chat-attach" id="chatAttachBtn" aria-label="' + esc(tt('chat_attach', 'Attach a file')) + '" title="' + esc(tt('chat_attach', 'Attach a file')) + '">' + (window.ICONS ? ICONS.clip : '+') + '</button>' +
           '<textarea id="chatInput" rows="1" placeholder="' + esc(tt('chat_ph', 'Write a message…')) + '"></textarea>' +
           '<button class="btn btn-primary btn-sm" type="submit">' + tt('chat_send', 'Send') + '</button>' +
         '</form>' +
@@ -156,7 +176,26 @@
     var listEl = bd.querySelector('#chatList');
     var input = bd.querySelector('#chatInput');
     var form = bd.querySelector('#chatForm');
+    var fileInput = bd.querySelector('#chatFile');
+    var stagedBar = bd.querySelector('#chatStaged');
+    var staged = null;   // File pending upload
     bd.querySelector('.chat-close').onclick = close;
+
+    bd.querySelector('#chatAttachBtn').onclick = function () { fileInput.click(); };
+    fileInput.onchange = function () {
+      staged = fileInput.files && fileInput.files[0];
+      if (!staged) { stagedBar.style.display = 'none'; return; }
+      stagedBar.style.display = '';
+      stagedBar.innerHTML = '<span>' + (window.ICONS ? ICONS.clip : '') + ' ' + esc(staged.name) + '</span>' +
+        '<button type="button" class="chat-staged-x" aria-label="remove">' + (window.ICONS ? ICONS.close : '✕') + '</button>';
+      stagedBar.querySelector('.chat-staged-x').onclick = function () { staged = null; fileInput.value = ''; stagedBar.style.display = 'none'; stagedBar.innerHTML = ''; };
+    };
+    function fileKind(f) { var ty = f.type || ''; return ty.indexOf('image') === 0 ? 'image' : ty.indexOf('video') === 0 ? 'video' : 'file'; }
+    function uploadStaged() {
+      if (!staged) return Promise.resolve(null);
+      return Auth.token().then(function (tok) { return AdminStore.uploadPublic(staged, tok, 'chat'); })
+        .then(function (url) { return { url: url, name: staged.name, type: fileKind(staged) }; });
+    }
 
     function refresh() {
       return Chat.thread(userId).then(function (msgs) {
@@ -174,11 +213,19 @@
     form.onsubmit = function (e) {
       e.preventDefault();
       var body = input.value.trim();
-      if (!body) return;
-      input.value = '';
-      Chat.send(userId, displayName, body, pending ? { requestId: pending.id, requestTitle: pending.title } : {})
-        .then(function () { pending = null; var sr = bd.querySelector('.chat-subref'); if (sr) sr.remove(); return refresh(); })
-        .catch(function (err) { alert('Could not send: ' + (err.message || err)); input.value = body; });
+      if (!body && !staged) return;   // need text or a file
+      var sendBtn = form.querySelector('button[type="submit"]');
+      input.value = ''; sendBtn.disabled = true;
+      uploadStaged().then(function (attachment) {
+        var o = pending ? { requestId: pending.id, requestTitle: pending.title } : {};
+        if (attachment) o.attachment = attachment;
+        return Chat.send(userId, displayName, body, o);
+      }).then(function () {
+        pending = null; var sr = bd.querySelector('.chat-subref'); if (sr) sr.remove();
+        staged = null; fileInput.value = ''; stagedBar.style.display = 'none'; stagedBar.innerHTML = '';
+        sendBtn.disabled = false;
+        return refresh();
+      }).catch(function (err) { sendBtn.disabled = false; alert('Could not send: ' + (err.message || err)); input.value = body; });
     };
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.onsubmit(e); } });
 
