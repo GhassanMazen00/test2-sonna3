@@ -83,6 +83,7 @@ function renderRequest(r) {
         '</div>' +
         mediaHTML +
         contactBox +
+        ((window.Auth && Auth.isLoggedIn() && !mine) ? '<div style="text-align:center;margin-top:14px">' + reportBtnHTML('request', r.id, r.title || '') + '</div>' : '') +
       '</div>' +
     '</div>' +
   '</main>' +

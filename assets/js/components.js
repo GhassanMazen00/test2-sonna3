@@ -184,6 +184,42 @@ window.openLightbox = function (btn) {
   render();
 };
 
+// ---- Report modal (factories, requests, messages) ----
+function reportBtnHTML(type, id, context, small) {
+  return '<button class="report-btn' + (small ? ' small' : '') + '" onclick="openReportModal(\'' + esc(type) + '\',\'' + esc(String(id)) + '\',\'' + esc(String(context || '')).replace(/\x27/g, '&#39;') + '\')">' +
+    ICONS.flag + ' ' + t('report') + '</button>';
+}
+window.openReportModal = function (type, id, context) {
+  if (!(window.Auth && Auth.isLoggedIn())) { if (window.openAuthModal) openAuthModal('login'); return; }
+  var reasons = (t('rep_reasons') && t('rep_reasons')[type]) || [t('rep_other')];
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  bd.innerHTML =
+    '<div class="modal">' +
+      '<h2>' + t('report_title') + '</h2>' +
+      '<p class="sub">' + t('report_sub') + '</p>' +
+      '<div class="au-err" id="rpErr" style="display:none"></div>' +
+      '<div class="form-field full"><label>' + t('report_reason') + '</label>' +
+        '<select id="rp_reason">' + reasons.map(function (r) { return '<option value="' + esc(r) + '">' + esc(r) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="form-field full" style="margin-top:10px"><label>' + t('report_details') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
+        '<textarea id="rp_details" rows="3" placeholder="' + esc(t('report_details_ph')) + '"></textarea></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
+        '<button class="btn btn-danger" id="rp_submit">' + t('report_submit') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(bd);
+  bd.querySelector('#rp_submit').onclick = function () {
+    var reason = bd.querySelector('#rp_reason').value;
+    var details = bd.querySelector('#rp_details').value.trim();
+    var btn = bd.querySelector('#rp_submit'); btn.disabled = true; btn.textContent = '…';
+    Auth.submitReport({ target_type: type, target_id: String(id), reason: reason, details: details, context: String(context || '').slice(0, 300) })
+      .then(function () { bd.remove(); toast(t('report_thanks')); })
+      .catch(function (e) { btn.disabled = false; btn.textContent = t('report_submit'); var er = bd.querySelector('#rpErr'); er.textContent = (e.message || e); er.style.display = 'block'; });
+  };
+};
+
 // Slim call-to-join banner shown to logged-out visitors on browse pages.
 function signupNudge(msg) {
   if (signedIn()) return '';
