@@ -18,6 +18,7 @@ function headerHTML() {
       '<a href="index.html" class="nav-link' + (isHome ? ' active' : '') + '">' + t('nav_home') + '</a>' +
       '<a href="factories.html" class="nav-link' + (path === 'factories.html' ? ' active' : '') + '">' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="nav-link' + (path === 'requests.html' ? ' active' : '') + '">' + t('nav_requests') + '</a>' +
+      '<button class="nav-link nav-list-factory" onclick="listYourFactory()">' + ICONS.factory + ' ' + t('list_factory') + '</button>' +
       '<a href="' + consultHref + '" class="nav-link nav-consult">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
       '<button class="nav-link" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('post_request') + '</button>' +
     '</nav>' +
@@ -58,6 +59,7 @@ function mobileMenuHTML() {
       '<a href="index.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.home + ' ' + t('nav_home') + '</a>' +
       '<a href="factories.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.factory + ' ' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
+      '<button class="mobile-menu-link" style="width:100%;text-align:start;background:none;border:none;cursor:pointer" onclick="closeMobileMenu();listYourFactory()">' + ICONS.factory + ' ' + t('list_factory') + '</button>' +
       '<a href="' + consultHref + '" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
       (window.Auth && Auth.isLoggedIn()
         ? '<button class="mobile-menu-link" style="width:100%;text-align:start;background:none;border:none;cursor:pointer" onclick="closeMobileMenu();toggleNotifs(event)">' + ICONS.bell + ' ' + t('nav_notifs') + ' <span class="notif-badge" style="display:none"></span></button>' +

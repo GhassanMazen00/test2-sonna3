@@ -203,7 +203,7 @@ function renderHomePage() {
       '<div class="container">' +
         '<div class="cta-band">' +
           '<div><h2>' + t('cta_title') + '</h2><p>' + t('cta_sub') + '</p></div>' +
-          '<button class="btn btn-primary">' + t('cta_btn') + '</button>' +
+          '<button class="btn btn-primary" onclick="listYourFactory()">' + t('cta_btn') + '</button>' +
         '</div>' +
       '</div>' +
     '</section>' +
