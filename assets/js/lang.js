@@ -5,7 +5,7 @@
 const STR = {
   en: {
     brand: "Sonna", nav_home: "Home", nav_factories: "Factories", nav_requests: "Requests",
-    nav_consult: "Consultant", nav_messages: "Messages",
+    nav_consult: "Consultant", nav_messages: "Messages", nav_notifs: "Notifications", notif_empty: "No notifications yet",
     msg_supplier: "Message supplier", req_message: "Message poster", req_yours: "Your request",
     req_yours_note: "This is your request. Interested manufacturers can message you here.",
     req_none: "No requests yet", req_none_sub: "Be the first to post what you need manufactured.",
@@ -217,7 +217,7 @@ const STR = {
   },
   ar: {
     brand: "صُنّا", nav_home: "الرئيسية", nav_factories: "المصانع", nav_requests: "طلبات التصنيع",
-    nav_consult: "مستشار", nav_messages: "الرسائل",
+    nav_consult: "مستشار", nav_messages: "الرسائل", nav_notifs: "الإشعارات", notif_empty: "لا توجد إشعارات بعد",
     msg_supplier: "مراسلة المورّد", req_message: "مراسلة صاحب الطلب", req_yours: "طلبك",
     req_yours_note: "هذا طلبك. يمكن للمصانع المهتمة مراسلتك هنا.",
     req_none: "لا توجد طلبات بعد", req_none_sub: "كن أول من ينشر ما يحتاج إلى تصنيعه.",

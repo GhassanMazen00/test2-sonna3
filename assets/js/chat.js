@@ -263,4 +263,89 @@
         if (el) el.textContent = (window.num ? num(cnt) : cnt);
       });
   };
+
+  // ---------- Notifications (bell) ----------
+  window.Notifs = {
+    list: function () {
+      var me = myId(); if (!me) return Promise.resolve([]);
+      return rest('notifications?select=*&order=created_at.desc&limit=30').catch(function () { return []; });
+    },
+    unreadCount: function () {
+      var me = myId(); if (!me) return Promise.resolve(0);
+      return Auth.token().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/notifications?select=id&read_at=is.null', { headers: headers(tok, { Prefer: 'count=exact' }) })
+          .then(function (r) { var cr = r.headers.get('content-range'); if (cr && cr.indexOf('/') >= 0) { var n = parseInt(cr.split('/')[1], 10); return isNaN(n) ? 0 : n; } return r.json().then(function (a) { return (a || []).length; }); });
+      }).catch(function () { return 0; });
+    },
+    markAllRead: function () {
+      var me = myId(); if (!me) return Promise.resolve();
+      return rest('notifications?read_at=is.null', { method: 'PATCH', body: JSON.stringify({ read_at: new Date().toISOString() }), prefer: 'return=minimal' }).catch(function () {});
+    }
+  };
+
+  window.updateNotifBadge = function () {
+    if (!ready() || !Auth.isLoggedIn()) return;
+    Notifs.unreadCount().then(function (n) {
+      document.querySelectorAll('.notif-badge').forEach(function (el) {
+        if (n > 0) { el.textContent = n > 99 ? '99+' : n; el.style.display = ''; }
+        else { el.style.display = 'none'; }
+      });
+    });
+  };
+
+  function notifIcon(type) {
+    var I = window.ICONS || {};
+    return type === 'rfq' ? (I.clipboard || '') : type === 'review' ? (I.star || '') : type === 'view' ? (I.eye || '') : (I.megaphone || I.bell || '');
+  }
+  function relDays(iso) { var s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)); try { return STR[LANG].days_ago(s); } catch (e) { return ''; } }
+
+  window.toggleNotifs = function (ev) {
+    if (ev) ev.stopPropagation();
+    if (!ready() || !Auth.isLoggedIn()) { if (window.openAuthModal) openAuthModal('login'); return; }
+    var existing = document.getElementById('notifPanel');
+    if (existing) { existing.remove(); return; }
+    if ('Notification' in window && Notification.permission === 'default') { try { Notification.requestPermission(); } catch (e) {} }
+
+    var panel = document.createElement('div');
+    panel.id = 'notifPanel';
+    panel.className = 'notif-panel';
+    panel.innerHTML = '<div class="notif-head"><b>' + tt('nav_notifs', 'Notifications') + '</b></div><div class="notif-body">' + tt('loading', 'Loading…') + '</div>';
+    document.body.appendChild(panel);
+    setTimeout(function () { document.addEventListener('click', outside); }, 0);
+    function outside(e) { if (!panel.contains(e.target) && !(e.target.closest && e.target.closest('.nav-bell'))) { panel.remove(); document.removeEventListener('click', outside); } }
+
+    Notifs.list().then(function (items) {
+      var body = panel.querySelector('.notif-body');
+      body.innerHTML = items.length
+        ? items.map(function (n) {
+            return '<a class="notif-item' + (n.read_at ? '' : ' unread') + '" href="' + (n.link ? encodeURI(n.link) : '#') + '">' +
+              '<span class="notif-ic">' + notifIcon(n.type) + '</span>' +
+              '<span class="notif-txt"><b>' + esc(n.title || '') + '</b>' + (n.body ? '<span>' + esc(n.body) + '</span>' : '') +
+                '<span class="notif-time">' + relDays(n.created_at) + '</span></span></a>';
+          }).join('')
+        : '<div class="muted" style="padding:26px;text-align:center">' + tt('notif_empty', 'No notifications yet') + '</div>';
+      Notifs.markAllRead().then(function () { if (window.updateNotifBadge) updateNotifBadge(); });
+    });
+  };
+
+  // While the tab is open, surface genuinely new notifications as browser
+  // pop-ups (needs the user to allow notifications). Background push (site
+  // closed) will ride on the email/push infrastructure later.
+  function browserNotify(items) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    var seen = {}; try { seen = JSON.parse(localStorage.getItem('sonnaNotifSeen') || '{}'); } catch (e) {}
+    var first = Object.keys(seen).length === 0;
+    var fresh = items.filter(function (n) { return !seen[n.id] && !n.read_at; });
+    if (!first) fresh.slice(0, 3).forEach(function (n) { try { new Notification(n.title || 'Sonnaع', { body: n.body || '' }); } catch (e) {} });
+    items.forEach(function (n) { seen[n.id] = 1; });
+    try { localStorage.setItem('sonnaNotifSeen', JSON.stringify(seen)); } catch (e) {}
+  }
+  function pollNotifs() {
+    if (!ready() || !Auth.isLoggedIn()) return;
+    Notifs.list().then(function (items) { browserNotify(items); if (window.updateNotifBadge) updateNotifBadge(); });
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(pollNotifs, 1200);
+    setInterval(pollNotifs, 25000);
+  });
 })();

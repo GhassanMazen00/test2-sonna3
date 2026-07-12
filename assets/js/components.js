@@ -29,7 +29,8 @@ function headerHTML() {
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\')">عربي</button>' +
       '</div>' +
       (window.Auth && Auth.isLoggedIn()
-        ? '<a href="messages.html" class="header-quick-btn desktop-only-flex nav-messages" aria-label="' + t('nav_messages') + '" style="position:relative">' + ICONS.chat + '<span class="msg-badge" style="display:none"></span></a>' +
+        ? '<button class="header-quick-btn desktop-only-flex nav-bell" aria-label="' + t('nav_notifs') + '" style="position:relative" onclick="toggleNotifs(event)">' + ICONS.bell + '<span class="notif-badge" style="display:none"></span></button>' +
+          '<a href="messages.html" class="header-quick-btn desktop-only-flex nav-messages" aria-label="' + t('nav_messages') + '" style="position:relative">' + ICONS.chat + '<span class="msg-badge" style="display:none"></span></a>' +
           '<a href="account.html" class="btn btn-ghost btn-sm desktop-only nav-account">' + ICONS.user + ' ' + t('my_account') + '</a>'
         : '<button class="btn btn-ghost btn-sm desktop-only" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
           '<button class="btn btn-primary btn-sm desktop-only" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>') +
@@ -59,7 +60,8 @@ function mobileMenuHTML() {
       '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
       '<a href="' + consultHref + '" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.compass + ' ' + t('nav_consult') + '</a>' +
       (window.Auth && Auth.isLoggedIn()
-        ? '<a href="messages.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.chat + ' ' + t('nav_messages') + ' <span class="msg-badge" style="display:none"></span></a>' +
+        ? '<button class="mobile-menu-link" style="width:100%;text-align:start;background:none;border:none;cursor:pointer" onclick="closeMobileMenu();toggleNotifs(event)">' + ICONS.bell + ' ' + t('nav_notifs') + ' <span class="notif-badge" style="display:none"></span></button>' +
+          '<a href="messages.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.chat + ' ' + t('nav_messages') + ' <span class="msg-badge" style="display:none"></span></a>' +
           '<a href="account.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.user + ' ' + t('my_account') + '</a>'
         : '') +
       '<div class="mobile-menu-divider"></div>' +
