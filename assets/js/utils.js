@@ -76,13 +76,70 @@ function setLang(l) {
   window.location.reload();
 }
 
-// Consultant booking (prototype) — confirms a match based on the chosen sector
+// Take the visitor to list their factory: sign up if needed, otherwise the
+// profile page (which has the "create factory page" option).
+function listYourFactory() {
+  if (window.Auth && Auth.isLoggedIn()) { window.location.href = 'account.html'; }
+  else if (window.openAuthModal) { openAuthModal('signup'); }
+  else { window.location.href = 'account.html'; }
+}
+
+// Consultant booking (prototype) — a booking + payment flow mock-up.
 function bookConsultation() {
   var sel = document.getElementById('consultSector');
-  if (!sel) return;
-  var industry = ind(sel.value);
-  var name = L({ en: industry.en, ar: industry.ar });
-  toast(t('consult_toast_pre') + name + t('consult_toast_post'));
+  var chosen = sel ? sel.value : ((typeof INDUSTRIES !== 'undefined' && INDUSTRIES[0]) ? INDUSTRIES[0].id : '');
+  var p = (window.Auth && Auth.profile && Auth.profile()) || {};
+  var sectorOpts = INDUSTRIES.map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === chosen ? ' selected' : '') + '>' + L({ en: s.en, ar: s.ar }) + '</option>'; }).join('');
+
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  bd.innerHTML =
+    '<div class="modal cb-modal">' +
+      '<h2>' + t('cb_title') + '</h2>' +
+      '<div class="cb-proto">' + ICONS.sparkle + ' ' + t('cb_proto') + '</div>' +
+      '<div class="au-err" id="cbErr" style="display:none"></div>' +
+
+      '<h3 class="cb-section">' + t('cb_details') + '</h3>' +
+      '<div class="form-grid">' +
+        '<div class="form-field"><label>' + t('cb_name') + ' *</label><input id="cb_name" value="' + esc(p.full_name || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_company') + '</label><input id="cb_company" value="' + esc(p.company || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_phone') + '</label><input id="cb_phone" dir="ltr" value="' + esc(p.phone || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_email') + '</label><input id="cb_email" dir="ltr" value="' + esc(p.email || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_sector') + '</label><select id="cb_sector">' + sectorOpts + '</select></div>' +
+        '<div class="form-field"><label>' + t('cb_date') + ' *</label><input id="cb_date" type="date"></div>' +
+        '<div class="form-field"><label>' + t('cb_time') + '</label><input id="cb_time" type="time"></div>' +
+        '<div class="form-field full"><label>' + t('cb_needs') + '</label><textarea id="cb_needs" rows="3" placeholder="' + esc(t('cb_needs_ph')) + '"></textarea></div>' +
+      '</div>' +
+
+      '<h3 class="cb-section">' + t('cb_pay') + '</h3>' +
+      '<div class="cb-fee"><span>' + t('cb_fee_label') + '</span><b>' + t('cb_fee_val') + '</b></div>' +
+      '<div class="form-grid">' +
+        '<div class="form-field full"><label>' + t('cb_card') + '</label><input id="cb_card" inputmode="numeric" placeholder="' + t('cb_card_ph') + '"></div>' +
+        '<div class="form-field full"><label>' + t('cb_card_name') + '</label><input id="cb_cardname"></div>' +
+        '<div class="form-field"><label>' + t('cb_expiry') + '</label><input id="cb_expiry" placeholder="MM/YY"></div>' +
+        '<div class="form-field"><label>' + t('cb_cvc') + '</label><input id="cb_cvc" inputmode="numeric" placeholder="123"></div>' +
+      '</div>' +
+
+      '<div class="modal-actions">' +
+        '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
+        '<button class="btn btn-primary" id="cb_pay_btn">' + ICONS.check + ' ' + t('cb_pay_btn') + ' · ' + t('cb_fee_val') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(bd);
+
+  bd.querySelector('#cb_pay_btn').onclick = function () {
+    var v = function (id) { var e = bd.querySelector('#' + id); return e ? e.value.trim() : ''; };
+    if (!v('cb_name') || (!v('cb_phone') && !v('cb_email')) || !v('cb_date')) {
+      var er = bd.querySelector('#cbErr'); er.textContent = t('cb_required'); er.style.display = 'block'; return;
+    }
+    bd.querySelector('.cb-modal').innerHTML =
+      '<div class="cb-done"><span class="cb-done-ic">' + ICONS.check + '</span>' +
+        '<h2>' + t('cb_done') + '</h2>' +
+        '<p class="muted">' + t('cb_done_sub') + '</p>' +
+        '<button class="btn btn-primary" style="margin-top:16px" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cb_close') + '</button>' +
+      '</div>';
+  };
 }
 
 // Toast notification

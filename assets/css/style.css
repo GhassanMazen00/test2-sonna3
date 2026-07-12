@@ -4251,3 +4251,32 @@ a.rfq-item:hover { border-color: var(--teal); background: var(--mist); }
 .notif-txt b { font-weight: 700; }
 .notif-txt span { color: var(--ink-soft); }
 .notif-time { font-size: 11px; }
+
+/* ============================================
+   Consultation booking (prototype) + list-factory nav
+   ============================================ */
+.cb-modal { max-width: 620px; }
+.cb-proto {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--amber-soft); color: #8A5A12;
+  border-radius: 10px; padding: 9px 13px; font-size: 12.5px; margin-bottom: 14px;
+}
+.cb-proto .svg-ic { width: 15px; height: 15px; }
+.cb-section {
+  font-size: 14px; font-weight: 800; margin: 18px 0 10px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--line);
+}
+.cb-fee {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--teal-tint); border-radius: 10px;
+  padding: 11px 14px; margin-bottom: 12px; font-size: 14px;
+}
+.cb-fee b { color: var(--teal); font-size: 16px; }
+.cb-done { text-align: center; padding: 20px 10px; }
+.cb-done-ic {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--teal-tint); color: var(--teal);
+  display: inline-grid; place-items: center; margin-bottom: 14px;
+}
+.cb-done-ic .svg-ic { width: 30px; height: 30px; }
+.nav-list-factory { color: var(--teal); font-weight: 700; }
