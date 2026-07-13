@@ -206,6 +206,30 @@ body::before {
 .plan-card-foot .btn-lg { width: 100%; padding: 13px 20px; font-size: 15px; font-weight: 700; }
 .plan-note { font-size: 12px; color: var(--ink-soft); margin: 12px 0 0; line-height: 1.5; }
 @media (max-width: 520px) { .plan-card-head h2 { font-size: 18px; } }
+
+/* ---- Dashboard locked (unverified) state ---- */
+.dash-lock-card {
+  border: 1.5px solid var(--teal);
+  background: linear-gradient(135deg, var(--teal-tint), #fff);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+.dash-lock-ic {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: var(--teal-tint); color: var(--teal);
+  display: inline-grid; place-items: center; margin-bottom: 10px;
+}
+.dash-lock-ic .svg-ic { width: 24px; height: 24px; }
+.dash-lock-card h2 { font-size: 18px; margin: 0 0 6px; }
+.dash-lock-card p { color: var(--ink-soft); font-size: 14px; line-height: 1.5; margin: 0 auto 14px; max-width: 440px; }
+.dash-locked {
+  opacity: .55;
+  filter: grayscale(1);
+  pointer-events: none;
+  user-select: none;
+}
 .vbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
 .vbadge .svg-ic { width: .95em; height: .95em; }
 .v-yes { background: var(--teal-tint); color: var(--teal); }
