@@ -156,6 +156,47 @@ function renderDashboard() {
 
       var recentReviews = reviews.slice(0, 3);
 
+      var dashBody =
+        '<div class="stat-grid">' +
+          statTile(ICONS.eye, num(views), t('dash_views'), true) +
+          statTile(ICONS.chat, num((stats && stats.threads) || 0), t('dash_convos')) +
+          statTile(ICONS.star, reviews.length ? avgRating + ' <small>(' + num(reviews.length) + ')</small>' : t('new_badge'), t('reviews_title')) +
+          statTile(ICONS.heart, num(saves), t('dash_saves')) +
+          statTile(ICONS.clipboard, num(rfqs.length) + (openRfqs ? ' <small>(' + num(openRfqs) + ' ' + t('dash_open') + ')</small>' : ''), t('rfq_incoming')) +
+        '</div>' +
+
+        respLine +
+
+        '<div class="panel"><h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
+          (fac.verified
+            ? '<div class="muted" style="font-size:12.5px;margin:-2px 0 10px">' + t('rfq_quota').replace('{used}', num(window.RFQ_USED)).replace('{n}', num(PLAN_LIMITS.rfqPerMonth)) + '</div>'
+            : '') +
+          (rfqs.length ? rfqs.map(rfqOwnerCard).join('') : '<p class="muted">' + t('rfq_none') + '</p>') +
+        '</div>' +
+
+        '<div class="dash-cols">' +
+          '<div class="panel"><h2>' + t('dash_recent_reviews') + '</h2>' +
+            (recentReviews.length
+              ? recentReviews.map(function (r) { return '<div class="rfq-item"><div class="rfq-top"><b>' + esc(r.reviewer_name || 'User') + '</b><span class="review-stars">' + starsMini(r.rating) + '</span></div>' + (r.body ? '<p style="font-size:13.5px;margin:4px 0 0">' + esc(r.body) + '</p>' : '') + '</div>'; }).join('')
+              : '<p class="muted">' + t('no_reviews_yet') + '</p>') +
+          '</div>' +
+          '<div class="panel"><h2>' + t('match_title') + '</h2>' +
+            '<p class="muted" style="font-size:12.5px;margin-bottom:10px">' + t('match_sub') + '</p>' +
+            (matches.length
+              ? matches.map(function (r) { return '<a class="rfq-item" href="request-detail.html?id=' + encodeURIComponent(r.id) + '" style="display:block;text-decoration:none;color:inherit"><b>' + esc(r.title || '') + '</b><div class="muted" style="font-size:12.5px">' + t('qty') + ': ' + esc(r.qty || '—') + (GOVS[r.gov] ? ' · ' + esc(L(GOVS[r.gov])) : '') + '</div></a>'; }).join('')
+              : '<p class="muted">' + t('match_none') + '</p>') +
+          '</div>' +
+        '</div>';
+
+      // Unverified factories see the dashboard grayed out, behind a get-verified card.
+      var lockCard =
+        '<div class="dash-lock-card">' +
+          '<span class="dash-lock-ic">' + ICONS.shieldCheck + '</span>' +
+          '<h2>' + t('dash_locked_title') + '</h2>' +
+          '<p>' + t('dash_locked_msg') + '</p>' +
+          '<a class="btn btn-primary" href="my-factory.html">' + t('dash_verify_cta') + '</a>' +
+        '</div>';
+
       shell(
         '<div class="container" style="padding:24px 24px 64px;max-width:960px">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">' +
@@ -166,39 +207,10 @@ function renderDashboard() {
               '<a class="btn btn-ghost btn-sm" href="my-factory.html">' + t('dash_manage') + '</a>' +
             '</div>' +
           '</div>' +
-          (fac.verified ? '' : '<div class="au-err" style="background:var(--amber-soft);color:#8A5A12;margin:8px 0 4px">' + ICONS.clock + ' ' + t('mf_unverified_banner') + '</div>') +
           '<p class="muted" style="margin-bottom:18px">' + t('dash_intro') + '</p>' +
-
-          '<div class="stat-grid">' +
-            statTile(ICONS.eye, num(views), t('dash_views'), true) +
-            statTile(ICONS.chat, num((stats && stats.threads) || 0), t('dash_convos')) +
-            statTile(ICONS.star, reviews.length ? avgRating + ' <small>(' + num(reviews.length) + ')</small>' : t('new_badge'), t('reviews_title')) +
-            statTile(ICONS.heart, num(saves), t('dash_saves')) +
-            statTile(ICONS.clipboard, num(rfqs.length) + (openRfqs ? ' <small>(' + num(openRfqs) + ' ' + t('dash_open') + ')</small>' : ''), t('rfq_incoming')) +
-          '</div>' +
-
-          respLine +
-
-          '<div class="panel"><h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
-            (fac.verified
-              ? '<div class="muted" style="font-size:12.5px;margin:-2px 0 10px">' + t('rfq_quota').replace('{used}', num(window.RFQ_USED)).replace('{n}', num(PLAN_LIMITS.rfqPerMonth)) + '</div>'
-              : '<div class="lock-note" style="margin:-2px 0 10px">' + ICONS.shieldCheck + ' ' + t('rfq_verify_note') + ' <a href="my-factory.html" style="color:var(--teal);font-weight:600">' + t('rfq_verify_to_respond') + '</a></div>') +
-            (rfqs.length ? rfqs.map(rfqOwnerCard).join('') : '<p class="muted">' + t('rfq_none') + '</p>') +
-          '</div>' +
-
-          '<div class="dash-cols">' +
-            '<div class="panel"><h2>' + t('dash_recent_reviews') + '</h2>' +
-              (recentReviews.length
-                ? recentReviews.map(function (r) { return '<div class="rfq-item"><div class="rfq-top"><b>' + esc(r.reviewer_name || 'User') + '</b><span class="review-stars">' + starsMini(r.rating) + '</span></div>' + (r.body ? '<p style="font-size:13.5px;margin:4px 0 0">' + esc(r.body) + '</p>' : '') + '</div>'; }).join('')
-                : '<p class="muted">' + t('no_reviews_yet') + '</p>') +
-            '</div>' +
-            '<div class="panel"><h2>' + t('match_title') + '</h2>' +
-              '<p class="muted" style="font-size:12.5px;margin-bottom:10px">' + t('match_sub') + '</p>' +
-              (matches.length
-                ? matches.map(function (r) { return '<a class="rfq-item" href="request-detail.html?id=' + encodeURIComponent(r.id) + '" style="display:block;text-decoration:none;color:inherit"><b>' + esc(r.title || '') + '</b><div class="muted" style="font-size:12.5px">' + t('qty') + ': ' + esc(r.qty || '—') + (GOVS[r.gov] ? ' · ' + esc(L(GOVS[r.gov])) : '') + '</div></a>'; }).join('')
-                : '<p class="muted">' + t('match_none') + '</p>') +
-            '</div>' +
-          '</div>' +
+          (fac.verified
+            ? dashBody
+            : lockCard + '<div class="dash-locked" aria-hidden="true">' + dashBody + '</div>') +
         '</div>'
       );
     });
