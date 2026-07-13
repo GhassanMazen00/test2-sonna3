@@ -26,7 +26,10 @@
     var user = j.user || j;
     var exp = j.expires_at || (Math.floor(Date.now() / 1000) + (j.expires_in || 3600));
     return { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: exp,
-             user: { id: user.id, email: user.email || email, user_metadata: user.user_metadata || {} } };
+             user: { id: user.id, email: user.email || email,
+                     email_confirmed_at: user.email_confirmed_at || null,
+                     confirmed_at: user.confirmed_at || null,
+                     user_metadata: user.user_metadata || {} } };
   }
 
   // Valid access token, refreshing via the refresh token if it has (nearly) expired
@@ -343,10 +346,14 @@
         });
     },
     // Once a user has a session, Supabase has already confirmed their email
-    // (login is blocked until then when Confirm-email is on). Reflect that.
+    // (login is blocked until then when Confirm-email is on). So an explicit
+    // confirmed timestamp OR simply holding a session both mean "verified".
+    // The session fallback also covers sessions cached before we started
+    // storing the timestamp.
     emailVerified: function () {
       var u = AUTH.session && AUTH.session.user;
-      return !!(u && (u.email_confirmed_at || u.confirmed_at));
+      if (!u) return false;
+      return !!(u.email_confirmed_at || u.confirmed_at || AUTH.session.access_token);
     },
 
     // ---- Optional phone verification (Twilio Verify via the phone-otp fn) ----
@@ -472,4 +479,36 @@
       '</div>' +
     '</div>';
   };
+
+  // ---------- Email-confirmation callback ----------
+  // Supabase's confirm link redirects back to the site with the session tokens
+  // in the URL fragment (#access_token=…&refresh_token=…&type=signup). Catch
+  // that here, establish the session so the user is logged in, and send them to
+  // the home page — no second manual login.
+  (function handleAuthCallback() {
+    if (!remoteReady()) return;
+    var hash = window.location.hash || '';
+    if (hash.indexOf('access_token=') === -1) {
+      // Surface an expired/used link cleanly rather than leaving #error in the URL.
+      if (hash.indexOf('error=') !== -1) {
+        try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
+      }
+      return;
+    }
+    var params = new URLSearchParams(hash.charAt(0) === '#' ? hash.slice(1) : hash);
+    var at = params.get('access_token'), rt = params.get('refresh_token');
+    var expIn = parseInt(params.get('expires_in') || '3600', 10);
+    if (!at) return;
+    // Clear the tokens from the address bar immediately (don't leave them in history).
+    try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+    fetch(SUPABASE_URL + '/auth/v1/user', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + at } })
+      .then(function (r) { return r.json(); })
+      .then(function (user) {
+        AUTH.session = sessionFrom({ access_token: at, refresh_token: rt, expires_in: expIn, user: user }, user && user.email);
+        writeCache();
+        return ensureProfile().catch(function () {});
+      })
+      .then(function () { window.location.replace('index.html'); })   // land home, logged in
+      .catch(function () { /* leave them on the page; cache already cleared */ });
+  })();
 })();
