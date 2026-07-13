@@ -10,9 +10,70 @@ Everything the app needs is already in the code. What's left is **account setup 
 do once** (Resend for email, optionally Twilio for SMS) and **pasting keys into
 Supabase**. Follow the steps in order.
 
+> **Do these in order.** The confirmation and unsubscribe emails link back to
+> `https://sonna3.net`, so the site has to be live at that domain **first**
+> (Step 1) — otherwise those links land on a dead page. Email hosting (Step 2+)
+> and site hosting (Step 1) use *different, non-conflicting* DNS records on the
+> same domain, so you can set them all up in one sitting at your registrar.
+
+**At a glance:**
+
+| Step | What | Where |
+|---|---|---|
+| 1 | Point `sonna3.net` at the site | GitHub Pages + registrar DNS |
+| 2 | Email sender | Resend |
+| 3 | Require email verification | Supabase Auth |
+| 4 | Notification emails | SQL + Edge Function + Webhook |
+| 5 | Optional phone verification | Twilio |
+
 ---
 
-## 0. Prerequisite — an email sender (Resend)
+## 1. Point `sonna3.net` at your site (GitHub Pages)
+
+Your files are on GitHub Pages, so first make the domain serve the site. This is
+what the confirmation/unsubscribe links (and eventually everything) point at.
+
+### 1a. Keep the custom domain sticky (repo file)
+GitHub Pages needs a `CNAME` file containing `sonna3.net` in the served root, or
+it drops the custom domain on the next deploy. **This repo already has one** (see
+`CNAME` at the root). If you ever change the domain, edit that file.
+
+### 1b. Turn it on in the repo
+1. Repo **Settings → Pages**.
+2. Note the **branch/folder** Pages builds from (usually `main` / root).
+3. **Custom domain** → enter `sonna3.net` → **Save**. GitHub verifies the domain
+   and starts issuing an HTTPS certificate.
+
+### 1c. DNS at your registrar
+Add these records for `sonna3.net` (they coexist with the email records in Step 2):
+
+| Type | Name / Host | Value |
+|---|---|---|
+| A | `@` | `185.199.108.153` |
+| A | `@` | `185.199.109.153` |
+| A | `@` | `185.199.110.153` |
+| A | `@` | `185.199.111.153` |
+| AAAA | `@` | `2606:50c0:8000::153` |
+| AAAA | `@` | `2606:50c0:8001::153` |
+| AAAA | `@` | `2606:50c0:8002::153` |
+| AAAA | `@` | `2606:50c0:8003::153` |
+| CNAME | `www` | `<your-github-username>.github.io` |
+
+> If your registrar doesn't allow `AAAA` or an apex `CNAME`, the four `A` records
+> alone are enough. The `www` CNAME is optional but recommended.
+
+### 1d. Confirm
+Wait for DNS to propagate (minutes–hours), then:
+- Repo **Settings → Pages** shows the domain as verified.
+- Tick **Enforce HTTPS**.
+- `https://sonna3.net` loads the site with a valid padlock.
+
+Only once `https://sonna3.net` actually loads should you set it as the Supabase
+**Site URL** (Step 3) — that's what makes the email links resolve.
+
+---
+
+## 2. Email sender (Resend)
 
 Your domain is **`sonna3.net`**, so you'll send from **`no-reply@sonna3.net`** and
 your Site URL is **`https://sonna3.net`**. (Adjust if you host on `www.` instead.)
@@ -33,7 +94,7 @@ You now have: a verified domain + an API key. Everything below uses them.
 
 ---
 
-## 1. Email verification on sign-up  (no code deploy — dashboard only)
+## 3. Email verification on sign-up  (no code deploy — dashboard only)
 
 Supabase Auth already does this; you just turn it on and point it at Resend so the
 emails are branded and reliable.
@@ -55,17 +116,17 @@ now email-verified.
 
 ---
 
-## 2. Notification emails  (deploy one Edge Function + one webhook)
+## 4. Notification emails  (deploy one Edge Function + one webhook)
 
 We already write in-app notifications to the `notifications` table (new message,
 matching request, review, view, etc.). This step emails them too, respecting each
 user's preferences.
 
-### 2a. Run the SQL
+### 4a. Run the SQL
 Run **`supabase/email_notifications.sql`** in the SQL editor. It adds per-user email
 preferences + an unsubscribe token, and an `unsubscribe_all(token)` RPC.
 
-### 2b. Deploy the Edge Function
+### 4b. Deploy the Edge Function
 `supabase/functions/notify-email/` is ready to deploy.
 
 ```bash
@@ -84,7 +145,7 @@ supabase secrets set SITE_URL=https://sonna3.net
 supabase functions deploy notify-email --no-verify-jwt
 ```
 
-### 2c. Fire it on every new notification (Database Webhook)
+### 4c. Fire it on every new notification (Database Webhook)
 **Supabase → Database → Webhooks → Create a new hook**
 - Table: `public.notifications`  ·  Events: **Insert**
 - Type: **Supabase Edge Function** → `notify-email`
@@ -106,7 +167,7 @@ function checks before sending.
 
 ---
 
-## 3. Optional phone verification  (needs an SMS provider — Twilio)
+## 5. Optional phone verification  (needs an SMS provider — Twilio)
 
 Only do this when you want phone verification. Email works without it.
 
