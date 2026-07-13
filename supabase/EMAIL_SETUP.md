@@ -14,14 +14,22 @@ Supabase**. Follow the steps in order.
 
 ## 0. Prerequisite — an email sender (Resend)
 
-Deliverability requires sending from your own domain.
+Your domain is **`sonna3.net`**, so you'll send from **`no-reply@sonna3.net`** and
+your Site URL is **`https://sonna3.net`**. (Adjust if you host on `www.` instead.)
 
 1. Create an account at **resend.com** (free tier is plenty to start).
-2. **Domains → Add domain** → add your domain (e.g. `sonnaa.com`).
+2. **Domains → Add domain** → add **`sonna3.net`**.
 3. Add the **DNS records** it shows you (SPF + DKIM) at your registrar. Wait for **Verified**.
 4. **API Keys → Create** → copy the key (starts `re_…`). Keep it secret.
 
 You now have: a verified domain + an API key. Everything below uses them.
+
+> **Want to test before the DNS verifies?** You can. Skip the domain for now and
+> use Resend's built-in sender **`onboarding@resend.dev`** with just the API key.
+> The one limit: it only delivers to the email address you signed up to Resend
+> with — perfect for testing the whole flow against your own inbox. Switch to
+> `no-reply@sonna3.net` once the domain shows **Verified** (only the sender
+> address / SMTP password change — no code changes).
 
 ---
 
@@ -35,8 +43,9 @@ emails are branded and reliable.
    - Host: `smtp.resend.com`   Port: `465`
    - Username: `resend`
    - Password: your Resend **API key** (`re_…`)
-   - Sender email: `no-reply@yourdomain`   Sender name: `Sonnaع`
-3. **Authentication → URL Configuration** → set **Site URL** to your site (e.g. `https://yourdomain`) and add it to **Redirect URLs**. (This is where the confirm link sends people.)
+   - Sender email: `no-reply@sonna3.net`   Sender name: `Sonnaع`
+     (or `onboarding@resend.dev` while you're still testing)
+3. **Authentication → URL Configuration** → set **Site URL** to `https://sonna3.net` and add it to **Redirect URLs**. (This is where the confirm link sends people.)
 4. (Optional) **Authentication → Email Templates → Confirm signup** → tweak the wording/branding.
 
 That's it. The app is already built for this: after sign-up the user sees a
@@ -67,8 +76,9 @@ supabase link --project-ref qtphintmxyncwlpxenha
 
 # set secrets the function needs
 supabase secrets set RESEND_API_KEY=re_your_key
-supabase secrets set FROM_EMAIL="Sonnaع <no-reply@yourdomain>"
-supabase secrets set SITE_URL=https://yourdomain
+supabase secrets set FROM_EMAIL="Sonnaع <no-reply@sonna3.net>"
+supabase secrets set SITE_URL=https://sonna3.net
+# (while testing, FROM_EMAIL can be "Sonnaع <onboarding@resend.dev>")
 
 # deploy
 supabase functions deploy notify-email --no-verify-jwt
