@@ -225,8 +225,8 @@ body::before {
 .dash-lock-card h2 { font-size: 18px; margin: 0 0 6px; }
 .dash-lock-card p { color: var(--ink-soft); font-size: 14px; line-height: 1.5; margin: 0 auto 14px; max-width: 440px; }
 .dash-locked {
-  opacity: .55;
-  filter: grayscale(1);
+  opacity: .7;
+  filter: grayscale(.7) blur(5px);
   pointer-events: none;
   user-select: none;
 }
