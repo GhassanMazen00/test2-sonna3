@@ -93,10 +93,55 @@ function dashboardHtml(p, fac) {
         '<button class="btn btn-primary" id="ac_save" onclick="saveAccount()">' + t('acc_save') + '</button>' +
       '</div>' +
     '</div>' +
+    verifyPanel(p) +
     '<div class="panel danger-zone" style="margin-top:16px">' +
       '<h2 style="margin-bottom:6px">' + t('acc_danger') + '</h2>' +
       '<p class="muted" style="margin-bottom:14px">' + t('acc_delete_note') + '</p>' +
       '<button class="btn btn-danger" id="acc_del" onclick="deleteMyAccount()">' + t('acc_delete_btn') + '</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function prefRow(key, label) {
+  var p = Auth.profile() || {};
+  var on = p[key] !== false;   // default on
+  return '<label class="pref-row">' +
+    '<span>' + label + '</span>' +
+    '<input type="checkbox" class="pref-toggle" data-pref="' + key + '"' + (on ? ' checked' : '') + '>' +
+  '</label>';
+}
+
+function verifyPanel(p) {
+  var emailOK = Auth.emailVerified && Auth.emailVerified();
+  var okBadge = '<span class="vchip ok">' + (ICONS.check || '✓') + ' ' + t('ver_verified') + '</span>';
+  var pendBadge = '<span class="vchip pend">' + t('ver_pending') + '</span>';
+  return '<div class="panel" style="margin-top:16px">' +
+    '<h2 style="margin-bottom:4px">' + t('ver_title') + '</h2>' +
+    '<p class="muted" style="margin-bottom:16px">' + t('ver_sub') + '</p>' +
+
+    '<div class="ver-row">' +
+      '<div><div class="ver-label">' + ICONS.mail + ' ' + t('ver_email') + '</div>' +
+        '<div class="muted" style="font-size:13px">' + esc(p.email || (Auth.user() && Auth.user().email) || '') + '</div></div>' +
+      (emailOK ? okBadge : pendBadge) +
+    '</div>' +
+
+    '<div class="ver-row" id="phoneRow">' +
+      '<div><div class="ver-label">' + ICONS.phone + ' ' + t('ver_phone') + ' <span class="opt">(' + t('optional') + ')</span></div>' +
+        '<div class="muted" style="font-size:13px" id="phoneState">' + t('ver_checking') + '</div></div>' +
+      '<div id="phoneAction"></div>' +
+    '</div>' +
+    '<div id="phoneForm"></div>' +
+
+    '<h3 style="margin:20px 0 4px;font-size:15px">' + t('ver_prefs_title') + '</h3>' +
+    '<p class="muted" style="margin-bottom:12px;font-size:13px">' + t('ver_prefs_sub') + '</p>' +
+    '<div class="pref-list">' +
+      prefRow('notify_messages', t('pref_messages')) +
+      prefRow('notify_matches',  t('pref_matches')) +
+      prefRow('notify_requests', t('pref_requests')) +
+      prefRow('notify_factory',  t('pref_factory')) +
+    '</div>' +
+    '<div class="modal-actions" style="margin-top:14px">' +
+      '<button class="btn btn-primary" id="pref_save" onclick="savePrefs()">' + t('acc_save') + '</button>' +
     '</div>' +
   '</div>';
 }
@@ -116,7 +161,92 @@ function renderAccount() {
   }
   var p = Auth.profile() || {};
   shell(dashboardHtml(p, null));   // render immediately, then fill in the factory
-  Auth.myFactory().then(function(fac){ shell(dashboardHtml(p, fac)); loadMyRFQs(); }).catch(function(){ loadMyRFQs(); });
+  loadPhoneState();
+  Auth.myFactory().then(function(fac){ shell(dashboardHtml(p, fac)); loadMyRFQs(); loadPhoneState(); }).catch(function(){ loadMyRFQs(); });
+}
+
+// ---- Optional phone verification ----
+function loadPhoneState() {
+  var state = document.getElementById('phoneState');
+  var action = document.getElementById('phoneAction');
+  if (!state || !Auth.verifiedPhone) return;
+  Auth.verifiedPhone().then(function (vp) {
+    if (vp && vp.phone) {
+      state.textContent = vp.phone;
+      action.innerHTML = '<span class="vchip ok">' + (ICONS.check || '✓') + ' ' + t('ver_verified') + '</span>';
+      document.getElementById('phoneForm').innerHTML = '';
+    } else {
+      state.textContent = t('ver_phone_none');
+      action.innerHTML = '<button class="btn btn-ghost btn-sm" onclick="showPhoneForm()">' + t('ver_add_phone') + '</button>';
+    }
+  }).catch(function () {
+    state.textContent = t('ver_phone_none');
+    action.innerHTML = '<button class="btn btn-ghost btn-sm" onclick="showPhoneForm()">' + t('ver_add_phone') + '</button>';
+  });
+}
+
+function showPhoneForm() {
+  var p = Auth.profile() || {};
+  var el = document.getElementById('phoneForm');
+  el.innerHTML =
+    '<div class="phone-verify">' +
+      '<div class="au-err" id="phErr" style="display:none"></div>' +
+      '<div class="form-grid">' +
+        accField(t('ver_phone_label'), '<input id="ph_num" type="tel" placeholder="+20 1XX XXX XXXX" value="' + esc(p.phone || '') + '">') +
+      '</div>' +
+      '<div class="modal-actions" style="margin-top:10px"><button class="btn btn-primary" id="ph_send" onclick="sendPhoneCode()">' + t('ver_send_code') + '</button></div>' +
+    '</div>';
+}
+
+function sendPhoneCode() {
+  var num = (document.getElementById('ph_num').value || '').trim();
+  var err = document.getElementById('phErr');
+  err.style.display = 'none';
+  if (!num) { err.textContent = t('ver_enter_phone'); err.style.display = 'block'; return; }
+  var btn = document.getElementById('ph_send'); btn.disabled = true; btn.textContent = '…';
+  Auth.startPhoneVerify(num).then(function () {
+    document.getElementById('phoneForm').innerHTML =
+      '<div class="phone-verify">' +
+        '<p class="muted" style="font-size:13px;margin-bottom:8px">' + t('ver_code_sent') + ' <strong>' + esc(num) + '</strong>.</p>' +
+        '<div class="au-err" id="phErr2" style="display:none"></div>' +
+        '<div class="form-grid">' +
+          accField(t('ver_code'), '<input id="ph_code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="000000">') +
+        '</div>' +
+        '<div class="modal-actions" style="margin-top:10px">' +
+          '<button class="btn btn-ghost" onclick="showPhoneForm()">' + t('ver_change_num') + '</button>' +
+          '<button class="btn btn-primary" id="ph_check" onclick="checkPhoneCode(\'' + esc(num).replace(/'/g, "\\'") + '\')">' + t('ver_verify') + '</button>' +
+        '</div>' +
+      '</div>';
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = t('ver_send_code');
+    err.textContent = e.message || String(e); err.style.display = 'block';
+  });
+}
+
+function checkPhoneCode(num) {
+  var code = (document.getElementById('ph_code').value || '').trim();
+  var err = document.getElementById('phErr2');
+  err.style.display = 'none';
+  if (!code) { err.textContent = t('ver_enter_code'); err.style.display = 'block'; return; }
+  var btn = document.getElementById('ph_check'); btn.disabled = true; btn.textContent = '…';
+  Auth.checkPhoneVerify(num, code).then(function () {
+    // Keep the profile phone field in sync with the verified number.
+    Auth.updateProfile({ phone: num }).catch(function () {});
+    loadPhoneState();
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = t('ver_verify');
+    err.textContent = e.message || String(e); err.style.display = 'block';
+  });
+}
+
+function savePrefs() {
+  var patch = {};
+  var toggles = document.querySelectorAll('.pref-toggle');
+  for (var i = 0; i < toggles.length; i++) { patch[toggles[i].getAttribute('data-pref')] = toggles[i].checked; }
+  var btn = document.getElementById('pref_save'); btn.disabled = true; btn.textContent = '…';
+  Auth.updateProfile(patch)
+    .then(function () { btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function () { btn.textContent = t('acc_save'); }, 2000); })
+    .catch(function (e) { btn.disabled = false; btn.textContent = t('acc_save'); alert('Could not save: ' + (e.message || e)); });
 }
 
 function loadMyRFQs() {

@@ -295,7 +295,13 @@
 
   function notifIcon(type) {
     var I = window.ICONS || {};
-    return type === 'rfq' ? (I.clipboard || '') : type === 'review' ? (I.star || '') : type === 'view' ? (I.eye || '') : (I.megaphone || I.bell || '');
+    return type === 'rfq' ? (I.clipboard || '')
+      : type === 'review' ? (I.star || '')
+      : type === 'view' ? (I.eye || '')
+      : type === 'message' ? (I.chat || I.mail || '')
+      : type === 'request' ? (I.clipboard || I.megaphone || '')
+      : type === 'factory' ? (I.factory || I.check || '')
+      : (I.megaphone || I.bell || '');
   }
   function relDays(iso) { var s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)); try { return STR[LANG].days_ago(s); } catch (e) { return ''; } }
 
