@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}}catch(e){}})();</script>
+<title>إلغاء الاشتراك | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script>
+function shell(body) { document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + body + '</main>' + footerHTML(); }
+
+function card(icon, iconBg, title, msg, extra) {
+  return '<div class="container" style="padding:64px 24px;text-align:center;max-width:520px">' +
+    '<span class="ci" style="width:56px;height:56px;background:' + iconBg + ';border-radius:16px;display:inline-grid;place-items:center;margin-bottom:14px">' + icon + '</span>' +
+    '<h1 style="margin-bottom:10px">' + title + '</h1>' +
+    '<p class="muted">' + msg + '</p>' +
+    (extra || '') +
+  '</div>';
+}
+
+function render() {
+  var token = new URLSearchParams(location.search).get('token');
+  if (!token) {
+    shell(card(ICONS.mail || '', 'var(--teal-tint)', t('unsub_bad_title'), t('unsub_bad_msg'),
+      '<div style="margin-top:18px"><a class="btn btn-primary" href="account.html">' + t('unsub_manage') + '</a></div>'));
+    return;
+  }
+  shell(card(ICONS.mail || '', 'var(--teal-tint)', t('unsub_working'), '…', ''));
+  fetch(window.SUPABASE_URL + '/rest/v1/rpc/unsubscribe_all', {
+    method: 'POST',
+    headers: { apikey: window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_token: token })
+  }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (res) {
+      if (res.ok && res.j === true) {
+        shell(card(ICONS.check || '✓', 'var(--teal-tint)', t('unsub_ok_title'), t('unsub_ok_msg'),
+          '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+            '<a class="btn btn-primary" href="account.html">' + t('unsub_manage') + '</a>' +
+            '<a class="btn btn-ghost" href="index.html">' + t('back_home') + '</a>' +
+          '</div>'));
+      } else {
+        shell(card(ICONS.mail || '', 'var(--teal-tint)', t('unsub_bad_title'), t('unsub_bad_msg'),
+          '<div style="margin-top:18px"><a class="btn btn-primary" href="account.html">' + t('unsub_manage') + '</a></div>'));
+      }
+    }).catch(function () {
+      shell(card(ICONS.mail || '', 'var(--teal-tint)', t('unsub_bad_title'), t('unsub_bad_msg'),
+        '<div style="margin-top:18px"><a class="btn btn-primary" href="account.html">' + t('unsub_manage') + '</a></div>'));
+    });
+}
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>

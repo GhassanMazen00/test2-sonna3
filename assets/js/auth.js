@@ -328,6 +328,51 @@
           method: 'POST', headers: restHeaders(tok), body: '{}'
         }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
       }).then(function () { clearCache(); return true; });
+    },
+
+    // ---- Email verification ----
+    // Re-send the confirmation email (used from the "check your inbox" screen).
+    resendConfirmation: function (email) {
+      return fetch(SUPABASE_URL + '/auth/v1/resend', {
+        method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'signup', email: email })
+      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.j.msg || res.j.error_description || res.j.error || AL('Could not resend. Try again shortly.', 'تعذر إعادة الإرسال. حاول بعد قليل.'));
+          return true;
+        });
+    },
+    // Once a user has a session, Supabase has already confirmed their email
+    // (login is blocked until then when Confirm-email is on). Reflect that.
+    emailVerified: function () {
+      var u = AUTH.session && AUTH.session.user;
+      return !!(u && (u.email_confirmed_at || u.confirmed_at));
+    },
+
+    // ---- Optional phone verification (Twilio Verify via the phone-otp fn) ----
+    startPhoneVerify: function (phone) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/functions/v1/phone-otp', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ action: 'start', phone: phone })
+        }).then(function (r) { return r.json(); })
+          .then(function (j) { if (j.error) throw new Error(j.error); return j; });
+      });
+    },
+    checkPhoneVerify: function (phone, code) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/functions/v1/phone-otp', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ action: 'check', phone: phone, code: code })
+        }).then(function (r) { return r.json(); })
+          .then(function (j) { if (j.error) throw new Error(j.error); return j; });
+      });
+    },
+    // The verified number (if any) for the signed-in user, else null.
+    verifiedPhone: function () {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/verified_phones?select=phone,verified_at&user_id=eq.' + AUTH.session.user.id, { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (rows) { return (rows && rows[0]) || null; });
+      });
     }
   };
 
@@ -380,10 +425,39 @@
     } else {
       var fields = { full_name: v('au_name'), phone: v('au_phone') };
       Auth.signup(email, pw, 'user', fields).then(function (r) {
-        if (r.needConfirm) { bd.querySelector('.modal').innerHTML = '<h2>' + t('au_signup_title') + '</h2><p class="sub">' + t('au_confirm') + '</p><div class="modal-actions"><button class="btn btn-primary" onclick="this.closest(\'.modal-backdrop\').remove()">OK</button></div>'; }
+        if (r.needConfirm) { showConfirmScreen(bd, email); }
         else { window.location.href = 'account.html'; }   // land in the dashboard
       }).catch(done);
     }
+  }
+
+  // "Check your inbox" screen after sign-up, with a resend button.
+  function showConfirmScreen(bd, email) {
+    var m = bd.querySelector('.modal');
+    m.innerHTML =
+      '<div style="text-align:center">' +
+        '<span class="ci" style="width:52px;height:52px;background:var(--teal-tint);color:var(--teal);border-radius:15px;display:inline-grid;place-items:center;margin-bottom:12px">' + (ICONS.mail || ICONS.bell || '') + '</span>' +
+        '<h2>' + t('au_check_inbox') + '</h2>' +
+        '<p class="sub">' + t('au_confirm_to') + ' <strong>' + email + '</strong>. ' + t('au_confirm_note') + '</p>' +
+        '<div class="au-err" id="cfErr" style="display:none"></div>' +
+        '<div class="cf-ok" id="cfOk" style="display:none;color:var(--teal);font-weight:600;margin:6px 0">' + t('au_resent') + '</div>' +
+      '</div>' +
+      '<div class="modal-actions" style="justify-content:center">' +
+        '<button class="btn btn-ghost" id="cfResend">' + t('au_resend') + '</button>' +
+        '<button class="btn btn-primary" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('au_done') + '</button>' +
+      '</div>';
+    var rb = m.querySelector('#cfResend');
+    rb.onclick = function () {
+      rb.disabled = true; rb.textContent = '…';
+      m.querySelector('#cfErr').style.display = 'none';
+      Auth.resendConfirmation(email).then(function () {
+        m.querySelector('#cfOk').style.display = 'block'; rb.textContent = t('au_resend');
+        setTimeout(function () { rb.disabled = false; }, 15000);
+      }).catch(function (e) {
+        var er = m.querySelector('#cfErr'); er.textContent = e.message || String(e); er.style.display = 'block';
+        rb.disabled = false; rb.textContent = t('au_resend');
+      });
+    };
   }
 
   // Gate body for members-only pages (factories / requests)
