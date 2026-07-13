@@ -2,6 +2,15 @@
 // DATA FILE: All structured data for Sonnaع
 // ============================================
 
+// Plan limits for the Verified (subscribed) tier. Free/unverified factories
+// stay locked (no media, no RFQ replies) until they subscribe. Tweak these
+// numbers freely — every limit in the app reads from here.
+window.PLAN_LIMITS = {
+  mediaImages: 10,   // gallery photos a verified factory may keep
+  mediaVideos: 2,    // gallery videos a verified factory may keep
+  rfqPerMonth: 15    // buyer quote-requests a verified factory may answer / calendar month
+};
+
 const INDUSTRIES = [
   { id: "textile", en: "Textile & Apparel", ar: "المنسوجات والملابس", icon: ICONS.textile, g: ["#0E6B5E", "#12897A"] },
   { id: "packaging", en: "Packaging & Printing", ar: "التعبئة والطباعة", icon: ICONS.box, g: ["#C98A2B", "#E0A94F"] },

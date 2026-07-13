@@ -162,6 +162,50 @@ body::before {
 .verify-benefits { list-style: none; display: grid; gap: 10px; margin: 12px 0; }
 .verify-benefits li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
 .verify-benefits .svg-ic { color: var(--teal); flex: none; margin-top: 2px; }
+
+/* ---- Verified-plan card (above the request-verification button) ---- */
+.plan-card {
+  border: 1.5px solid var(--teal);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--card, #fff);
+  box-shadow: 0 12px 32px -18px rgba(15, 118, 110, .45);
+}
+.plan-card-head {
+  padding: 22px 24px 20px;
+  background: linear-gradient(135deg, #0f766e, #12897a);
+  color: #fff;
+}
+.plan-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .28);
+  padding: 4px 11px; border-radius: 99px;
+  font-size: 12px; font-weight: 700; letter-spacing: .01em;
+  margin-bottom: 12px;
+}
+.plan-badge .svg-ic { width: 14px; height: 14px; }
+.plan-card-head h2 { color: #fff; font-size: 20px; line-height: 1.25; margin: 0; }
+.plan-card-head p { color: rgba(255, 255, 255, .88); font-size: 13.5px; line-height: 1.5; margin: 8px 0 0; }
+.plan-benefits { list-style: none; margin: 0; padding: 8px 12px; display: grid; gap: 2px; }
+.plan-benefit {
+  display: flex; gap: 13px; align-items: flex-start;
+  padding: 12px; border-radius: 14px; transition: background .18s ease;
+}
+.plan-benefit:hover { background: var(--teal-tint); }
+.plan-benefit-ic {
+  flex: none; width: 34px; height: 34px; border-radius: 10px;
+  background: var(--teal-tint); color: var(--teal);
+  display: grid; place-items: center;
+}
+.plan-benefit-ic .svg-ic { width: 18px; height: 18px; }
+.plan-benefit > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.plan-benefit b { font-size: 14.5px; font-weight: 650; color: var(--ink); }
+.plan-benefit small { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+.plan-card-foot { padding: 6px 24px 22px; text-align: center; }
+.plan-card-foot .btn-lg { width: 100%; padding: 13px 20px; font-size: 15px; font-weight: 700; }
+.plan-note { font-size: 12px; color: var(--ink-soft); margin: 12px 0 0; line-height: 1.5; }
+@media (max-width: 520px) { .plan-card-head h2 { font-size: 18px; } }
 .vbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
 .vbadge .svg-ic { width: .95em; height: .95em; }
 .v-yes { background: var(--teal-tint); color: var(--teal); }
