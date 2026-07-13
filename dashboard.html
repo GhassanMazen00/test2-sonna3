@@ -49,11 +49,19 @@ function rfqOwnerCard(rfq) {
       (rfq.target_price ? ' · ' + t('rfq_target') + ': ' + esc(rfq.target_price) : '') +
       (rfq.needed_by ? ' · ' + t('rfq_needed') + ': ' + esc(rfq.needed_by) : '') + '</div>' +
     (rfq.details ? '<p style="font-size:13.5px;margin:6px 0">' + esc(rfq.details) + '</p>' : '') +
-    (rfq.status !== 'closed' ? '<button class="btn btn-primary btn-sm" onclick="openQuoteModal(\'' + esc(rfq.id) + '\')">' + t('rfq_respond') + '</button>' : '') +
+    (rfq.status !== 'closed'
+      ? (window.FAC_VERIFIED
+          ? '<button class="btn btn-primary btn-sm" onclick="openQuoteModal(\'' + esc(rfq.id) + '\')">' + t('rfq_respond') + '</button>'
+          : '<a class="btn btn-ghost btn-sm" href="my-factory.html">' + ICONS.shieldCheck + ' ' + t('rfq_verify_to_respond') + '</a>')
+      : '') +
   '</div>';
 }
 
 function openQuoteModal(rfqId) {
+  if (!window.FAC_VERIFIED) {
+    alert(t('rfq_verify_to_respond') + '\n' + t('rfq_verify_note'));
+    return;
+  }
   var cap = (window.PLAN_LIMITS && PLAN_LIMITS.rfqPerMonth) || 15;
   if ((window.RFQ_USED || 0) >= cap) {
     alert(t('limit_rfq_title') + '\n' + t('limit_rfq_msg').replace('{n}', cap));
@@ -130,6 +138,7 @@ function renderDashboard() {
       var saves = res[3] || 0;
       var rfqs = res[4] || [];
       window.RFQ_USED = res[6] || 0;   // quotes sent this month (for the monthly cap)
+      window.FAC_VERIFIED = !!fac.verified;   // only verified factories may reply to RFQs
       var matches = (res[5] || []).filter(function (r) {
         if (String(r.owner) === String(me)) return false;
         return (r.sector && r.sector === fac.sector) || (r.gov != null && String(r.gov) === String(fac.gov));
@@ -171,7 +180,9 @@ function renderDashboard() {
           respLine +
 
           '<div class="panel"><h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
-            '<div class="muted" style="font-size:12.5px;margin:-2px 0 10px">' + t('rfq_quota').replace('{used}', num(window.RFQ_USED)).replace('{n}', num(PLAN_LIMITS.rfqPerMonth)) + '</div>' +
+            (fac.verified
+              ? '<div class="muted" style="font-size:12.5px;margin:-2px 0 10px">' + t('rfq_quota').replace('{used}', num(window.RFQ_USED)).replace('{n}', num(PLAN_LIMITS.rfqPerMonth)) + '</div>'
+              : '<div class="lock-note" style="margin:-2px 0 10px">' + ICONS.shieldCheck + ' ' + t('rfq_verify_note') + ' <a href="my-factory.html" style="color:var(--teal);font-weight:600">' + t('rfq_verify_to_respond') + '</a></div>') +
             (rfqs.length ? rfqs.map(rfqOwnerCard).join('') : '<p class="muted">' + t('rfq_none') + '</p>') +
           '</div>' +
 
