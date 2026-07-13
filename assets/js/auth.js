@@ -227,6 +227,17 @@
           .then(function (r) { return r.ok ? r.json() : []; });
       }).catch(function () { return []; });
     },
+    // How many quotes the signed-in owner has sent since the 1st of this month
+    // (used to enforce the Verified plan's monthly RFQ-reply cap).
+    quotesThisMonth: function () {
+      var now = new Date();
+      var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/quotes?select=id&factory_owner=eq.' + AUTH.session.user.id + '&created_at=gte.' + encodeURIComponent(monthStart), { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (rows) { return (rows || []).length; });
+      }).catch(function () { return 0; });
+    },
     sendQuote: function (rfqId, fields) {
       var self = this;
       return freshToken().then(function (tok) {

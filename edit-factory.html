@@ -52,13 +52,35 @@ function onCover(input) { uploadInto(input, function (url) { EDIT.cover = url; v
 function onMedia(input) {
   var files = Array.prototype.slice.call(input.files || []);
   if (!files.length) return;
-  var note = document.getElementById('mediaNote'); if (note) note.textContent = t('ef_uploading');
-  Promise.all(files.map(function (f) {
+  var note = document.getElementById('mediaNote');
+  var lim = window.PLAN_LIMITS || { mediaImages: 10, mediaVideos: 2 };
+  var cur = EDIT.media || [];
+  var curImg = cur.filter(function (x) { return x.type !== 'video'; }).length;
+  var curVid = cur.filter(function (x) { return x.type === 'video'; }).length;
+  var roomImg = Math.max(0, lim.mediaImages - curImg);
+  var roomVid = Math.max(0, lim.mediaVideos - curVid);
+
+  // Keep only what fits within the plan, in the order chosen.
+  var accepted = [], trimmed = false;
+  files.forEach(function (f) {
+    var isVid = f.type && f.type.indexOf('video') === 0;
+    if (isVid) { if (roomVid > 0) { accepted.push(f); roomVid--; } else trimmed = true; }
+    else { if (roomImg > 0) { accepted.push(f); roomImg--; } else trimmed = true; }
+  });
+
+  if (!accepted.length) {
+    input.value = '';
+    alert(t('limit_media_title') + '\n' + t('limit_media_msg').replace('{i}', lim.mediaImages).replace('{v}', lim.mediaVideos));
+    return;
+  }
+  if (note) note.textContent = t('ef_uploading');
+  Promise.all(accepted.map(function (f) {
     return Auth.uploadFactoryMedia(f).then(function (url) { return { url: url, type: (f.type && f.type.indexOf('video') === 0) ? 'video' : 'image' }; });
   })).then(function (items) {
     EDIT.media = (EDIT.media || []).concat(items); refreshMedia();
     if (note) note.textContent = '';
     input.value = '';
+    if (trimmed) alert(t('limit_media_title') + '\n' + t('limit_media_msg').replace('{i}', lim.mediaImages).replace('{v}', lim.mediaVideos));
   }).catch(function (e) { if (note) note.textContent = (e.message || e); });
 }
 function uploadInto(input, cb) {
@@ -134,7 +156,7 @@ function renderEditor(fac) {
       '<div class="panel" style="margin-bottom:16px"><h2>' + t('ef_media') + '</h2><div class="form-grid">' +
         field(t('ef_logo'), '<div class="media-pick"><div class="media-thumb" id="logoPrev" style="background-image:url(\'' + safeUrl(EDIT.logo) + '\')"></div><input type="file" accept="image/*" onchange="onLogo(this)"></div>') +
         field(t('ef_cover'), '<div class="media-pick"><div class="media-thumb wide" id="coverPrev" style="background-image:url(\'' + safeUrl(EDIT.cover) + '\')"></div><input type="file" accept="image/*" onchange="onCover(this)"></div>') +
-        field(t('gallery'), '<input type="file" accept="image/*,video/*" multiple onchange="onMedia(this)"><div class="muted" id="mediaNote" style="font-size:12px;margin:4px 0"></div><div id="mediaWrap">' + mediaPreviews() + '</div>') +
+        field(t('gallery') + ' <span class="opt">(' + t('plan_f_media').replace('{i}', PLAN_LIMITS.mediaImages).replace('{v}', PLAN_LIMITS.mediaVideos) + ')</span>', '<input type="file" accept="image/*,video/*" multiple onchange="onMedia(this)"><div class="muted" id="mediaNote" style="font-size:12px;margin:4px 0"></div><div id="mediaWrap">' + mediaPreviews() + '</div>') +
       '</div></div>' +
 
       '<div style="display:flex;gap:10px;justify-content:flex-end">' +
