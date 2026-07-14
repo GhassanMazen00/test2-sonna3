@@ -44,53 +44,64 @@ async function hmacSha256Hex(secret: string, message: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method !== "POST") return json({ error: "method" }, 405);
-  if (!MID || !PAYMENT_API_KEY) return json({ error: "Payments are not configured yet." }, 200);
+  try {
+    if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+    if (req.method !== "POST") return json({ error: "method" }, 405);
+    console.log("checkout: start", { hasMID: !!MID, hasKey: !!PAYMENT_API_KEY, mode: MODE, site: SITE_URL });
+    if (!MID || !PAYMENT_API_KEY) { console.log("checkout: missing Kashier secrets"); return json({ error: "Payments are not configured yet." }, 200); }
 
-  // Authenticate the caller.
-  const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
-  if (!jwt) return json({ error: "auth" }, 401);
-  const userClient = createClient(SUPABASE_URL, ANON, {
-    global: { headers: { Authorization: `Bearer ${jwt}` } }, auth: { persistSession: false },
-  });
-  const { data: uWrap } = await userClient.auth.getUser();
-  const user = uWrap?.user;
-  if (!user) return json({ error: "auth" }, 401);
+    // Authenticate the caller.
+    const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (!jwt) { console.log("checkout: no auth header"); return json({ error: "auth" }, 401); }
+    const userClient = createClient(SUPABASE_URL, ANON, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } }, auth: { persistSession: false },
+    });
+    const { data: uWrap, error: uErr } = await userClient.auth.getUser();
+    const user = uWrap?.user;
+    if (uErr || !user) { console.log("checkout: no user", uErr?.message); return json({ error: "Please log in again." }, 200); }
+    console.log("checkout: user", user.id);
 
-  const amount = String(AMOUNT);
-  const currency = "EGP";
-  const plan = "verified";
+    const amount = String(AMOUNT);
+    const currency = "EGP";
+    const plan = "verified";
 
-  // The caller's factory (so the webhook verifies exactly this factory).
-  const { data: fac } = await admin
-    .from("factories").select("id").eq("owner", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (!fac) return json({ error: "Create your factory page first." }, 200);
+    // The caller's factory (so the webhook verifies exactly this factory).
+    const { data: fac, error: facErr } = await admin
+      .from("factories").select("id").eq("owner", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (facErr) { console.log("checkout: factories query error", facErr.message); return json({ error: "Could not read your factory: " + facErr.message }, 200); }
+    if (!fac) { console.log("checkout: no factory for owner"); return json({ error: "Create your factory page first." }, 200); }
+    console.log("checkout: factory", fac.id);
 
-  const orderId = crypto.randomUUID();
-  const { error: piErr } = await admin.from("payment_intents").insert({
-    ref: orderId, owner: user.id, factory_id: fac.id, plan, amount_cents: Math.round(Number(amount)), currency, status: "pending",
-  });
-  if (piErr) return json({ error: "Could not start checkout." }, 200);
+    const orderId = crypto.randomUUID();
+    const { error: piErr } = await admin.from("payment_intents").insert({
+      ref: orderId, owner: user.id, factory_id: fac.id, plan, amount_cents: Math.round(Number(amount)), currency, status: "pending",
+    });
+    if (piErr) { console.log("checkout: payment_intents insert error", piErr.message); return json({ error: "Could not start checkout: " + piErr.message }, 200); }
 
-  // Kashier order hash: HMAC-SHA256 of the payment path with the Payment API Key.
-  const path = `/?payment=${MID}.${orderId}.${amount}.${currency}`;
-  const hash = await hmacSha256Hex(PAYMENT_API_KEY, path);
+    // Kashier order hash: HMAC-SHA256 of the payment path with the Payment API Key.
+    const path = `/?payment=${MID}.${orderId}.${amount}.${currency}`;
+    const hash = await hmacSha256Hex(PAYMENT_API_KEY, path);
 
-  const params = new URLSearchParams({
-    merchantId: MID,
-    orderId,
-    amount,
-    currency,
-    hash,
-    mode: MODE,
-    merchantRedirect: `${SITE_URL}/payment-return.html`,
-    serverWebhook: `${SUPABASE_URL}/functions/v1/kashier-webhook`,
-    allowedMethods: "card",
-    redirectMethod: "get",
-    display: "en",
-    type: "external",
-  });
+    const params = new URLSearchParams({
+      merchantId: MID,
+      orderId,
+      amount,
+      currency,
+      hash,
+      mode: MODE,
+      merchantRedirect: `${SITE_URL}/payment-return.html`,
+      serverWebhook: `${SUPABASE_URL}/functions/v1/kashier-webhook`,
+      allowedMethods: "card",
+      redirectMethod: "get",
+      display: "en",
+      type: "external",
+    });
 
-  return json({ url: `https://checkout.kashier.io/?${params.toString()}` });
+    const url = `https://checkout.kashier.io/?${params.toString()}`;
+    console.log("checkout: created url ok");
+    return json({ url });
+  } catch (e) {
+    console.log("checkout: EXCEPTION", String(e));
+    return json({ error: "Checkout failed: " + String(e) }, 200);
+  }
 });
