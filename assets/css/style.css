@@ -110,6 +110,10 @@
 :root[data-theme="dark"] .industry-card-new:hover { background: rgba(255, 255, 255, .08); }
 :root[data-theme="dark"] .hero-slider { background: rgba(255, 255, 255, .05); border-color: var(--line); }
 :root[data-theme="dark"] .industries-intro .section-badge { background: var(--card); }
+/* Selected language pill used var(--ink) (light in dark mode) with white text →
+   invisible. Use the brand teal for the selected state in dark. */
+:root[data-theme="dark"] .lang-toggle button.on,
+:root[data-theme="dark"] .mobile-lang-toggle button.on { background: var(--teal); color: #fff; border-color: var(--teal); }
 /* Light pastel status backgrounds → muted dark tints (keep colored text readable). */
 :root[data-theme="dark"] .au-err { background: #3A1D1B; color: #F3B4AE; }
 :root[data-theme="dark"] .danger-zone { background: #2A1512; border-color: #5B2B25; }
