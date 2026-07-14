@@ -216,8 +216,11 @@ function openRequestForm() {
           '<select id="fq_sector"><option value="">' + t('all') + '</option>' + INDUSTRIES.map(function(s) { return '<option value="' + esc(s.id) + '">' + L({en: s.en, ar: s.ar}) + '</option>'; }).join('') + '</select>' +
         '</div>' +
         '<div class="form-field full">' +
-          '<label>' + t('fr_contact') + ' *</label>' +
-          '<input id="fq_contact" placeholder="' + t('fr_contact_ph') + '">' +
+          '<label>' + t('fr_contact') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
+          '<div class="muted" style="font-size:12.5px;margin:-2px 0 8px">' + t('fr_contact_note') + '</div>' +
+          '<div class="contact-field"><span class="cf-ic">' + ICONS.phone + '</span><input id="fq_phone" dir="ltr" type="tel" placeholder="' + t('fr_phone_ph') + '"></div>' +
+          '<div class="contact-field"><span class="cf-ic cf-wa">' + ICONS.whatsapp + '</span><input id="fq_whatsapp" dir="ltr" type="tel" placeholder="' + t('fr_whatsapp_ph') + '"></div>' +
+          '<div class="contact-field"><span class="cf-ic">' + ICONS.envelope + '</span><input id="fq_email" dir="ltr" type="email" placeholder="' + t('fr_email_ph') + '"></div>' +
         '</div>' +
         '<div class="form-field full">' +
           '<label>' + t('fr_files') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
@@ -245,8 +248,9 @@ function openRequestForm() {
   bd.querySelector('#fq_cancel').onclick = function() { bd.remove(); };
   bd.querySelector('#fq_submit').onclick = function() {
     var v = function(id) { return bd.querySelector(id).value.trim(); };
-    var title = v('#fq_title'), desc = v('#fq_desc'), qty = v('#fq_qty'), contact = v('#fq_contact');
-    if (!title || !desc || !qty || !contact) { showErr(t('fill_required')); return; }
+    var title = v('#fq_title'), desc = v('#fq_desc'), qty = v('#fq_qty');
+    var phone = v('#fq_phone'), whatsapp = v('#fq_whatsapp'), email = v('#fq_email');
+    if (!title || !desc || !qty) { showErr(t('fill_required')); return; }
     if (!(window.Auth && Auth.isLoggedIn())) { if (window.openAuthModal) openAuthModal('login'); return; }
 
     var btn = bd.querySelector('#fq_submit'); btn.disabled = true; btn.textContent = '…';
@@ -264,7 +268,8 @@ function openRequestForm() {
         title: title, description: desc, qty: qty,
         budget: v('#fq_budget') || null, material: v('#fq_mat') || null,
         gov: Number(bd.querySelector('#fq_gov').value), sector: bd.querySelector('#fq_sector').value || null,
-        contact: contact, media: media
+        contact_phone: phone || null, contact_whatsapp: whatsapp || null, contact_email: email || null,
+        media: media
       });
     }).then(function () {
       bd.remove();

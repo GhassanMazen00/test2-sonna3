@@ -40,6 +40,22 @@ function renderRequest(r) {
     ? '<div class="panel"><h2>' + t('req_samples') + '</h2><div class="gallery">' + galleryHTML(media) + '</div></div>'
     : '';
 
+  function digitsOnly(s) { return String(s || '').replace(/[^0-9]/g, ''); }
+  function cMethod(href, icon, label, val, external) {
+    return '<a class="req-contact" href="' + href + '"' + (external ? ' target="_blank" rel="noopener"' : '') + '>' +
+      '<span class="rc-ic">' + icon + '</span>' +
+      '<span class="rc-txt"><b>' + label + '</b><span dir="ltr">' + esc(val) + '</span></span></a>';
+  }
+  function contactMethods(r) {
+    var out = '';
+    if (r.contact_phone)    out += cMethod('tel:' + digitsOnly(r.contact_phone), ICONS.phone, t('call'), r.contact_phone);
+    if (r.contact_whatsapp) out += cMethod('https://wa.me/' + digitsOnly(r.contact_whatsapp), ICONS.whatsapp, t('whatsapp'), r.contact_whatsapp, true);
+    if (r.contact_email)    out += cMethod('mailto:' + r.contact_email, ICONS.envelope, t('email'), r.contact_email, true);
+    // Legacy single-field requests.
+    if (!out && r.contact)  out = '<p dir="ltr" style="font-weight:600;overflow-wrap:anywhere">' + esc(r.contact) + '</p>';
+    return out ? '<div class="req-contacts">' + out + '</div>' : '';
+  }
+
   var contactBox = !signedIn()
     ? '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('req_interested') + '</h2>' +
@@ -49,13 +65,14 @@ function renderRequest(r) {
     : mine
     ? '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('contact_requester') + '</h2>' +
-        '<p style="font-weight:600;color:var(--ink)" dir="ltr">' + esc(r.contact || '') + '</p>' +
+        (contactMethods(r) || '<p class="muted" style="font-size:13px">' + t('req_no_contact') + '</p>') +
         '<p style="font-size:12.5px;margin-top:8px">' + t('req_yours_note') + '</p></div>'
     : '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('req_interested') + '</h2>' +
         '<p style="font-size:13px;margin-bottom:12px">' + t('req_message_sub') + '</p>' +
         '<button class="btn btn-primary" onclick="Chat.openWith(\'' + esc(r.owner) + '\',\'' + nameAttr + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>' +
-        '<p style="font-size:12.5px;margin-top:12px;color:var(--ink-soft)">' + t('req_contact_alt') + ' <span dir="ltr" style="font-weight:600">' + esc(r.contact || '—') + '</span></p></div>';
+        (contactMethods(r) ? '<p style="font-size:12.5px;margin:14px 0 8px;color:var(--ink-soft)">' + t('req_contact_alt') + '</p>' + contactMethods(r) : '') +
+        '</div>';
 
   var app = document.getElementById('app');
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
@@ -76,7 +93,7 @@ function renderRequest(r) {
             '</div>' +
           '</div>' +
         '</div>' +
-        '<p style="margin:18px 0;color:var(--ink);font-size:14.5px;white-space:pre-line">' + esc(r.description || '') + '</p>' +
+        '<p style="margin:18px 0;color:var(--ink);font-size:14.5px;white-space:pre-line;overflow-wrap:anywhere;word-break:break-word">' + esc(r.description || '') + '</p>' +
         '<div class="spec-grid">' +
           '<div class="spec"><div class="k">' + t('qty') + '</div><div class="v">' + esc(r.qty || '—') + ' ' + t('units') + '</div></div>' +
           '<div class="spec"><div class="k">' + t('budget') + '</div><div class="v">' + (r.budget ? esc(r.budget) + ' ' + t('egp') : t('budget_na')) + '</div></div>' +
