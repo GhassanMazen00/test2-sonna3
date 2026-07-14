@@ -170,6 +170,14 @@
           .then(function (r) { if (!r.ok) throw new Error('requests ' + r.status); return r.json(); });
       });
     },
+    updateRequest: function (id, fields) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/requests?id=eq.' + id, {
+          method: 'PATCH', headers: restHeaders(tok, { Prefer: 'return=representation' }), body: JSON.stringify(fields || {})
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })
+          .then(function (rows) { return Array.isArray(rows) ? rows[0] : rows; });
+      });
+    },
     deleteRequest: function (id) {
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/rest/v1/requests?id=eq.' + id, { method: 'DELETE', headers: restHeaders(tok) })

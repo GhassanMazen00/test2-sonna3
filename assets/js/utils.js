@@ -170,67 +170,71 @@ function closeMobileMenu() {
 
 // Request form modal — posts a live manufacturing request to Supabase, with
 // optional sample media uploads. Requires the user to be logged in.
-function openRequestForm() {
+function openRequestForm(existing) {
   if (window.Auth && Auth.ready && Auth.ready() && !Auth.isLoggedIn()) {
     if (window.openAuthModal) openAuthModal('login');
     return;
   }
+  var ex = (existing && existing.id) ? existing : null;   // editing an existing post?
+  var editing = !!ex;
+  var exMedia = (ex && Array.isArray(ex.media)) ? ex.media : [];
   var bd = document.createElement('div');
   bd.className = 'modal-backdrop';
   bd.addEventListener('click', function(e) {
     if (e.target === bd) bd.remove();
   });
+  var xa = function (val) { return esc(val == null ? '' : String(val)); };   // value attr
 
   bd.innerHTML =
     '<div class="modal">' +
-      '<h2>' + t('new_req') + '</h2>' +
-      '<p class="sub">' + t('new_req_sub') + '</p>' +
+      '<h2>' + (editing ? t('req_edit_title') : t('new_req')) + '</h2>' +
+      '<p class="sub">' + (editing ? t('req_edit_sub') : t('new_req_sub')) + '</p>' +
       '<div class="au-err" id="fq_err" style="display:none"></div>' +
       '<div class="form-grid">' +
         '<div class="form-field full">' +
           '<label>' + t('fr_title') + ' *</label>' +
-          '<input id="fq_title" placeholder="' + t('fr_title_ph') + '">' +
+          '<input id="fq_title" value="' + xa(ex && ex.title) + '" placeholder="' + t('fr_title_ph') + '">' +
         '</div>' +
         '<div class="form-field full">' +
           '<label>' + t('fr_desc') + ' *</label>' +
-          '<textarea id="fq_desc" placeholder="' + t('fr_desc_ph') + '"></textarea>' +
+          '<textarea id="fq_desc" placeholder="' + t('fr_desc_ph') + '">' + xa(ex && ex.description) + '</textarea>' +
         '</div>' +
         '<div class="form-field">' +
           '<label>' + t('fr_qty') + ' *</label>' +
-          '<input id="fq_qty" type="number" min="1" placeholder="1000">' +
+          '<input id="fq_qty" type="number" min="1" value="' + xa(ex && ex.qty) + '" placeholder="1000">' +
         '</div>' +
         '<div class="form-field">' +
           '<label>' + t('fr_material') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
-          '<input id="fq_mat" placeholder="' + t('fr_material_ph') + '">' +
+          '<input id="fq_mat" value="' + xa(ex && ex.material) + '" placeholder="' + t('fr_material_ph') + '">' +
         '</div>' +
         '<div class="form-field">' +
           '<label>' + t('fr_budget') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
-          '<input id="fq_budget" type="number" min="0" placeholder="' + t('fr_budget_ph') + '">' +
+          '<input id="fq_budget" type="number" min="0" value="' + xa(ex && ex.budget) + '" placeholder="' + t('fr_budget_ph') + '">' +
         '</div>' +
         '<div class="form-field">' +
           '<label>' + t('fr_gov') + ' *</label>' +
-          '<select id="fq_gov">' + GOVS.map(function(g, ix) { return '<option value="' + ix + '">' + L(g) + '</option>'; }).join('') + '</select>' +
+          '<select id="fq_gov">' + GOVS.map(function(g, ix) { return '<option value="' + ix + '"' + (ex && Number(ex.gov) === ix ? ' selected' : '') + '>' + L(g) + '</option>'; }).join('') + '</select>' +
         '</div>' +
         '<div class="form-field">' +
           '<label>' + t('fr_sector') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
-          '<select id="fq_sector"><option value="">' + t('all') + '</option>' + INDUSTRIES.map(function(s) { return '<option value="' + esc(s.id) + '">' + L({en: s.en, ar: s.ar}) + '</option>'; }).join('') + '</select>' +
+          '<select id="fq_sector"><option value="">' + t('all') + '</option>' + INDUSTRIES.map(function(s) { return '<option value="' + esc(s.id) + '"' + (ex && ex.sector === s.id ? ' selected' : '') + '>' + L({en: s.en, ar: s.ar}) + '</option>'; }).join('') + '</select>' +
         '</div>' +
         '<div class="form-field full">' +
           '<label>' + t('fr_contact') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
           '<div class="muted" style="font-size:12.5px;margin:-2px 0 8px">' + t('fr_contact_note') + '</div>' +
-          '<div class="contact-field"><span class="cf-ic">' + ICONS.phone + '</span><input id="fq_phone" dir="ltr" type="tel" placeholder="' + t('fr_phone_ph') + '"></div>' +
-          '<div class="contact-field"><span class="cf-ic cf-wa">' + ICONS.whatsapp + '</span><input id="fq_whatsapp" dir="ltr" type="tel" placeholder="' + t('fr_whatsapp_ph') + '"></div>' +
-          '<div class="contact-field"><span class="cf-ic">' + ICONS.envelope + '</span><input id="fq_email" dir="ltr" type="email" placeholder="' + t('fr_email_ph') + '"></div>' +
+          '<div class="contact-field"><span class="cf-ic">' + ICONS.phone + '</span><input id="fq_phone" dir="ltr" type="tel" value="' + xa(ex && ex.contact_phone) + '" placeholder="' + t('fr_phone_ph') + '"></div>' +
+          '<div class="contact-field"><span class="cf-ic cf-wa">' + ICONS.whatsapp + '</span><input id="fq_whatsapp" dir="ltr" type="tel" value="' + xa(ex && ex.contact_whatsapp) + '" placeholder="' + t('fr_whatsapp_ph') + '"></div>' +
+          '<div class="contact-field"><span class="cf-ic">' + ICONS.envelope + '</span><input id="fq_email" dir="ltr" type="email" value="' + xa(ex && ex.contact_email) + '" placeholder="' + t('fr_email_ph') + '"></div>' +
         '</div>' +
         '<div class="form-field full">' +
           '<label>' + t('fr_files') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
           '<input id="fq_files" type="file" accept="image/*,video/*" multiple>' +
-          '<div class="muted" id="fq_files_list" style="font-size:12.5px;margin-top:6px">' + t('fr_files_note') + '</div>' +
+          '<div class="muted" id="fq_files_list" style="font-size:12.5px;margin-top:6px">' + (editing && exMedia.length ? t('fr_files_kept').replace('{n}', exMedia.length) : t('fr_files_note')) + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="modal-actions">' +
         '<button class="btn btn-ghost" id="fq_cancel">' + t('cancel') + '</button>' +
-        '<button class="btn btn-primary" id="fq_submit">' + t('publish') + '</button>' +
+        '<button class="btn btn-primary" id="fq_submit">' + (editing ? t('save') : t('publish')) + '</button>' +
       '</div>' +
     '</div>';
 
@@ -238,9 +242,10 @@ function openRequestForm() {
 
   var filesInput = bd.querySelector('#fq_files');
   var filesList = bd.querySelector('#fq_files_list');
+  var defaultNote = (editing && exMedia.length) ? t('fr_files_kept').replace('{n}', exMedia.length) : t('fr_files_note');
   filesInput.onchange = function () {
     var names = Array.prototype.map.call(filesInput.files, function (f) { return f.name; });
-    filesList.textContent = names.length ? names.join(', ') : t('fr_files_note');
+    filesList.textContent = names.length ? names.join(', ') : defaultNote;
   };
 
   var showErr = function (m) { var e = bd.querySelector('#fq_err'); e.textContent = m; e.style.display = 'block'; };
@@ -255,7 +260,7 @@ function openRequestForm() {
 
     var btn = bd.querySelector('#fq_submit'); btn.disabled = true; btn.textContent = '…';
 
-    // Upload any chosen sample media first, then create the request row.
+    // Upload any newly chosen sample media first, then save the request.
     var files = Array.prototype.slice.call(filesInput.files || []);
     var uploads = files.map(function (f) {
       return Auth.uploadRequestMedia(f).then(function (url) {
@@ -264,19 +269,23 @@ function openRequestForm() {
     });
 
     Promise.all(uploads).then(function (media) {
-      return Auth.createRequest({
+      var fields = {
         title: title, description: desc, qty: qty,
         budget: v('#fq_budget') || null, material: v('#fq_mat') || null,
         gov: Number(bd.querySelector('#fq_gov').value), sector: bd.querySelector('#fq_sector').value || null,
         contact_phone: phone || null, contact_whatsapp: whatsapp || null, contact_email: email || null,
-        media: media
-      });
+        media: editing ? exMedia.concat(media) : media   // editing keeps existing media, appends new
+      };
+      return editing ? Auth.updateRequest(ex.id, fields) : Auth.createRequest(fields);
     }).then(function () {
       bd.remove();
-      toast(t('published'));
-      setTimeout(function() { window.location.href = 'requests.html'; }, 500);
+      toast(editing ? t('req_saved') : t('published'));
+      setTimeout(function() {
+        if (editing) window.location.reload();
+        else window.location.href = 'requests.html';
+      }, 500);
     }).catch(function (e) {
-      btn.disabled = false; btn.textContent = t('publish');
+      btn.disabled = false; btn.textContent = editing ? t('save') : t('publish');
       showErr((t('req_post_fail') || 'Could not post request') + ': ' + (e.message || e));
     });
   };

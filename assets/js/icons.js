@@ -48,6 +48,7 @@
     ruler:      L('<path d="M4.5 4v14.5a1 1 0 0 0 1 1H20z"/><path d="M4.5 9.5h3M4.5 13.5h6"/>'),
     tag:        L('<path d="M12.5 3.5H5A1.5 1.5 0 0 0 3.5 5v7.5a1.5 1.5 0 0 0 .44 1.06l7.5 7.5a1.5 1.5 0 0 0 2.12 0l7.5-7.5a1.5 1.5 0 0 0 0-2.12l-7.5-7.5A1.5 1.5 0 0 0 12.5 3.5z"/><circle cx="8" cy="8" r="1.3"/>'),
     wrench:     L('<path d="M14.7 6.3a4 4 0 0 0-5 5l-6 6a1.5 1.5 0 0 0 0 2.1l.9.9a1.5 1.5 0 0 0 2.1 0l6-6a4 4 0 0 0 5-5l-2.6 2.6-2.4-.6-.6-2.4z"/>'),
+    trash:      L('<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/>'),
     truck:      L('<rect x="2.5" y="6" width="12" height="9" rx="1"/><path d="M14.5 9h3.2l2.8 3v3h-6z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17" cy="17.5" r="1.7"/>'),
     microscope: L('<path d="M6 21h14"/><path d="M9 21a6 6 0 0 0 5.5-8.4"/><rect x="9.2" y="4" width="3.2" height="9" rx="1.4" transform="rotate(18 10.8 8.5)"/><path d="M8 15.5h4"/>'),
     testtube:   L('<path d="M9 3h6M10 3v15a2 2 0 0 0 4 0V3M10 13h4"/>'),
