@@ -325,6 +325,11 @@ body::before {
 
 /* Long words / URLs must never blow out the layout. */
 .spec .v, .request-card .desc, .factory-card .desc { overflow-wrap: anywhere; word-break: break-word; }
+
+/* Request owner actions (edit / delete) on the detail head */
+.req-owner-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+.req-del-btn { color: #C0392B; }
+.req-del-btn:hover { background: rgba(192, 57, 43, .1); border-color: rgba(192, 57, 43, .35); color: #C0392B; }
 .vbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
 .vbadge .svg-ic { width: .95em; height: .95em; }
 .v-yes { background: var(--teal-tint); color: var(--teal); }

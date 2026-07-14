@@ -74,6 +74,14 @@ function renderRequest(r) {
         (contactMethods(r) ? '<p style="font-size:12.5px;margin:14px 0 8px;color:var(--ink-soft)">' + t('req_contact_alt') + '</p>' + contactMethods(r) : '') +
         '</div>';
 
+  window.CURRENT_REQ = r;   // for the owner's Edit action
+  var ownerActions = mine
+    ? '<div class="req-owner-actions">' +
+        '<button class="btn btn-ghost btn-sm" onclick="editThisRequest()">' + ICONS.wrench + ' ' + t('req_edit') + '</button>' +
+        '<button class="btn btn-ghost btn-sm req-del-btn" onclick="deleteThisRequest()">' + ICONS.trash + ' ' + t('req_delete') + '</button>' +
+      '</div>'
+    : '';
+
   var app = document.getElementById('app');
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
     '<div class="container">' +
@@ -92,6 +100,7 @@ function renderRequest(r) {
               '</span>' +
             '</div>' +
           '</div>' +
+          ownerActions +
         '</div>' +
         '<p style="margin:18px 0;color:var(--ink);font-size:14.5px;white-space:pre-line;overflow-wrap:anywhere;word-break:break-word">' + esc(r.description || '') + '</p>' +
         '<div class="spec-grid">' +
@@ -109,6 +118,19 @@ function renderRequest(r) {
   footerHTML();
   if (window.updateChatBadge) updateChatBadge();
   if (window.loadViews) loadViews('request', r.id, 'reqViews');
+}
+
+// ---- Owner actions ----
+function editThisRequest() {
+  if (window.CURRENT_REQ && window.openRequestForm) openRequestForm(window.CURRENT_REQ);
+}
+function deleteThisRequest() {
+  var r = window.CURRENT_REQ;
+  if (!r || !window.Auth) return;
+  if (!confirm(t('req_delete_confirm'))) return;
+  Auth.deleteRequest(r.id)
+    .then(function () { toast(t('req_deleted')); setTimeout(function () { window.location.href = 'requests.html'; }, 500); })
+    .catch(function (e) { alert((t('req_delete_fail') || 'Could not delete') + ': ' + (e.message || e)); });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
