@@ -209,9 +209,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Unverified user submissions show name + sector only; all other panels are
   // locked until an admin verifies the factory.
   var locked = (f.verified === false);
+  // Only the factory's own owner sees the "unlocks once verified" explanation.
+  // Everyone else just sees empty sections (name + sector + unverified badge).
+  var isOwner = !!(window.Auth && Auth.isLoggedIn() && Auth.user() && f.ownerId && Auth.user().id === f.ownerId);
   function lockedPanel(title) {
     return '<div class="panel locked-panel"><h2>' + title + '</h2>' +
-      '<div class="lock-note">' + ICONS.clock + ' ' + t('mf_locked_note') + '</div></div>';
+      (isOwner ? '<div class="lock-note">' + ICONS.clock + ' ' + t('mf_locked_note') + '</div>' : '') +
+      '</div>';
   }
   function lockedLayout() {
     return '<div>' +
