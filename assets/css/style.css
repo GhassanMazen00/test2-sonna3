@@ -36,6 +36,11 @@
   --ink-soft: #4A5A56;
   --paper: #FFFFFF;
   --mist: #F4F7F6;
+  --card: #FFFFFF;          /* panels, cards, modals */
+  --surface-2: #F4F7F6;     /* subtle inset surfaces */
+  --field-bg: #FFFFFF;      /* form inputs */
+  --header-bg: rgba(255, 255, 255, .97);
+  --footer-bg: #15221F;     /* footer stays dark in both themes */
   --teal: #0E6B5E;
   --teal-dark: #0A4A42;
   --teal-tint: #E4F0EE;
@@ -52,6 +57,62 @@
   --grid-bold: rgba(14, 107, 94, .09);
   --grid-node: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%3E%3Cg%20stroke%3D%27%230E6B5E%27%20stroke-width%3D%271.1%27%20stroke-opacity%3D%270.30%27%3E%3Cpath%20d%3D%27M0%20-5V5M-5%200H5M120%20-5V5M115%200H125M0%20115V125M-5%20120H5M120%20115V125M115%20120H125%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
 }
+
+/* ============================================================
+   DARK MODE — the inline <head> script sets data-theme on <html>
+   from localStorage('sonnaTheme') or the OS preference. Overriding
+   the palette variables re-themes the whole variable-driven UI.
+   ============================================================ */
+:root[data-theme="dark"] {
+  --ink: #E8EDEC;
+  --ink-soft: #9FB0AC;
+  --paper: #0F1614;        /* page background */
+  --mist: #16211E;         /* tinted sections */
+  --card: #172320;         /* panels, cards, modals */
+  --surface-2: #1E2C28;    /* inset surfaces */
+  --field-bg: #101A17;     /* form inputs */
+  --header-bg: rgba(15, 22, 20, .92);
+  --footer-bg: #0A100E;
+  --teal: #2AA996;         /* brighter so it reads on dark */
+  --teal-dark: #1E8877;
+  --teal-tint: #143029;    /* dark teal tile */
+  --line: #283733;
+  --amber: #E0A94F;
+  --amber-soft: #322915;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px -14px rgba(0, 0, 0, .6);
+  --grid-fine: rgba(42, 169, 150, .05);
+  --grid-bold: rgba(42, 169, 150, .09);
+  color-scheme: dark;
+}
+
+/* Surfaces that used literal colors need themed overrides in dark. */
+:root[data-theme="dark"] header { background: var(--header-bg); box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea { background: var(--field-bg); color: var(--ink); }
+:root[data-theme="dark"] .modal-backdrop { background: rgba(0, 0, 0, .6); }
+:root[data-theme="dark"] .search-bar input { background: transparent; }
+/* Home sections that use light base gradients → dark equivalents (accents kept). */
+:root[data-theme="dark"] .industries-section {
+  background:
+    radial-gradient(ellipse 700px 450px at 80% 5%, rgba(201, 138, 43, .10) 0%, transparent 55%),
+    radial-gradient(ellipse 550px 380px at 20% 95%, rgba(14, 107, 94, .16) 0%, transparent 55%),
+    linear-gradient(178deg, #131E1B 0%, #0F1614 50%, #131E1B 100%);
+}
+:root[data-theme="dark"] .consultant-section {
+  background:
+    radial-gradient(ellipse 600px 400px at 15% 8%, rgba(14, 107, 94, .16), transparent 60%),
+    radial-gradient(ellipse 520px 360px at 92% 92%, rgba(201, 138, 43, .10), transparent 62%),
+    linear-gradient(180deg, #131E1B, #0F1614);
+}
+:root[data-theme="dark"] .requests-section { background: linear-gradient(180deg, var(--mist) 0%, var(--paper) 100%); }
+:root[data-theme="dark"] .industry-card-new { background: rgba(255, 255, 255, .04); border-color: var(--line); }
+:root[data-theme="dark"] .industry-card-new:hover { background: rgba(255, 255, 255, .08); }
+:root[data-theme="dark"] .hero-slider { background: rgba(255, 255, 255, .05); border-color: var(--line); }
+:root[data-theme="dark"] .industries-intro .section-badge { background: var(--card); }
+/* Light pastel status backgrounds → muted dark tints (keep colored text readable). */
+:root[data-theme="dark"] .au-err { background: #3A1D1B; color: #F3B4AE; }
+:root[data-theme="dark"] .danger-zone { background: #2A1512; border-color: #5B2B25; }
 
 * {
   margin: 0;
@@ -158,7 +219,7 @@ body::before {
 .locked-panel { opacity: .55; }
 .lock-note { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 13px; }
 .lock-note .svg-ic { color: var(--amber); }
-.verify-cta { background: linear-gradient(135deg, var(--teal-tint), #fff); border: 1.5px solid var(--teal); }
+.verify-cta { background: linear-gradient(135deg, var(--teal-tint), var(--card)); border: 1.5px solid var(--teal); }
 .verify-benefits { list-style: none; display: grid; gap: 10px; margin: 12px 0; }
 .verify-benefits li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
 .verify-benefits .svg-ic { color: var(--teal); flex: none; margin-top: 2px; }
@@ -210,7 +271,7 @@ body::before {
 /* ---- Dashboard locked (unverified) state ---- */
 .dash-lock-card {
   border: 1.5px solid var(--teal);
-  background: linear-gradient(135deg, var(--teal-tint), #fff);
+  background: linear-gradient(135deg, var(--teal-tint), var(--card));
   border-radius: 16px;
   padding: 24px;
   text-align: center;
@@ -241,7 +302,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, .97);
+  background: var(--header-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--line);
@@ -406,7 +467,7 @@ nav.main-nav {
 }
 
 .btn-ghost {
-  background: #fff;
+  background: var(--card);
   border: 2px solid var(--line);
   color: var(--ink);
 }
@@ -443,7 +504,7 @@ nav.main-nav {
   height: 40px;
   border-radius: 10px;
   border: 2px solid var(--line);
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   transition: all .2s ease;
   flex-shrink: 0;
@@ -492,7 +553,7 @@ nav.main-nav {
   right: 0;
   width: 85%;
   max-width: 360px;
-  background: #fff;
+  background: var(--card);
   z-index: 201;
   padding: 24px 20px;
   display: flex;
@@ -543,7 +604,7 @@ nav.main-nav {
   padding: 10px;
   border: 2px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--card);
   font-size: 14px;
   font-weight: 600;
   color: var(--ink-soft);
@@ -596,7 +657,7 @@ nav.main-nav {
   overflow: hidden;
   background: radial-gradient(680px 360px at 50% 6%, rgba(14, 107, 94, .09), transparent 60%),
     radial-gradient(560px 300px at 88% 4%, rgba(201, 138, 43, .06), transparent 62%),
-    linear-gradient(180deg, #F6FAF9 0%, #fff 100%);
+    linear-gradient(180deg, var(--mist) 0%, var(--paper) 100%);
 }
 
 .hero::before {
@@ -847,7 +908,7 @@ nav.main-nav {
 
 .float-chip {
   position: absolute;
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 14px;
   padding: 10px 16px;
@@ -989,7 +1050,7 @@ nav.main-nav {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   display: grid;
   place-items: center;
@@ -1059,7 +1120,7 @@ nav.main-nav {
 .search-bar {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, .92);
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 18px;
   box-shadow: var(--shadow);
@@ -1563,7 +1624,7 @@ nav.main-nav {
 
 .request-card-new {
   flex: 0 0 calc(33.333% - 14px);
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 20px;
   padding: 28px;
@@ -1682,7 +1743,7 @@ nav.main-nav {
   height: 40px;
   border-radius: 50%;
   border: 2px solid var(--line);
-  background: #fff;
+  background: var(--card);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -1763,7 +1824,7 @@ nav.main-nav {
 }
 
 .featured-card-large {
-  background: #fff;
+  background: var(--card);
   border: 2px solid var(--line);
   border-radius: 24px;
   overflow: hidden;
@@ -2010,7 +2071,7 @@ section.block.alt::before {
 }
 
 .industry-card {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
   padding: 20px 14px;
@@ -2062,7 +2123,7 @@ section.block.alt::before {
 
 .factory-card {
   position: relative;
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
@@ -2160,7 +2221,7 @@ section.block.alt::before {
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   display: grid;
   place-items: center;
@@ -2227,7 +2288,7 @@ section.block.alt::before {
 }
 
 .request-card {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
@@ -2289,7 +2350,7 @@ section.block.alt::before {
 }
 
 .why-card {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
   padding: 22px;
@@ -2414,7 +2475,7 @@ section.block.alt::before {
 }
 
 .consultant-card {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 20px;
   padding: 28px;
@@ -2532,7 +2593,7 @@ section.block.alt::before {
 }
 
 .cta-band .btn-primary {
-  background: #fff;
+  background: var(--card);
   color: var(--teal-dark);
   box-shadow: none;
   position: relative;
@@ -2596,7 +2657,7 @@ section.block.alt::before {
 }
 
 .filters {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
@@ -2638,7 +2699,7 @@ section.block.alt::before {
   padding: 9px 10px;
   border: 1.5px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--card);
 }
 
 .f-check {
@@ -2674,7 +2735,7 @@ section.block.alt::before {
 }
 
 .empty {
-  background: #fff;
+  background: var(--card);
   border: 1.5px dashed var(--line);
   border-radius: var(--radius);
   padding: 48px 24px;
@@ -2728,7 +2789,7 @@ section.block.alt::before {
 }
 
 .profile-card {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: 20px;
   padding: 24px;
@@ -2781,7 +2842,7 @@ section.block.alt::before {
 }
 
 .panel {
-  background: #fff;
+  background: var(--card);
   border: 1.5px solid var(--line);
   border-radius: var(--radius);
   padding: 22px;
@@ -2877,7 +2938,7 @@ section.block.alt::before {
   font-weight: 600;
   font-size: 14px;
   transition: border-color .15s, background .15s;
-  background: #fff;
+  background: var(--card);
   width: 100%;
   text-align: start;
 }
@@ -3022,7 +3083,7 @@ section.block.alt::before {
 }
 
 .modal {
-  background: #fff;
+  background: var(--card);
   border-radius: 20px;
   max-width: 620px;
   width: 100%;
@@ -3119,7 +3180,7 @@ section.block.alt::before {
 
 /* ---------- Footer ---------- */
 footer {
-  background: var(--ink);
+  background: var(--footer-bg);
   color: #B9C6C2;
   padding: 48px 0 28px;
   margin-top: 0;
@@ -3733,7 +3794,7 @@ footer li button:hover {
   word-break: break-word;
 }
 .chat-msg.me .chat-bubble { background: var(--teal); color: #fff; border-bottom-right-radius: 4px; }
-.chat-msg.them .chat-bubble { background: #fff; color: var(--ink); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.chat-msg.them .chat-bubble { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
 .chat-time { font-size: 10.5px; color: var(--ink-soft); margin-top: 3px; }
 .chat-ref, .chat-ref-inline {
   display: inline-flex;
@@ -4249,7 +4310,7 @@ a.rfq-item:hover { border-color: var(--teal); background: var(--mist); }
 .chat-att-file {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 13px; border-radius: 14px;
-  background: #fff; border: 1px solid var(--line);
+  background: var(--card); border: 1px solid var(--line);
   color: var(--ink); text-decoration: none; font-size: 13.5px; font-weight: 600;
   margin-bottom: 3px; max-width: 82%;
 }

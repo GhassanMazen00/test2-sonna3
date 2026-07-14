@@ -1,3 +1,16 @@
+// ---- Theme (light / dark) ----
+// The inline <head> script already applied data-theme before paint; these just
+// power the toggle button and keep the choice in localStorage.
+function currentTheme() { return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+function themeIconHTML() { return currentTheme() === 'dark' ? ICONS.sun : ICONS.moon; }
+window.toggleTheme = function () {
+  var next = currentTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('sonnaTheme', next); } catch (e) {}
+  var ics = document.querySelectorAll('.theme-ic');
+  for (var i = 0; i < ics.length; i++) ics[i].innerHTML = themeIconHTML();
+};
+
 // Header component
 function headerHTML() {
   var path = window.location.pathname.split('/').pop();
@@ -25,6 +38,7 @@ function headerHTML() {
     '<div class="header-actions">' +
       '<a href="factories.html" class="header-quick-btn desktop-only-flex">' + ICONS.factory + '</a>' +
       '<a href="requests.html" class="header-quick-btn desktop-only-flex">' + ICONS.clipboard + '</a>' +
+      '<button class="header-quick-btn desktop-only-flex theme-toggle" aria-label="' + t('theme_toggle') + '" onclick="toggleTheme()"><span class="theme-ic">' + themeIconHTML() + '</span></button>' +
       '<div class="lang-toggle desktop-only-flex">' +
         '<button class="' + (LANG === 'en' ? 'on' : '') + '" onclick="setLang(\'en\')">EN</button>' +
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\')">عربي</button>' +
@@ -56,6 +70,7 @@ function mobileMenuHTML() {
         '<button class="' + (LANG === 'en' ? 'on' : '') + '" onclick="setLang(\'en\');closeMobileMenu()">English</button>' +
         '<button class="' + (LANG === 'ar' ? 'on' : '') + '" onclick="setLang(\'ar\');closeMobileMenu()">العربية</button>' +
       '</div>' +
+      '<button class="mobile-menu-link theme-toggle" style="width:100%;text-align:start;background:none;border:none;cursor:pointer" onclick="toggleTheme()"><span class="theme-ic">' + themeIconHTML() + '</span> <span>' + t('theme_toggle') + '</span></button>' +
       '<a href="index.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.home + ' ' + t('nav_home') + '</a>' +
       '<a href="factories.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.factory + ' ' + t('nav_factories') + '</a>' +
       '<a href="requests.html" class="mobile-menu-link" onclick="closeMobileMenu()">' + ICONS.clipboard + ' ' + t('nav_requests') + '</a>' +
