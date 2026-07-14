@@ -408,8 +408,16 @@
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/functions/v1/' + fn, {
           method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ plan: plan || 'verified' })
-        }).then(function (r) { return r.json(); })
-          .then(function (j) { if (j.error) throw new Error(j.error); return j; });
+        }).then(function (r) {
+          return r.text().then(function (txt) {
+            var j = {}; try { j = JSON.parse(txt); } catch (e) {}
+            if (r.status === 404) throw new Error('The "' + fn + '" function isn\'t deployed (404). Deploy it with that exact name.');
+            if (!r.ok) throw new Error(j.error || j.message || j.msg || ('checkout HTTP ' + r.status));
+            if (j.error) throw new Error(j.error);
+            if (!j.url) throw new Error('Checkout returned no URL (HTTP ' + r.status + ') — check the ' + fn + ' function logs.');
+            return j;
+          });
+        });
       });
     },
     mySubscription: function () {
