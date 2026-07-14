@@ -355,13 +355,18 @@ function verifiedSubRows() {
     .map(function(row){
       var i = DATA.industries.find(function(s){return s.id===row.sector;});
       var d = row.data || {};
+      var pending = row.verification_status === 'active_pending_visit';
+      var statusChip = pending
+        ? '<span class="chip" style="background:var(--amber-soft);color:#8A5A12;font-size:10px;padding:2px 7px;vertical-align:middle">Visit pending</span>'
+        : (row.verification_status === 'visited' ? '<span class="chip teal" style="font-size:10px;padding:2px 7px;vertical-align:middle">Visited</span>' : '<span class="chip teal" style="font-size:10px;padding:2px 7px;vertical-align:middle">Submitted</span>');
       return '<tr>' +
-        '<td><b>'+esc(row.name)+'</b> <span class="chip teal" style="font-size:10px;padding:2px 7px;vertical-align:middle">Submitted</span>'+deletionChip(row)+'</td>' +
+        '<td><b>'+esc(row.name)+'</b> '+statusChip+deletionChip(row)+'</td>' +
         '<td>'+esc(i?i.en:row.sector)+'</td>' +
         '<td>'+esc((DATA.govs[row.gov]||{}).en||'—')+'</td>' +
         '<td>'+esc(d.moq||'—')+'</td>' +
         '<td>'+(d.featured?'★':'')+'</td>' +
         '<td><div class="row-actions">' +
+          (pending ? '<button class="btn btn-primary btn-sm" onclick="markVisited(\''+row.id+'\')">Mark visited</button>' : '') +
           '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
           '<button class="btn btn-sm btn-danger" onclick="deleteSubmission(\''+row.id+'\')">Delete</button>' +
         '</div></td>' +
@@ -691,6 +696,12 @@ function verifyRow(id) {
   if (!confirm('Mark this factory as verified? It will show a verified badge in the directory.')) return;
   adminPatchFactory(id, { verified: true, verification_requested: false }).then(function(){ renderSubmissions(); })
     .catch(function(e){ alert('Could not verify: '+(e.message||e)); });
+}
+// Upgrade a paid (visit-pending) factory to fully visited after the on-site visit.
+function markVisited(id) {
+  if (!confirm('Confirm you have visited and verified this factory on-site?')) return;
+  Auth.markFactoryVisited(id).then(function(){ renderFactories(); })
+    .catch(function(e){ alert('Could not update: '+(e.message||e)); });
 }
 function deleteSubmission(id) {
   var r = findSub(id);

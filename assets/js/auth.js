@@ -399,6 +399,31 @@
           .then(function (r) { return r.ok ? r.json() : []; })
           .then(function (rows) { return (rows && rows[0]) || null; });
       });
+    },
+
+    // ---- Subscriptions / pay-to-verify (Paymob) ----
+    // Starts checkout: returns { url } to redirect the owner to Paymob.
+    startSubscription: function (plan) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/functions/v1/paymob-checkout', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ plan: plan || 'verified' })
+        }).then(function (r) { return r.json(); })
+          .then(function (j) { if (j.error) throw new Error(j.error); return j; });
+      });
+    },
+    mySubscription: function () {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/subscriptions?select=*&owner=eq.' + AUTH.session.user.id + '&order=created_at.desc&limit=1', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows && rows[0]) || null; });
+      }).catch(function () { return null; });
+    },
+    // Admin: upgrade a paid factory to "visited" after the on-site visit.
+    markFactoryVisited: function (factoryId) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rpc/mark_factory_visited', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ p_factory: factoryId })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      });
     }
   };
 
