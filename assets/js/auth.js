@@ -404,8 +404,9 @@
     // ---- Subscriptions / pay-to-verify (Paymob) ----
     // Starts checkout: returns { url } to redirect the owner to Paymob.
     startSubscription: function (plan) {
+      var fn = (window.PAYMENT_CHECKOUT_FN || 'kashier-checkout');
       return freshToken().then(function (tok) {
-        return fetch(SUPABASE_URL + '/functions/v1/paymob-checkout', {
+        return fetch(SUPABASE_URL + '/functions/v1/' + fn, {
           method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ plan: plan || 'verified' })
         }).then(function (r) { return r.json(); })
           .then(function (j) { if (j.error) throw new Error(j.error); return j; });
