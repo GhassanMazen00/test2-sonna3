@@ -79,7 +79,7 @@ create table if not exists public.payment_intents (
 alter table public.payment_intents enable row level security;
 
 -- ---------- Apply a successful payment (called by the webhook, service role) ----------
-create or replace function public.apply_subscription_payment(p_ref text, p_provider_ref text)
+create or replace function public.apply_subscription_payment(p_ref text, p_provider_ref text, p_provider text default 'kashier')
 returns boolean language plpgsql security definer set search_path = public as $$
 declare pi public.payment_intents; f_owner uuid;
 begin
@@ -90,7 +90,7 @@ begin
   update public.payment_intents set status = 'paid' where ref = p_ref;
 
   insert into public.subscriptions (owner, factory_id, plan, status, provider, provider_ref, amount_cents, currency, current_period_end)
-  values (pi.owner, pi.factory_id, pi.plan, 'active', 'paymob', p_provider_ref, pi.amount_cents, pi.currency, now() + interval '30 days');
+  values (pi.owner, pi.factory_id, pi.plan, 'active', coalesce(p_provider, 'kashier'), p_provider_ref, pi.amount_cents, pi.currency, now() + interval '30 days');
 
   if pi.factory_id is not null then
     update public.factories
@@ -105,7 +105,7 @@ begin
   end if;
   return true;
 end $$;
-revoke all on function public.apply_subscription_payment(text, text) from anon, authenticated;
+revoke all on function public.apply_subscription_payment(text, text, text) from anon, authenticated;
 
 -- ---------- Admin: mark a factory as visited (upgrades the badge) ----------
 create or replace function public.mark_factory_visited(p_factory uuid)

@@ -16,3 +16,7 @@ window.SUPABASE_TABLE = 'site_content';
 
 // Storage bucket that holds uploaded factory images/videos (create it in Supabase)
 window.SUPABASE_BUCKET = 'media';
+
+// Which payment provider's checkout Edge Function to call when a factory
+// subscribes. Switch providers by changing this to e.g. 'paymob-checkout'.
+window.PAYMENT_CHECKOUT_FN = 'kashier-checkout';
