@@ -7,6 +7,16 @@ var LANG = 'ar';
   if (saved === 'en') LANG = 'en';
 })();
 
+// Start a subscription checkout (redirects to Paymob).
+function startSubscribe(plan) {
+  if (!(window.Auth && Auth.isLoggedIn())) { if (window.openAuthModal) openAuthModal('login'); return; }
+  if (window.toast) toast(t('pay_starting'));
+  Auth.startSubscription(plan || 'verified').then(function (r) {
+    if (r && r.url) { window.location.href = r.url; return; }
+    throw new Error('no checkout url');
+  }).catch(function (e) { alert((t('pay_error') || 'Could not start checkout') + ': ' + (e.message || e)); });
+}
+
 // Current page tracking
 var CURRENT_PAGE = 'home';
 var FILTERS = { q: '', industry: '', gov: '', moq: '', exp: false, cert: '', minCapacity: '', sort: 'name' };

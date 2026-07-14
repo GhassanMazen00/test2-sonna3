@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
+<title>الدفع | صُنّاع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script>
+function shell(body) { document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + body + '</main>' + footerHTML(); }
+
+function card(icon, iconBg, title, msg, extra) {
+  return '<div class="container" style="padding:64px 24px;text-align:center;max-width:520px">' +
+    '<span class="ci" style="width:56px;height:56px;background:' + iconBg + ';border-radius:16px;display:inline-grid;place-items:center;margin-bottom:14px">' + icon + '</span>' +
+    '<h1 style="margin-bottom:10px">' + title + '</h1>' +
+    '<p class="muted">' + msg + '</p>' + (extra || '') +
+  '</div>';
+}
+
+function done(verified) {
+  if (verified) {
+    shell(card(ICONS.shieldCheck || ICONS.check, 'var(--teal-tint)', t('pay_ok_title'), t('pay_ok_msg'),
+      '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+        '<a class="btn btn-primary" href="my-factory.html">' + t('pay_view_factory') + '</a>' +
+        '<a class="btn btn-ghost" href="dashboard.html">' + t('dash_link') + '</a></div>'));
+  } else {
+    shell(card(ICONS.clock, 'var(--amber-soft)', t('pay_pending_title'), t('pay_pending_msg'),
+      '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+        '<a class="btn btn-primary" href="my-factory.html">' + t('pay_view_factory') + '</a>' +
+        '<button class="btn btn-ghost" onclick="location.reload()">' + t('pay_refresh') + '</button></div>'));
+  }
+}
+
+// The webhook flips verification server-side; poll our own record briefly.
+function poll(tries) {
+  if (!window.Auth || !Auth.isLoggedIn()) { done(false); return; }
+  Auth.myFactory().then(function (fac) {
+    if (fac && fac.verified) { done(true); return; }
+    if (tries <= 0) { done(false); return; }
+    setTimeout(function () { poll(tries - 1); }, 2000);
+  }).catch(function () { done(false); });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  shell(card(ICONS.clock, 'var(--teal-tint)', t('pay_processing_title'), t('pay_processing_msg'), ''));
+  poll(6);   // ~12s
+});
+</script>
+</body>
+</html>

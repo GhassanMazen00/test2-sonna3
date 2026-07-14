@@ -375,13 +375,14 @@ AdminStore.rowToFactory = function (row) {
     whatsapp: d.whatsapp || '', email: d.email || '', website: d.website || '',
     facebook: d.facebook || '', instagram: d.instagram || '', linkedin: d.linkedin || '',
     logo: d.logo || '', cover: d.cover || '', media: d.media || [],
-    verified: !!row.verified, userSubmitted: true, ownerId: row.owner
+    verified: !!row.verified, verificationStatus: row.verification_status || (row.verified ? 'visited' : 'unverified'),
+    userSubmitted: true, ownerId: row.owner
   };
 };
 
 // Public columns only — never request verification info here (it lives in a
 // separate, admin-only table now).
-var FACTORY_PUBLIC_COLS = 'id,owner,name,sector,gov,data,verified,verification_requested,deletion_requested,created_at';
+var FACTORY_PUBLIC_COLS = 'id,owner,name,sector,gov,data,verified,verification_status,verification_requested,deletion_requested,created_at';
 
 // Fetch all rows from the factories table (public read)
 AdminStore.fetchFactoryRows = function () {
