@@ -295,6 +295,36 @@ body::before {
   pointer-events: none;
   user-select: none;
 }
+
+/* ---- Request contact methods (post form + detail) ---- */
+.contact-field { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.contact-field .cf-ic {
+  flex: none; width: 34px; height: 34px; border-radius: 9px;
+  background: var(--surface-2); color: var(--ink-soft);
+  display: grid; place-items: center;
+}
+.contact-field .cf-ic .svg-ic { width: 17px; height: 17px; }
+.contact-field .cf-ic.cf-wa { background: #25D36618; color: #1EBE57; }
+.contact-field input { flex: 1; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 11px; }
+.req-contacts { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.req-contact {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; transition: border-color .15s ease;
+}
+.req-contact:hover { border-color: var(--teal); }
+.req-contact .rc-ic {
+  flex: none; width: 36px; height: 36px; border-radius: 10px;
+  background: var(--teal-tint); color: var(--teal);
+  display: grid; place-items: center;
+}
+.req-contact .rc-ic .svg-ic { width: 18px; height: 18px; }
+.req-contact .rc-txt { display: flex; flex-direction: column; min-width: 0; }
+.req-contact .rc-txt b { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+.req-contact .rc-txt span { font-weight: 600; overflow-wrap: anywhere; }
+
+/* Long words / URLs must never blow out the layout. */
+.spec .v, .request-card .desc, .factory-card .desc { overflow-wrap: anywhere; word-break: break-word; }
 .vbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
 .vbadge .svg-ic { width: .95em; height: .95em; }
 .v-yes { background: var(--teal-tint); color: var(--teal); }
