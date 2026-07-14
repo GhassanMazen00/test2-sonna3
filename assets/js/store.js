@@ -381,14 +381,25 @@ AdminStore.rowToFactory = function (row) {
 };
 
 // Public columns only — never request verification info here (it lives in a
-// separate, admin-only table now).
-var FACTORY_PUBLIC_COLS = 'id,owner,name,sector,gov,data,verified,verification_status,verification_requested,deletion_requested,created_at';
+// separate, admin-only table now). verification_status only exists once
+// payments.sql has been run, so it's requested optionally (see below).
+var FACTORY_PUBLIC_COLS = 'id,owner,name,sector,gov,data,verified,verification_requested,deletion_requested,created_at';
+var FACTORY_PUBLIC_COLS_EXT = 'id,owner,name,sector,gov,data,verified,verification_status,verification_requested,deletion_requested,created_at';
 
-// Fetch all rows from the factories table (public read)
+// Fetch all rows from the factories table (public read). Tries the extended
+// column set (with verification_status); if that column doesn't exist yet
+// (payments.sql not run), it transparently falls back to the base set.
 AdminStore.fetchFactoryRows = function () {
   if (!this.remoteEnabled()) return Promise.resolve([]);
-  return fetch(FACTORIES_URL() + '?select=' + FACTORY_PUBLIC_COLS + '&order=created_at.desc', { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY } })
-    .then(function (r) { if (!r.ok) throw new Error('factories ' + r.status); return r.json(); })
+  var hdrs = { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY };
+  var url = function (cols) { return FACTORIES_URL() + '?select=' + cols + '&order=created_at.desc'; };
+  return fetch(url(FACTORY_PUBLIC_COLS_EXT), { headers: hdrs })
+    .then(function (r) {
+      if (r.ok) return r.json();
+      // Missing column (or any 4xx) → retry with the guaranteed base columns.
+      return fetch(url(FACTORY_PUBLIC_COLS), { headers: hdrs })
+        .then(function (r2) { if (!r2.ok) throw new Error('factories ' + r2.status); return r2.json(); });
+    })
     .catch(function (e) { if (window.console) console.warn('fetchFactoryRows failed:', e.message || e); return []; });
 };
 
