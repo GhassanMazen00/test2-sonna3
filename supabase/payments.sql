@@ -91,17 +91,16 @@ declare pi public.payment_intents; f_owner uuid;
 begin
   select * into pi from public.payment_intents where ref = p_ref;
   if not found then return false; end if;
-  if pi.status = 'paid' then return true; end if;   -- idempotent: already handled
 
-  update public.payment_intents set status = 'paid' where ref = p_ref;
-
-  -- Let the factories_guard trigger allow this trusted verification change.
-  perform set_config('sonna.bypass_guard', '1', true);
-
-  insert into public.subscriptions (owner, factory_id, plan, status, provider, provider_ref, amount_cents, currency, current_period_end)
-  values (pi.owner, pi.factory_id, pi.plan, 'active', coalesce(p_provider, 'kashier'), p_provider_ref, pi.amount_cents, pi.currency, now() + interval '30 days');
+  if pi.status <> 'paid' then
+    update public.payment_intents set status = 'paid' where ref = p_ref;
+    insert into public.subscriptions (owner, factory_id, plan, status, provider, provider_ref, amount_cents, currency, current_period_end)
+    values (pi.owner, pi.factory_id, pi.plan, 'active', coalesce(p_provider, 'kashier'), p_provider_ref, pi.amount_cents, pi.currency, now() + interval '30 days');
+  end if;
 
   if pi.factory_id is not null then
+    -- Let the factories_guard trigger allow this trusted verification change.
+    perform set_config('sonna.bypass_guard', '1', true);
     update public.factories
        set verified = true,
            verification_status = case when verification_status = 'visited' then 'visited' else 'active_pending_visit' end
