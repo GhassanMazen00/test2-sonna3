@@ -1,21 +1,18 @@
 -- ============================================================
--- Sonnaع — Complete verification fix. Run the WHOLE script once
--- in the Supabase SQL editor. Safe to re-run.
+-- Sonnaع — Verification fix (v3, bulletproof: column privileges)
+-- Run the WHOLE script once in the Supabase SQL editor. Safe to re-run.
 --
--- Sets BOTH the guard and the payment RPC to their correct versions, then
--- retroactively verifies any factory that already has an active subscription.
+-- No more trigger races or bypass flags. Owners simply lack permission to
+-- change `verified` / `verification_status`; only the payment RPC and admin
+-- RPCs (which run as the DB owner) can. The guard trigger now only protects
+-- the `featured` flag inside `data`.
 -- ============================================================
 
--- 1) Guard: trusted RPCs may verify (via the bypass flag). Owners still can't.
+-- 1) Guard protects ONLY data.featured now.
 create or replace function public.factories_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if current_setting('sonna.bypass_guard', true) = '1' then
-    return new;
-  end if;
   if not public.is_admin() then
-    new.verified := old.verified;
-    new.verification_status := old.verification_status;
     new.data := jsonb_set(
       coalesce(new.data, '{}'::jsonb), '{featured}',
       coalesce(old.data -> 'featured', 'false'::jsonb), true);
@@ -26,24 +23,25 @@ drop trigger if exists factories_guard_trg on public.factories;
 create trigger factories_guard_trg before update on public.factories
   for each row execute function public.factories_guard();
 
--- 2) Payment RPC: sets the flag (works because a function is one transaction).
---    Also re-flips the factory even if the payment was already recorded, so a
---    previously-stuck payment heals on the next call.
+-- 2) Owners may update only these columns. verified / verification_status are
+--    off-limits to everyone except the security-definer functions below.
+revoke update on public.factories from anon, authenticated;
+grant update (name, sector, gov, data, verification_requested, deletion_requested)
+  on public.factories to authenticated;
+
+-- 3) Payment RPC (runs as owner → may set verified; no flag needed).
 create or replace function public.apply_subscription_payment(p_ref text, p_provider_ref text, p_provider text default 'kashier')
 returns boolean language plpgsql security definer set search_path = public as $$
 declare pi public.payment_intents; f_owner uuid;
 begin
   select * into pi from public.payment_intents where ref = p_ref;
   if not found then return false; end if;
-
   if pi.status <> 'paid' then
     update public.payment_intents set status = 'paid' where ref = p_ref;
     insert into public.subscriptions (owner, factory_id, plan, status, provider, provider_ref, amount_cents, currency, current_period_end)
     values (pi.owner, pi.factory_id, pi.plan, 'active', coalesce(p_provider, 'kashier'), p_provider_ref, pi.amount_cents, pi.currency, now() + interval '30 days');
   end if;
-
   if pi.factory_id is not null then
-    perform set_config('sonna.bypass_guard', '1', true);
     update public.factories
        set verified = true,
            verification_status = case when verification_status = 'visited' then 'visited' else 'active_pending_visit' end
@@ -58,14 +56,35 @@ begin
 end $$;
 revoke all on function public.apply_subscription_payment(text, text, text) from anon, authenticated;
 
--- 3) Retroactively verify existing paid factories. The SQL editor runs pooled
---    statements, so the flag won't reach the trigger here — disable it instead.
-alter table public.factories disable trigger user;
+-- 4) Admin verify / unverify via RPC (owners/admins can't touch the columns directly now).
+create or replace function public.admin_set_verification(p_factory uuid, p_verified boolean, p_status text default null)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+  update public.factories
+     set verified = p_verified,
+         verification_requested = case when p_verified then false else verification_requested end,
+         verification_status = coalesce(p_status, case when p_verified then 'visited' else 'unverified' end)
+   where id = p_factory;
+  return true;
+end $$;
+grant execute on function public.admin_set_verification(uuid, boolean, text) to authenticated;
+
+-- 5) mark_factory_visited stays valid (runs as owner).
+create or replace function public.mark_factory_visited(p_factory uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+  update public.factories set verification_status = 'visited', verified = true where id = p_factory;
+  return true;
+end $$;
+grant execute on function public.mark_factory_visited(uuid) to authenticated;
+
+-- 6) Retroactively verify existing paid factories (plain update; nothing reverts it now).
 update public.factories
    set verified = true,
        verification_status = case when verification_status = 'visited' then 'visited' else 'active_pending_visit' end
  where id in (select factory_id from public.subscriptions where status = 'active' and factory_id is not null);
-alter table public.factories enable trigger user;
 
--- 4) Confirm
+-- 7) Confirm
 select id, name, verified, verification_status from public.factories order by created_at desc limit 10;
