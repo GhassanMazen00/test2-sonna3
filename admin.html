@@ -694,7 +694,13 @@ function renderSubmissions() {
 }
 function verifyRow(id) {
   if (!confirm('Mark this factory as verified? It will show a verified badge in the directory.')) return;
-  adminPatchFactory(id, { verified: true, verification_requested: false }).then(function(){ renderSubmissions(); })
+  // verified/verification_status are column-locked; set them via the admin RPC.
+  getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_verification', {
+      method:'POST', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_factory: id, p_verified: true, p_status: 'visited' })
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||r.status); }); return true; });
+  }).then(function(){ renderSubmissions(); })
     .catch(function(e){ alert('Could not verify: '+(e.message||e)); });
 }
 // Upgrade a paid (visit-pending) factory to fully visited after the on-site visit.

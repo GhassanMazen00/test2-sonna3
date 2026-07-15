@@ -21,30 +21,28 @@ update public.factories set verification_status = 'visited' where verified = tru
 -- Owners still can't self-verify. Admins can. The webhook RPC runs with the
 -- service role (auth.uid() is null) and RLS already blocks anon writes to
 -- factories, so "auth.uid() is null" here means "trusted server context".
+-- The guard only protects the featured flag inside data. verified /
+-- verification_status are protected by COLUMN privileges (below) instead — this
+-- is bulletproof (no trigger races): owners literally can't write those columns,
+-- while the security-definer RPCs (which run as the DB owner) can.
 create or replace function public.factories_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  -- Trusted server RPCs (apply_subscription_payment / mark_factory_visited) set
-  -- this transaction-local flag to legitimately change verification. Everyone
-  -- else (owners) still can't self-verify.
-  if current_setting('sonna.bypass_guard', true) = '1' then
-    return new;
-  end if;
   if not public.is_admin() then
-    new.verified := old.verified;
-    new.verification_status := old.verification_status;
     new.data := jsonb_set(
-      coalesce(new.data, '{}'::jsonb),
-      '{featured}',
-      coalesce(old.data -> 'featured', 'false'::jsonb),
-      true
-    );
+      coalesce(new.data, '{}'::jsonb), '{featured}',
+      coalesce(old.data -> 'featured', 'false'::jsonb), true);
   end if;
   return new;
 end $$;
 drop trigger if exists factories_guard_trg on public.factories;
 create trigger factories_guard_trg before update on public.factories
   for each row execute function public.factories_guard();
+
+-- Owners may update only these columns; verified / verification_status are off-limits.
+revoke update on public.factories from anon, authenticated;
+grant update (name, sector, gov, data, verification_requested, deletion_requested)
+  on public.factories to authenticated;
 
 -- ---------- Subscriptions ----------
 create table if not exists public.subscriptions (
@@ -99,8 +97,6 @@ begin
   end if;
 
   if pi.factory_id is not null then
-    -- Let the factories_guard trigger allow this trusted verification change.
-    perform set_config('sonna.bypass_guard', '1', true);
     update public.factories
        set verified = true,
            verification_status = case when verification_status = 'visited' then 'visited' else 'active_pending_visit' end
@@ -120,8 +116,21 @@ create or replace function public.mark_factory_visited(p_factory uuid)
 returns boolean language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception 'not authorized'; end if;
-  perform set_config('sonna.bypass_guard', '1', true);
   update public.factories set verification_status = 'visited', verified = true where id = p_factory;
   return true;
 end $$;
 grant execute on function public.mark_factory_visited(uuid) to authenticated;
+
+-- Admin verify / unverify via RPC (owners & admins can't write the columns directly now).
+create or replace function public.admin_set_verification(p_factory uuid, p_verified boolean, p_status text default null)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+  update public.factories
+     set verified = p_verified,
+         verification_requested = case when p_verified then false else verification_requested end,
+         verification_status = coalesce(p_status, case when p_verified then 'visited' else 'unverified' end)
+   where id = p_factory;
+  return true;
+end $$;
+grant execute on function public.admin_set_verification(uuid, boolean, text) to authenticated;
