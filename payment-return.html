@@ -59,9 +59,25 @@ function poll(tries) {
   }).catch(function () { done(false); });
 }
 
+// Confirm the signed Kashier redirect server-side (flips verification), then poll.
+function confirmThenPoll() {
+  var q = window.location.search || '';
+  if (q.indexOf('paymentStatus=') === -1) { poll(6); return; }
+  fetch(window.SUPABASE_URL + '/functions/v1/kashier-confirm', {
+    method: 'POST',
+    headers: { apikey: window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: q })
+  }).then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j && j.verified) { done(true); return; }
+      poll(6);   // confirm didn't flip it (e.g. still processing) — poll as a fallback
+    })
+    .catch(function () { poll(6); });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   shell(card(ICONS.clock, 'var(--teal-tint)', t('pay_processing_title'), t('pay_processing_msg'), ''));
-  poll(6);   // ~12s
+  confirmThenPoll();
 });
 </script>
 </body>

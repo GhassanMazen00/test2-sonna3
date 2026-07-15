@@ -44,10 +44,14 @@ trusted server can flip verification).
 > Key both signs the order and validates the webhook). Keep it for later if you
 > add server-to-server calls like refunds.
 
-## 4. Deploy the two Edge Functions
+## 4. Deploy the Edge Functions
 Dashboard → Edge Functions → **Deploy via Editor** (paste each `index.ts`):
 - **`kashier-checkout`** — leave "Verify JWT" **on** (called by logged-in owners).
-- **`kashier-webhook`** — turn "Verify JWT" **off** (Kashier calls it, no user token).
+- **`kashier-confirm`** — turn "Verify JWT" **off**. This verifies the signed
+  redirect Kashier sends back and flips the factory to verified. It's the
+  primary path and does **not** need Kashier's webhook to be configured.
+- **`kashier-webhook`** — turn "Verify JWT" **off** (optional backup: fires if
+  you configure Kashier's server webhook; same result).
 
 ## 5. Point Kashier at the webhook
 The checkout already passes `serverWebhook` = your function URL. Also set it in
