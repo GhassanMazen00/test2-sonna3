@@ -24,7 +24,13 @@ update public.factories set verification_status = 'visited' where verified = tru
 create or replace function public.factories_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if not public.is_admin() and auth.uid() is not null then
+  -- Trusted server RPCs (apply_subscription_payment / mark_factory_visited) set
+  -- this transaction-local flag to legitimately change verification. Everyone
+  -- else (owners) still can't self-verify.
+  if current_setting('sonna.bypass_guard', true) = '1' then
+    return new;
+  end if;
+  if not public.is_admin() then
     new.verified := old.verified;
     new.verification_status := old.verification_status;
     new.data := jsonb_set(
@@ -89,6 +95,9 @@ begin
 
   update public.payment_intents set status = 'paid' where ref = p_ref;
 
+  -- Let the factories_guard trigger allow this trusted verification change.
+  perform set_config('sonna.bypass_guard', '1', true);
+
   insert into public.subscriptions (owner, factory_id, plan, status, provider, provider_ref, amount_cents, currency, current_period_end)
   values (pi.owner, pi.factory_id, pi.plan, 'active', coalesce(p_provider, 'kashier'), p_provider_ref, pi.amount_cents, pi.currency, now() + interval '30 days');
 
@@ -112,6 +121,7 @@ create or replace function public.mark_factory_visited(p_factory uuid)
 returns boolean language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception 'not authorized'; end if;
+  perform set_config('sonna.bypass_guard', '1', true);
   update public.factories set verification_status = 'visited', verified = true where id = p_factory;
   return true;
 end $$;
