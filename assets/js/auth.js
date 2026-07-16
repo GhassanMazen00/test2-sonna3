@@ -403,11 +403,11 @@
 
     // ---- Subscriptions / pay-to-verify (Paymob) ----
     // Starts checkout: returns { url } to redirect the owner to Paymob.
-    startSubscription: function (plan) {
+    startSubscription: function (plan, extra) {
       var fn = (window.PAYMENT_CHECKOUT_FN || 'kashier-checkout');
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/functions/v1/' + fn, {
-          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ plan: plan || 'verified' })
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify(Object.assign({ plan: plan || 'verified' }, extra || {}))
         }).then(function (r) {
           return r.text().then(function (txt) {
             var j = {}; try { j = JSON.parse(txt); } catch (e) {}

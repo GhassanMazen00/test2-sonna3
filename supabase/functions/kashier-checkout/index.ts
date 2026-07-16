@@ -65,6 +65,13 @@ Deno.serve(async (req) => {
     const currency = "EGP";
     const plan = "verified";
 
+    // Subscriber contact details (required; the client validates too).
+    const body = await req.json().catch(() => ({}));
+    const subName = String(body?.name ?? "").trim();
+    const subPhone = String(body?.phone ?? "").trim();
+    if (!subName) return json({ error: "Your full name is required." }, 200);
+    if (!subPhone) return json({ error: "A mobile number is required." }, 200);
+
     // The caller's factory (so the webhook verifies exactly this factory).
     const { data: fac, error: facErr } = await admin
       .from("factories").select("id").eq("owner", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -75,6 +82,7 @@ Deno.serve(async (req) => {
     const orderId = crypto.randomUUID();
     const { error: piErr } = await admin.from("payment_intents").insert({
       ref: orderId, owner: user.id, factory_id: fac.id, plan, amount_cents: Math.round(Number(amount)), currency, status: "pending",
+      sub_name: subName, sub_phone: subPhone, sub_email: user.email ?? null,
     });
     if (piErr) { console.log("checkout: payment_intents insert error", piErr.message); return json({ error: "Could not start checkout: " + piErr.message }, 200); }
 

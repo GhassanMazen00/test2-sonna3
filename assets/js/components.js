@@ -256,6 +256,10 @@ function verifyBadge(f) {
   if (f.verified === false) {
     return '<span class="vbadge v-no" title="' + esc(t('badge_unverified_tip')) + '">' + ICONS.clock + ' ' + t('badge_unverified') + '</span>';
   }
+  var status = f.verificationStatus || f.verification_status;
+  if (status === 'active_pending_visit') {
+    return '<span class="vbadge v-pending" title="' + esc(t('badge_pending_tip')) + '">' + ICONS.check + ' ' + t('badge_verified_pending') + '</span>';
+  }
   return '<span class="vbadge v-yes">' + ICONS.check + ' ' + t('badge_verified') + '</span>';
 }
 

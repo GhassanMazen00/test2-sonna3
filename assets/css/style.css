@@ -334,6 +334,7 @@ body::before {
 .vbadge .svg-ic { width: .95em; height: .95em; }
 .v-yes { background: var(--teal-tint); color: var(--teal); }
 .v-no { background: var(--amber-soft); color: #8A5A12; cursor: help; }
+.v-pending { background: var(--amber-soft); color: #8A5A12; cursor: help; }
 .cover-badge { position: absolute; top: 10px; inset-inline-start: 10px; z-index: 2; }
 
 /* ---------- Header ---------- */
