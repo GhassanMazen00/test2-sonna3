@@ -21,6 +21,10 @@ update public.factories set verification_status = 'visited' where verified = tru
 -- Owners still can't self-verify. Admins can. The webhook RPC runs with the
 -- service role (auth.uid() is null) and RLS already blocks anon writes to
 -- factories, so "auth.uid() is null" here means "trusted server context".
+-- Remove any leftover/rogue trigger that reverts `verified` (a duplicate guard
+-- from an earlier iteration that silently undid paid verifications).
+drop trigger if exists trg_protect_factory_verified on public.factories;
+
 -- The guard only protects the featured flag inside data. verified /
 -- verification_status are protected by COLUMN privileges (below) instead — this
 -- is bulletproof (no trigger races): owners literally can't write those columns,
