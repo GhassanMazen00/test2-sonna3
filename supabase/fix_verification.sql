@@ -8,6 +8,10 @@
 -- the `featured` flag inside `data`.
 -- ============================================================
 
+-- 0) Remove any leftover/rogue trigger that protects `verified` (a duplicate of
+--    the guard from an earlier iteration; it silently reverted paid verifications).
+drop trigger if exists trg_protect_factory_verified on public.factories;
+
 -- 1) Guard protects ONLY data.featured now.
 create or replace function public.factories_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
