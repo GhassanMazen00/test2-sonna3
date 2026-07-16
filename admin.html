@@ -235,7 +235,7 @@ function boot() {
   }).catch(function(){ renderNotAuthorized(); });
 }
 function renderApp() {
-  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['subscriptions','Subscriptions'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
   root.innerHTML =
     '<div class="admin-wrap">' +
       '<div class="admin-top">' +
@@ -257,6 +257,7 @@ function switchTab(t) { TAB = t; renderApp(); }
 function renderTab() {
   if (TAB === 'factories') renderFactories();
   else if (TAB === 'submissions') renderSubmissions();
+  else if (TAB === 'subscriptions') renderSubscriptions();
   else if (TAB === 'requests') renderRequests();
   else if (TAB === 'reports') renderReports();
   else if (TAB === 'sectors') renderSectors();
@@ -706,8 +707,55 @@ function verifyRow(id) {
 // Upgrade a paid (visit-pending) factory to fully visited after the on-site visit.
 function markVisited(id) {
   if (!confirm('Confirm you have visited and verified this factory on-site?')) return;
-  Auth.markFactoryVisited(id).then(function(){ renderFactories(); })
+  // admin.html doesn't load auth.js — call the RPC directly with the admin token.
+  getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/mark_factory_visited', {
+      method:'POST', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json' },
+      body: JSON.stringify({ p_factory: id })
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||r.status); }); return true; });
+  }).then(function(){ renderFactories(); })
     .catch(function(e){ alert('Could not update: '+(e.message||e)); });
+}
+
+/* ---------- Subscriptions (paid factories — contact them to arrange a visit) ---------- */
+function renderSubscriptions() {
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<h2>Subscriptions</h2>' +
+      '<div class="hint" style="margin:0 0 12px">Factories that paid to get verified. Use the contact details to arrange the on-site visit, then hit “Mark visited” in the Factories tab.</div>' +
+      '<div id="subsListBody">Loading…</div>' +
+    '</div>';
+  getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/subscriptions?select=*,factories(name,verification_status)&order=created_at.desc', {
+      headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok }
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||r.status); }); return r.json(); });
+  }).then(function(rows){
+    var body = document.getElementById('subsListBody'); if(!body) return;
+    if(!rows || !rows.length){ body.innerHTML = '<p class="muted">No subscriptions yet.</p>'; return; }
+    body.innerHTML = '<div style="overflow-x:auto"><table class="data"><thead><tr>' +
+      '<th>Factory</th><th>Contact name</th><th>Phone</th><th>Email</th><th>Plan</th><th>Amount</th><th>Provider</th><th>Joined</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function(s){
+        var fac = s.factories || {};
+        var joined = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
+        var amt = (s.amount_cents!=null) ? (s.amount_cents + ' ' + (s.currency||'EGP')) : '—';
+        var st = fac.verification_status==='visited' ? 'Visited'
+               : (fac.verification_status==='active_pending_visit' ? 'Visit pending' : (s.status||'—'));
+        return '<tr>' +
+          '<td><b>'+esc(fac.name||'—')+'</b></td>' +
+          '<td>'+esc(s.sub_name||'—')+'</td>' +
+          '<td dir="ltr">'+esc(s.sub_phone||'—')+'</td>' +
+          '<td dir="ltr">'+esc(s.sub_email||'—')+'</td>' +
+          '<td>'+esc(s.plan||'—')+'</td>' +
+          '<td>'+esc(amt)+'</td>' +
+          '<td>'+esc(s.provider||'—')+'</td>' +
+          '<td>'+esc(joined)+'</td>' +
+          '<td>'+esc(st)+'</td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }).catch(function(e){
+    var body = document.getElementById('subsListBody');
+    if(body) body.innerHTML = '<p class="muted">Could not load subscriptions: '+esc(e.message||e)+'</p>';
+  });
 }
 function deleteSubmission(id) {
   var r = findSub(id);
