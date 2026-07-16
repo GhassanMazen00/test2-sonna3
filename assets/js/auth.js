@@ -128,6 +128,16 @@
           .then(function (rows) { return (rows && rows[0]) || null; });
       });
     },
+    // True only when the signed-in user owns a live VERIFIED factory (paid/
+    // verified, whether the on-site visit is still pending or already done, and
+    // NOT pending deletion). Used to gate who may contact buyers who post
+    // requests. A factory the owner has asked to delete no longer counts.
+    isVerifiedOwner: function () {
+      if (!this.isLoggedIn()) return Promise.resolve(false);
+      return this.myFactory().then(function (f) {
+        return !!(f && f.verified && !f.deletion_requested);
+      }).catch(function () { return false; });
+    },
     createFactory: function (name, sector, gov) {
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/rest/v1/factories', {

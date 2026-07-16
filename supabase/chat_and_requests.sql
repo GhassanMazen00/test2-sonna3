@@ -36,9 +36,23 @@ drop policy if exists "messages_update_recipient" on public.messages;
 create policy "messages_select_own" on public.messages
   for select using (auth.uid() = sender or auth.uid() = recipient);
 
--- You may only send messages as yourself, and not to yourself.
+-- You may only send messages as yourself, and not to yourself. A message that
+-- references a buyer request (request_id set) may only be sent by the owner of a
+-- VERIFIED factory — only verified factories can contact buyers who post requests.
 create policy "messages_insert_self" on public.messages
-  for insert with check (auth.uid() = sender and sender <> recipient);
+  for insert with check (
+    auth.uid() = sender
+    and sender <> recipient
+    and (
+      request_id is null
+      or exists (
+        select 1 from public.factories f
+        where f.owner = auth.uid()
+          and f.verified = true
+          and coalesce(f.deletion_requested, false) = false
+      )
+    )
+  );
 
 -- Only the recipient may update a message (used to stamp read_at).
 create policy "messages_update_recipient" on public.messages

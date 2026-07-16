@@ -67,6 +67,12 @@ function renderRequest(r) {
         '<h2>' + t('contact_requester') + '</h2>' +
         (contactMethods(r) || '<p class="muted" style="font-size:13px">' + t('req_no_contact') + '</p>') +
         '<p style="font-size:12.5px;margin-top:8px">' + t('req_yours_note') + '</p></div>'
+    : !window.MY_VERIFIED_OWNER
+    // Signed in, but not a verified factory owner — cannot contact buyers.
+    ? '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
+        '<h2>' + t('req_verify_to_contact') + '</h2>' +
+        '<p style="font-size:13px;margin-bottom:12px">' + t('req_verify_contact_note') + '</p>' +
+        '<a class="btn btn-primary" href="my-factory.html">' + ICONS.shieldCheck + ' ' + t('req_verify_contact_cta') + '</a></div>'
     : '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('req_interested') + '</h2>' +
         '<p style="font-size:13px;margin-bottom:12px">' + t('req_message_sub') + '</p>' +
@@ -146,7 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
   var requestId = params.get('id');
   if (!requestId) { window.location.href = 'requests.html'; return; }
 
-  AdminStore.getRequest(requestId).then(function (r) {
+  var verChk = (window.Auth && Auth.isLoggedIn())
+    ? Auth.isVerifiedOwner().catch(function () { return false; })
+    : Promise.resolve(false);
+
+  Promise.all([AdminStore.getRequest(requestId), verChk]).then(function (res) {
+    var r = res[0];
+    window.MY_VERIFIED_OWNER = !!res[1];
     if (!r) { window.location.href = 'requests.html'; return; }
     renderRequest(r);
   }).catch(function () { window.location.href = 'requests.html'; });
