@@ -54,7 +54,9 @@ function liveRequestCard(r) {
       ? '<button class="btn btn-ghost btn-sm req-msg-btn" onclick="event.stopPropagation();openAuthModal(\'signup\')">' + ICONS.user + ' ' + t('req_join_to_msg') + '</button>'
       : mine
         ? '<div class="req-owner-tag">' + ICONS.user + ' ' + t('req_yours') + '</div>'
-        : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>') +
+        : !window.MY_VERIFIED_OWNER
+          ? '<a class="btn btn-ghost btn-sm req-msg-btn" href="my-factory.html" onclick="event.stopPropagation()">' + ICONS.shieldCheck + ' ' + t('rfq_verify_to_respond') + '</a>'
+          : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>') +
   '</div>';
 }
 
@@ -101,8 +103,13 @@ document.addEventListener('DOMContentLoaded', function() {
   '</main>' +
   footerHTML();
 
-  AdminStore.fetchRequests().then(function (rows) {
-    REQ_ROWS = rows || [];
+  var verChk = (window.Auth && Auth.isLoggedIn())
+    ? Auth.isVerifiedOwner().catch(function () { return false; })
+    : Promise.resolve(false);
+
+  Promise.all([AdminStore.fetchRequests(), verChk]).then(function (res) {
+    REQ_ROWS = res[0] || [];
+    window.MY_VERIFIED_OWNER = !!res[1];
     renderReqList();
     if (window.updateChatBadge) updateChatBadge();
   });
