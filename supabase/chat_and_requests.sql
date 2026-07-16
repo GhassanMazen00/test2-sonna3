@@ -47,7 +47,9 @@ create policy "messages_insert_self" on public.messages
       request_id is null
       or exists (
         select 1 from public.factories f
-        where f.owner = auth.uid() and f.verified = true
+        where f.owner = auth.uid()
+          and f.verified = true
+          and coalesce(f.deletion_requested, false) = false
       )
     )
   );
