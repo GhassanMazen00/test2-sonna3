@@ -1668,6 +1668,7 @@ nav.main-nav {
 .requests-track {
   display: flex;
   gap: 20px;
+  align-items: stretch;
   transition: transform .6s cubic-bezier(.4, 0, .2, 1);
 }
 
@@ -1684,6 +1685,11 @@ nav.main-nav {
   gap: 16px;
   cursor: pointer;
   width: 100%;
+  /* Fixed height → every card is identical regardless of text length. The
+     title (2 lines) and description (3 lines) are clamped below, so content
+     always fits inside this height. */
+  height: 360px;
+  overflow: hidden;
 }
 
 .request-card-new:hover {

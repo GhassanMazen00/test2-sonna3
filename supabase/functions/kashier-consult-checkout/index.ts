@@ -63,10 +63,21 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const str = (v: unknown) => String(v ?? "").trim();
     const name = str(body?.name);
+    const company = str(body?.company);
     const phone = str(body?.phone);
     const whatsapp = str(body?.whatsapp);
-    if (!name) return json({ error: "Your full name is required." }, 200);
-    if (!phone && !whatsapp) return json({ error: "A phone or WhatsApp number is required." }, 200);
+    const email = str(body?.email);
+    const city = str(body?.city);
+    const sector = str(body?.sector);
+    const preferred = str(body?.preferred_at);
+    const needs = str(body?.needs);
+    // Every field is required except the sample upload.
+    if (!name || !company || !phone || !whatsapp || !email || !city || !sector || !preferred || !needs) {
+      return json({ error: "Please fill in all fields (only the samples are optional)." }, 200);
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: "Please enter a valid email address." }, 200);
+    }
 
     // Sample uploads (already stored client-side); keep only http(s) URLs.
     let samples: string[] = [];
@@ -81,14 +92,14 @@ Deno.serve(async (req) => {
     const { data: cons, error: cErr } = await admin.from("consultations").insert({
       owner: user.id,
       name,
-      company: str(body?.company) || null,
-      phone: phone || null,
-      whatsapp: whatsapp || null,
-      email: str(body?.email) || user.email || null,
-      sector: str(body?.sector) || null,
-      city: str(body?.city) || null,
-      needs: str(body?.needs) || null,
-      preferred_at: str(body?.preferred_at) || null,
+      company,
+      phone,
+      whatsapp,
+      email,
+      sector,
+      city,
+      needs,
+      preferred_at: preferred,
       sample_urls: samples,
       amount_cents: Math.round(Number(amount)),
       currency,
@@ -100,7 +111,7 @@ Deno.serve(async (req) => {
     const { error: piErr } = await admin.from("payment_intents").insert({
       ref: orderId, owner: user.id, kind: "consultation", consultation_id: cons.id,
       plan: "consultation", amount_cents: Math.round(Number(amount)), currency, status: "pending",
-      sub_name: name, sub_phone: phone || whatsapp, sub_email: str(body?.email) || user.email || null,
+      sub_name: name, sub_phone: phone || whatsapp, sub_email: email,
     });
     if (piErr) return json({ error: "Could not start checkout: " + piErr.message }, 200);
 

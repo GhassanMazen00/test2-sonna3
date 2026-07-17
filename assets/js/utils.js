@@ -156,14 +156,14 @@ function bookConsultation() {
       '<h3 class="cb-section">' + t('cb_details') + '</h3>' +
       '<div class="form-grid">' +
         '<div class="form-field"><label>' + t('cb_name') + ' *</label><input id="cb_name" value="' + esc(p.full_name || '') + '"></div>' +
-        '<div class="form-field"><label>' + t('cb_company') + '</label><input id="cb_company" value="' + esc(p.company || '') + '"></div>' +
-        '<div class="form-field"><label>' + t('cb_phone') + '</label><input id="cb_phone" dir="ltr" value="' + esc(p.phone || '') + '"></div>' +
-        '<div class="form-field"><label>' + t('cb_whatsapp') + '</label><input id="cb_whatsapp" dir="ltr" placeholder="' + esc(t('cb_whatsapp_ph')) + '"></div>' +
-        '<div class="form-field"><label>' + t('cb_email') + '</label><input id="cb_email" dir="ltr" value="' + esc(p.email || '') + '"></div>' +
-        '<div class="form-field"><label>' + t('cb_city') + '</label><input id="cb_city" placeholder="' + esc(t('cb_city_ph')) + '"></div>' +
-        '<div class="form-field"><label>' + t('cb_sector') + '</label><select id="cb_sector">' + sectorOpts + '</select></div>' +
-        '<div class="form-field"><label>' + t('cb_date') + '</label><input id="cb_date" type="date"></div>' +
-        '<div class="form-field full"><label>' + t('cb_needs') + '</label><textarea id="cb_needs" rows="3" placeholder="' + esc(t('cb_needs_ph')) + '"></textarea></div>' +
+        '<div class="form-field"><label>' + t('cb_company') + ' *</label><input id="cb_company" value="' + esc(p.company || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_phone') + ' *</label><input id="cb_phone" dir="ltr" value="' + esc(p.phone || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_whatsapp') + ' *</label><input id="cb_whatsapp" dir="ltr" placeholder="' + esc(t('cb_whatsapp_ph')) + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_email') + ' *</label><input id="cb_email" dir="ltr" value="' + esc(p.email || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_city') + ' *</label><input id="cb_city" placeholder="' + esc(t('cb_city_ph')) + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_sector') + ' *</label><select id="cb_sector">' + sectorOpts + '</select></div>' +
+        '<div class="form-field"><label>' + t('cb_date') + ' *</label><input id="cb_date" type="date"></div>' +
+        '<div class="form-field full"><label>' + t('cb_needs') + ' *</label><textarea id="cb_needs" rows="3" placeholder="' + esc(t('cb_needs_ph')) + '"></textarea></div>' +
         '<div class="form-field full">' +
           '<label>' + t('cb_samples') + '</label>' +
           '<label class="cb-upload" for="cb_files">' + ICONS.image + ' <span>' + t('cb_samples_btn') + '</span></label>' +
@@ -204,8 +204,16 @@ function bookConsultation() {
   btn.onclick = function () {
     var v = function (id) { var e = bd.querySelector('#' + id); return e ? e.value.trim() : ''; };
     var err = bd.querySelector('#cbErr');
-    if (!v('cb_name') || (!v('cb_phone') && !v('cb_whatsapp'))) {
-      err.textContent = t('cb_required'); err.style.display = 'block'; return;
+    // Every field is required except the sample upload.
+    var missing = ['cb_name','cb_company','cb_phone','cb_whatsapp','cb_email','cb_city','cb_sector','cb_date','cb_needs']
+      .some(function (id) { return !v(id); });
+    if (missing) {
+      err.textContent = t('cb_required'); err.style.display = 'block';
+      bd.querySelector('.cb-modal').scrollTop = 0; return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('cb_email'))) {
+      err.textContent = t('cb_bad_email'); err.style.display = 'block';
+      bd.querySelector('.cb-modal').scrollTop = 0; return;
     }
     err.style.display = 'none';
     btn.disabled = true;
