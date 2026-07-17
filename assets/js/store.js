@@ -374,7 +374,7 @@ AdminStore.rowToFactory = function (row) {
     hours: d.hours || { en: '', ar: '' }, keywords: d.keywords || '',
     whatsapp: d.whatsapp || '', email: d.email || '', website: d.website || '',
     facebook: d.facebook || '', instagram: d.instagram || '', linkedin: d.linkedin || '',
-    logo: d.logo || '', cover: d.cover || '', media: d.media || [],
+    logo: d.logo || '', cover: d.cover || '', media: d.media || [], productMedia: d.productMedia || [],
     verified: !!row.verified, verificationStatus: row.verification_status || (row.verified ? 'visited' : 'unverified'),
     userSubmitted: true, ownerId: row.owner
   };

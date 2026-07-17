@@ -83,7 +83,7 @@ function verifiedFactoryHTML(fac) {
   var svcNames = L(nonEmptyList(f.services) ? f.services : { en: [], ar: [] });
   var prodList = nonEmptyList(f.products) ? f.products : (IND_PRODUCTS[f.industry] || { en: [], ar: [] });
   var capList = nonEmptyList(f.capabilities) ? f.capabilities : (IND_CAPS[f.industry] || { en: [], ar: [] });
-  var hoursTxt = (f.hours && (f.hours.en || f.hours.ar)) ? L(f.hours) : t('hours_val');
+  var hoursTxt = formatHours(f.hours) || t('hours_val');
   var waNum = (f.whatsapp || f.phone || '').replace(/[^0-9]/g, '');
 
   var contact = '<div class="panel"><h2>' + t('contact_title') + '</h2>' +
@@ -119,14 +119,17 @@ function verifiedFactoryHTML(fac) {
         '</div>' +
         '<div class="panel"><h2>' + t('products') + '</h2><div class="chip-row">' + L(prodList).map(function (p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div></div>' +
         '<div class="panel"><h2>' + t('capabilities') + '</h2><div class="chip-row">' + L(capList).map(function (p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div></div>' +
-        '<div class="panel"><h2>' + t('gallery') + '</h2><div class="gallery">' +
+        ((f.productMedia && f.productMedia.length)
+          ? '<div class="panel"><h2>' + t('ef_product_photos') + '</h2><div class="gallery">' + galleryHTML(f.productMedia) + '</div></div>'
+          : '') +
+        '<div class="panel"><h2>' + t('ef_factory_photos') + '</h2><div class="gallery">' +
           ((f.media && f.media.length)
             ? galleryHTML(f.media)
             : [0,1,2,3,4,5].map(function (n) { return '<div class="ph" style="background:' + grad(i.g) + ';opacity:' + (1 - n * 0.09) + '">' + (n < 3 ? ICONS.camera : i.icon) + '</div>'; }).join('')) +
         '</div></div>' +
         '<div class="panel"><h2>' + t('details') + '</h2><div class="spec-grid">' +
           '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + (f.yr ? num(f.yr) : '—') + '</div></div>' +
-          '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + (esc(f.emp) || '—') + '</div></div>' +
+          '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + (f.emp ? (isNaN(Number(f.emp)) ? esc(f.emp) : num(Number(f.emp))) : '—') + '</div></div>' +
           '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">' + ICONS.pin + ' ' + esc(L(f.gov)) + '</div></div>' +
           '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + esc(hoursTxt) + '</div></div>' +
           '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +

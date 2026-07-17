@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
   } else { svcNames = L(f.services || {en:[],ar:[]}); }
   var prodList = nonEmpty(f.products) ? f.products : (IND_PRODUCTS[f.industry] || {en:[],ar:[]});
   var capList  = nonEmpty(f.capabilities) ? f.capabilities : (IND_CAPS[f.industry] || {en:[],ar:[]});
-  var hoursTxt = (f.hours && (f.hours.en || f.hours.ar)) ? L(f.hours) : t('hours_val');
+  var hoursTxt = formatHours(f.hours) || t('hours_val');
   var waNum = (f.whatsapp || f.phone || '').replace(/[^0-9]/g,'');
   var emailAddr = f.email || ('info@' + slug + '.example');
   var siteUrl = f.website || (slug + '.example.com');
@@ -311,8 +311,14 @@ document.addEventListener('DOMContentLoaded', function() {
             '<h2>' + t('capabilities') + '</h2>' +
             '<div class="chip-row">' + L(capList).map(function(p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>' +
           '</div>' +
+          ((f.productMedia && f.productMedia.length)
+            ? '<div class="panel">' +
+                '<h2>' + t('ef_product_photos') + '</h2>' +
+                '<div class="gallery">' + galleryHTML(f.productMedia) + '</div>' +
+              '</div>'
+            : '') +
           '<div class="panel">' +
-            '<h2>' + t('gallery') + '</h2>' +
+            '<h2>' + t('ef_factory_photos') + '</h2>' +
             '<div class="gallery">' +
               ((f.media && f.media.length)
                 ? galleryHTML(f.media)
@@ -323,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<h2>' + t('details') + '</h2>' +
             '<div class="spec-grid">' +
               '<div class="spec"><div class="k">' + t('established') + '</div><div class="v">' + num(f.yr) + '</div></div>' +
-              '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + f.emp + '</div></div>' +
+              '<div class="spec"><div class="k">' + t('employees') + '</div><div class="v">' + (f.emp ? (isNaN(Number(f.emp)) ? esc(f.emp) : num(Number(f.emp))) : '—') + '</div></div>' +
               (signedIn() ? '<div class="spec"><div class="k">' + t('location') + '</div><div class="v">' + ICONS.pin + ' ' + L(f.gov) + '</div></div>' : '') +
               '<div class="spec"><div class="k">' + t('hours') + '</div><div class="v">' + esc(hoursTxt) + '</div></div>' +
               '<div class="spec"><div class="k">' + t('moq') + '</div><div class="v">' + num(f.moq) + ' ' + t('units') + '</div></div>' +
