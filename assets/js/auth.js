@@ -430,6 +430,29 @@
         });
       });
     },
+    // Upload one consultation sample (photo or PDF) → returns its public URL.
+    uploadConsultSample: function (file) {
+      return freshToken().then(function (tok) { return AdminStore.uploadPublic(file, tok, 'consultations'); });
+    },
+    // Book a consultation: posts the details to the consult checkout function and
+    // returns { url } for the Kashier payment page.
+    startConsultation: function (payload) {
+      var fn = (window.PAYMENT_CONSULT_FN || 'kashier-consult-checkout');
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/functions/v1/' + fn, {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify(payload || {})
+        }).then(function (r) {
+          return r.text().then(function (txt) {
+            var j = {}; try { j = JSON.parse(txt); } catch (e) {}
+            if (r.status === 404) throw new Error('The "' + fn + '" function isn\'t deployed (404). Deploy it with that exact name.');
+            if (!r.ok) throw new Error(j.error || j.message || ('checkout HTTP ' + r.status));
+            if (j.error) throw new Error(j.error);
+            if (!j.url) throw new Error('Checkout returned no URL — check the ' + fn + ' function logs.');
+            return j;
+          });
+        });
+      });
+    },
     mySubscription: function () {
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/rest/v1/subscriptions?select=*&owner=eq.' + AUTH.session.user.id + '&order=created_at.desc&limit=1', { headers: restHeaders(tok) })

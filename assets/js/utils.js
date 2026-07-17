@@ -127,12 +127,22 @@ function listYourFactory() {
   else { window.location.href = 'account.html'; }
 }
 
-// Consultant booking (prototype) — a booking + payment flow mock-up.
+// Consultant booking — collects the client's details + sample files and sends
+// them to a live Kashier payment. On success the return page shows the
+// "a consultant will contact you soon" message and the booking is logged for
+// admins. Requires the visitor to be logged in (so files upload + we can reach
+// them afterwards).
 function bookConsultation() {
+  if (window.Auth && Auth.ready && Auth.ready() && !Auth.isLoggedIn()) {
+    if (window.openAuthModal) openAuthModal('login');
+    return;
+  }
   var sel = document.getElementById('consultSector');
   var chosen = sel ? sel.value : ((typeof INDUSTRIES !== 'undefined' && INDUSTRIES[0]) ? INDUSTRIES[0].id : '');
   var p = (window.Auth && Auth.profile && Auth.profile()) || {};
   var sectorOpts = INDUSTRIES.map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === chosen ? ' selected' : '') + '>' + L({ en: s.en, ar: s.ar }) + '</option>'; }).join('');
+  var fee = t('cb_fee_val');
+  var samples = [];   // File objects chosen for upload
 
   var bd = document.createElement('div');
   bd.className = 'modal-backdrop';
@@ -140,7 +150,7 @@ function bookConsultation() {
   bd.innerHTML =
     '<div class="modal cb-modal">' +
       '<h2>' + t('cb_title') + '</h2>' +
-      '<div class="cb-proto">' + ICONS.sparkle + ' ' + t('cb_proto') + '</div>' +
+      '<p class="sub">' + t('cb_sub') + '</p>' +
       '<div class="au-err" id="cbErr" style="display:none"></div>' +
 
       '<h3 class="cb-section">' + t('cb_details') + '</h3>' +
@@ -148,40 +158,77 @@ function bookConsultation() {
         '<div class="form-field"><label>' + t('cb_name') + ' *</label><input id="cb_name" value="' + esc(p.full_name || '') + '"></div>' +
         '<div class="form-field"><label>' + t('cb_company') + '</label><input id="cb_company" value="' + esc(p.company || '') + '"></div>' +
         '<div class="form-field"><label>' + t('cb_phone') + '</label><input id="cb_phone" dir="ltr" value="' + esc(p.phone || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_whatsapp') + '</label><input id="cb_whatsapp" dir="ltr" placeholder="' + esc(t('cb_whatsapp_ph')) + '"></div>' +
         '<div class="form-field"><label>' + t('cb_email') + '</label><input id="cb_email" dir="ltr" value="' + esc(p.email || '') + '"></div>' +
+        '<div class="form-field"><label>' + t('cb_city') + '</label><input id="cb_city" placeholder="' + esc(t('cb_city_ph')) + '"></div>' +
         '<div class="form-field"><label>' + t('cb_sector') + '</label><select id="cb_sector">' + sectorOpts + '</select></div>' +
-        '<div class="form-field"><label>' + t('cb_date') + ' *</label><input id="cb_date" type="date"></div>' +
-        '<div class="form-field"><label>' + t('cb_time') + '</label><input id="cb_time" type="time"></div>' +
+        '<div class="form-field"><label>' + t('cb_date') + '</label><input id="cb_date" type="date"></div>' +
         '<div class="form-field full"><label>' + t('cb_needs') + '</label><textarea id="cb_needs" rows="3" placeholder="' + esc(t('cb_needs_ph')) + '"></textarea></div>' +
+        '<div class="form-field full">' +
+          '<label>' + t('cb_samples') + '</label>' +
+          '<label class="cb-upload" for="cb_files">' + ICONS.image + ' <span>' + t('cb_samples_btn') + '</span></label>' +
+          '<input id="cb_files" type="file" accept="image/*,application/pdf" multiple style="display:none">' +
+          '<div class="cb-files" id="cb_files_list"></div>' +
+          '<span class="cb-hint">' + t('cb_samples_hint') + '</span>' +
+        '</div>' +
       '</div>' +
 
-      '<h3 class="cb-section">' + t('cb_pay') + '</h3>' +
-      '<div class="cb-fee"><span>' + t('cb_fee_label') + '</span><b>' + t('cb_fee_val') + '</b></div>' +
-      '<div class="form-grid">' +
-        '<div class="form-field full"><label>' + t('cb_card') + '</label><input id="cb_card" inputmode="numeric" placeholder="' + t('cb_card_ph') + '"></div>' +
-        '<div class="form-field full"><label>' + t('cb_card_name') + '</label><input id="cb_cardname"></div>' +
-        '<div class="form-field"><label>' + t('cb_expiry') + '</label><input id="cb_expiry" placeholder="MM/YY"></div>' +
-        '<div class="form-field"><label>' + t('cb_cvc') + '</label><input id="cb_cvc" inputmode="numeric" placeholder="123"></div>' +
-      '</div>' +
+      '<div class="cb-fee"><span>' + t('cb_fee_label') + '</span><b id="cb_total">' + fee + '</b></div>' +
 
       '<div class="modal-actions">' +
         '<button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cancel') + '</button>' +
-        '<button class="btn btn-primary" id="cb_pay_btn">' + ICONS.check + ' ' + t('cb_pay_btn') + ' · ' + t('cb_fee_val') + '</button>' +
+        '<button class="btn btn-primary" id="cb_pay_btn">' + ICONS.shieldCheck + ' ' + t('cb_pay_btn') + ' · ' + fee + '</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(bd);
 
-  bd.querySelector('#cb_pay_btn').onclick = function () {
+  // File picker → track selected files and show their names.
+  var fileInput = bd.querySelector('#cb_files');
+  var fileList = bd.querySelector('#cb_files_list');
+  fileInput.addEventListener('change', function () {
+    for (var i = 0; i < fileInput.files.length && samples.length < 12; i++) samples.push(fileInput.files[i]);
+    fileInput.value = '';
+    fileList.innerHTML = samples.map(function (f, ix) {
+      return '<span class="cb-file">' + esc(f.name) + '<button type="button" aria-label="remove" data-ix="' + ix + '">×</button></span>';
+    }).join('');
+  });
+  fileList.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-ix]'); if (!b) return;
+    samples.splice(Number(b.dataset.ix), 1);
+    fileList.innerHTML = samples.map(function (f, ix) {
+      return '<span class="cb-file">' + esc(f.name) + '<button type="button" aria-label="remove" data-ix="' + ix + '">×</button></span>';
+    }).join('');
+  });
+
+  var btn = bd.querySelector('#cb_pay_btn');
+  btn.onclick = function () {
     var v = function (id) { var e = bd.querySelector('#' + id); return e ? e.value.trim() : ''; };
-    if (!v('cb_name') || (!v('cb_phone') && !v('cb_email')) || !v('cb_date')) {
-      var er = bd.querySelector('#cbErr'); er.textContent = t('cb_required'); er.style.display = 'block'; return;
+    var err = bd.querySelector('#cbErr');
+    if (!v('cb_name') || (!v('cb_phone') && !v('cb_whatsapp'))) {
+      err.textContent = t('cb_required'); err.style.display = 'block'; return;
     }
-    bd.querySelector('.cb-modal').innerHTML =
-      '<div class="cb-done"><span class="cb-done-ic">' + ICONS.check + '</span>' +
-        '<h2>' + t('cb_done') + '</h2>' +
-        '<p class="muted">' + t('cb_done_sub') + '</p>' +
-        '<button class="btn btn-primary" style="margin-top:16px" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('cb_close') + '</button>' +
-      '</div>';
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = samples.length ? t('cb_uploading') : t('cb_redirecting');
+
+    // Upload any sample files first, then create the booking + payment.
+    var uploads = samples.map(function (f) { return Auth.uploadConsultSample(f); });
+    Promise.all(uploads).then(function (urls) {
+      return Auth.startConsultation({
+        name: v('cb_name'), company: v('cb_company'), phone: v('cb_phone'),
+        whatsapp: v('cb_whatsapp'), email: v('cb_email'), sector: v('cb_sector'),
+        city: v('cb_city'), needs: v('cb_needs'), preferred_at: v('cb_date'),
+        sample_urls: urls
+      });
+    }).then(function (j) {
+      btn.innerHTML = t('cb_redirecting');
+      window.location.href = j.url;   // off to Kashier
+    }).catch(function (e) {
+      btn.disabled = false;
+      btn.innerHTML = ICONS.shieldCheck + ' ' + t('cb_pay_btn') + ' · ' + fee;
+      err.textContent = (t('cb_pay_fail') || 'Could not start payment') + ': ' + (e.message || e);
+      err.style.display = 'block';
+    });
   };
 }
 

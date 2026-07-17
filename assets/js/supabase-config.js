@@ -20,3 +20,7 @@ window.SUPABASE_BUCKET = 'media';
 // Which payment provider's checkout Edge Function to call when a factory
 // subscribes. Switch providers by changing this to e.g. 'paymob-checkout'.
 window.PAYMENT_CHECKOUT_FN = 'kashier-checkout';
+
+// The Edge Function that books a paid consultation (see the consultant section
+// on the home page). Same Kashier setup as the verification checkout.
+window.PAYMENT_CONSULT_FN = 'kashier-consult-checkout';
