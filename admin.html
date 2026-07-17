@@ -235,7 +235,7 @@ function boot() {
   }).catch(function(){ renderNotAuthorized(); });
 }
 function renderApp() {
-  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['subscriptions','Subscriptions'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['subscriptions','Subscriptions'],['consultations','Consultations'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
   root.innerHTML =
     '<div class="admin-wrap">' +
       '<div class="admin-top">' +
@@ -258,6 +258,7 @@ function renderTab() {
   if (TAB === 'factories') renderFactories();
   else if (TAB === 'submissions') renderSubmissions();
   else if (TAB === 'subscriptions') renderSubscriptions();
+  else if (TAB === 'consultations') renderConsultations();
   else if (TAB === 'requests') renderRequests();
   else if (TAB === 'reports') renderReports();
   else if (TAB === 'sectors') renderSectors();
@@ -755,6 +756,50 @@ function renderSubscriptions() {
   }).catch(function(e){
     var body = document.getElementById('subsListBody');
     if(body) body.innerHTML = '<p class="muted">Could not load subscriptions: '+esc(e.message||e)+'</p>';
+  });
+}
+function renderConsultations() {
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<h2>Consultations</h2>' +
+      '<div class="hint" style="margin:0 0 12px">People who booked a paid consultation. Use their phone / WhatsApp to arrange the session.</div>' +
+      '<div id="consListBody">Loading…</div>' +
+    '</div>';
+  getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL + '/rest/v1/consultations?select=*&order=created_at.desc', {
+      headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok }
+    }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||r.status); }); return r.json(); });
+  }).then(function(rows){
+    var body = document.getElementById('consListBody'); if(!body) return;
+    if(!rows || !rows.length){ body.innerHTML = '<p class="muted">No consultation bookings yet.</p>'; return; }
+    body.innerHTML = '<div style="overflow-x:auto"><table class="data"><thead><tr>' +
+      '<th>Date</th><th>Name</th><th>Company</th><th>Phone</th><th>WhatsApp</th><th>Email</th><th>Sector</th><th>City</th><th>Needs</th><th>Samples</th><th>Amount</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function(c){
+        var joined = c.created_at ? new Date(c.created_at).toLocaleString() : '—';
+        var amt = (c.amount_cents!=null) ? (c.amount_cents + ' ' + (c.currency||'EGP')) : '—';
+        var paid = c.status==='paid';
+        var samples = Array.isArray(c.sample_urls) ? c.sample_urls : [];
+        var sampleLinks = samples.length
+          ? samples.map(function(u,ix){ return '<a href="'+esc(u)+'" target="_blank" rel="noopener">#'+(ix+1)+'</a>'; }).join(' ')
+          : '—';
+        return '<tr>' +
+          '<td>'+esc(joined)+'</td>' +
+          '<td><b>'+esc(c.name||'—')+'</b></td>' +
+          '<td>'+esc(c.company||'—')+'</td>' +
+          '<td dir="ltr">'+esc(c.phone||'—')+'</td>' +
+          '<td dir="ltr">'+esc(c.whatsapp||'—')+'</td>' +
+          '<td dir="ltr">'+esc(c.email||'—')+'</td>' +
+          '<td>'+esc(c.sector||'—')+'</td>' +
+          '<td>'+esc(c.city||'—')+'</td>' +
+          '<td style="max-width:220px;white-space:normal">'+esc(c.needs||'—')+'</td>' +
+          '<td>'+sampleLinks+'</td>' +
+          '<td>'+esc(amt)+'</td>' +
+          '<td>'+(paid?'<span style="color:#0E6B5E;font-weight:600">Paid</span>':'Pending')+'</td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }).catch(function(e){
+    var body = document.getElementById('consListBody');
+    if(body) body.innerHTML = '<p class="muted">Could not load consultations: '+esc(e.message||e)+'</p>';
   });
 }
 function deleteSubmission(id) {

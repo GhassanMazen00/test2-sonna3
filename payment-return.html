@@ -49,6 +49,24 @@ function done(verified) {
   }
 }
 
+// Consultation bookings: no factory to poll — just confirm the signed redirect
+// and show the "a consultant will contact you soon" message.
+function isConsult() {
+  return new URLSearchParams(window.location.search).get('type') === 'consult';
+}
+function doneConsult(ok) {
+  if (ok) {
+    shell(card(ICONS.check, 'var(--teal-tint)', t('consult_paid_title'), t('consult_paid_msg'),
+      '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+        '<a class="btn btn-primary" href="index.html">' + t('consult_paid_home') + '</a></div>'));
+  } else {
+    shell(card(ICONS.clock, 'var(--amber-soft)', t('pay_pending_title'), t('consult_pending_msg'),
+      '<div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+        '<a class="btn btn-primary" href="index.html">' + t('consult_paid_home') + '</a>' +
+        '<button class="btn btn-ghost" onclick="location.reload()">' + t('pay_refresh') + '</button></div>'));
+  }
+}
+
 // The webhook flips verification server-side; poll our own record briefly.
 function poll(tries) {
   if (!window.Auth || !Auth.isLoggedIn()) { done(false); return; }
@@ -62,17 +80,19 @@ function poll(tries) {
 // Confirm the signed Kashier redirect server-side (flips verification), then poll.
 function confirmThenPoll() {
   var q = window.location.search || '';
-  if (q.indexOf('paymentStatus=') === -1) { poll(6); return; }
+  var consult = isConsult();
+  if (q.indexOf('paymentStatus=') === -1) { consult ? doneConsult(false) : poll(6); return; }
   fetch(window.SUPABASE_URL + '/functions/v1/kashier-confirm', {
     method: 'POST',
     headers: { apikey: window.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: q })
   }).then(function (r) { return r.json(); })
     .then(function (j) {
+      if (consult) { doneConsult(!!(j && j.ok)); return; }
       if (j && j.verified) { done(true); return; }
       poll(6);   // confirm didn't flip it (e.g. still processing) — poll as a fallback
     })
-    .catch(function () { poll(6); });
+    .catch(function () { consult ? doneConsult(false) : poll(6); });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
