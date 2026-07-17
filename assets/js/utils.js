@@ -7,6 +7,37 @@ var LANG = 'ar';
   if (saved === 'en') LANG = 'en';
 })();
 
+// Format a factory's working hours for display. Supports the new structured
+// shape { days:[...], open:'09:00', close:'17:00' } and the legacy free-text
+// shape { en, ar }. Returns '' when there's nothing to show.
+function formatHours(h) {
+  if (!h) return '';
+  // Legacy free-text hours.
+  if (!h.days && !h.open && !h.close) return (h.en || h.ar) ? L(h) : '';
+  var order = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
+  var lbl = { sat: ['Sat', 'السبت'], sun: ['Sun', 'الأحد'], mon: ['Mon', 'الإثنين'], tue: ['Tue', 'الثلاثاء'], wed: ['Wed', 'الأربعاء'], thu: ['Thu', 'الخميس'], fri: ['Fri', 'الجمعة'] };
+  var li = LANG === 'ar' ? 1 : 0;
+  var days = order.filter(function (d) { return (h.days || []).indexOf(d) >= 0; });
+  var dStr = '';
+  if (days.length) {
+    // Contiguous block → "Sat–Thu"; otherwise a comma list.
+    var idxs = days.map(function (d) { return order.indexOf(d); });
+    var contiguous = idxs.every(function (v, i) { return i === 0 || v === idxs[i - 1] + 1; });
+    dStr = (contiguous && days.length > 1)
+      ? lbl[days[0]][li] + '–' + lbl[days[days.length - 1]][li]
+      : days.map(function (d) { return lbl[d][li]; }).join(LANG === 'ar' ? '، ' : ', ');
+  }
+  function t12(hm) {
+    var p = String(hm || '').split(':'); if (p.length < 2) return '';
+    var hh = parseInt(p[0], 10), mm = p[1];
+    var ap = hh >= 12 ? (LANG === 'ar' ? 'م' : 'PM') : (LANG === 'ar' ? 'ص' : 'AM');
+    var h12 = hh % 12; if (h12 === 0) h12 = 12;
+    return h12 + ':' + mm + ' ' + ap;
+  }
+  var tStr = (h.open && h.close) ? (t12(h.open) + ' – ' + t12(h.close)) : '';
+  return [dStr, tStr].filter(Boolean).join(' · ');
+}
+
 // Valid Egyptian mobile: 010/011/012/015 + 8 digits, with optional +20 / 0.
 function isEgyptMobile(v) {
   var d = String(v || '').replace(/[^\d]/g, '').replace(/^0020/, '').replace(/^20/, '').replace(/^0/, '');
