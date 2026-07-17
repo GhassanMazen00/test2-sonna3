@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
+<title>مركز المساعدة | Help Center — Sonnaع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script>
+function step(n, title, body) {
+  return '<div class="step-row"><span class="num">' + n + '</span><div><h3>' + title + '</h3><p>' + body + '</p></div></div>';
+}
+function faq(q, a) {
+  return '<details><summary>' + q + '</summary><div class="faq-body">' + a + '</div></details>';
+}
+
+function EN() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.clipboard + ' Help Center</span>' +
+      '<h1>How Sonnaع works</h1>' +
+      '<p>Everything you need to buy from — or sell to — Egyptian factories with confidence. Start with the guide, then check the FAQs below.</p>' +
+    '</div>' +
+    '<div class="info-wrap">' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.search + ' For buyers &amp; brands</h2>' +
+        '<p class="lead">Find a factory and start a real conversation in four steps.</p>' +
+        '<div class="step-list">' +
+          step(1, 'Browse or search the directory', 'Open <b>Browse factories</b> and filter by industry, governorate, minimum order quantity (MOQ), certifications and daily capacity. Every card shows the sector and a verified badge at a glance.') +
+          step(2, 'Open a factory page', 'See the factory\'s products, capabilities, services, certifications, working hours, and photos of both the products and the factory floor. Verified factories show a green badge.') +
+          step(3, 'Post a request (optional)', 'In a hurry or can\'t find the exact match? Use <b>Post a Request</b> to describe what you need. Verified factories can see it and reach out to you.') +
+          step(4, 'Message &amp; request a quote', 'Sign in, then message the supplier directly or send a formal quote request (RFQ) with your quantity, target price and deadline. Contact details are real — you talk to the factory, not a broker.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.factory + ' For factories</h2>' +
+        '<p class="lead">Turn your page into a lead machine.</p>' +
+        '<div class="step-list">' +
+          step(1, 'Create your account &amp; factory page', 'Sign up, then create your factory with its name, sector and location. This is free.') +
+          step(2, 'Get verified', 'Request verification to unlock your full page and the ability to reply to buyer requests. Verification includes a review and, where possible, an on-site visit by our team.') +
+          step(3, 'Complete your page', 'Once verified, open <b>Edit your factory</b> and add your products, capabilities, services, certifications, working hours, and separate product and factory photos. The more complete your page, the more trust you earn.') +
+          step(4, 'Respond fast', 'Reply to messages and quote requests quickly — your response rate is shown on your page, and fast, reliable factories win more deals.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.shieldCheck + ' Verification &amp; badges</h2>' +
+        '<div class="info-cards">' +
+          '<div class="info-card"><span class="ic">' + ICONS.shieldCheck + '</span><h3>Verified · visit pending</h3><p>The factory has completed verification and its page is live. Our team is arranging an on-site visit to complete the full check.</p></div>' +
+          '<div class="info-card"><span class="ic">' + ICONS.check + '</span><h3>Verified</h3><p>The factory has been fully verified, including an on-site visit. This is the highest trust level on Sonnaع.</p></div>' +
+          '<div class="info-card"><span class="ic">' + ICONS.clock + '</span><h3>Unverified</h3><p>A submitted page that hasn\'t been verified yet. It shows only the name and sector, and can\'t message buyers, until verification is complete.</p></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.compass + ' Talk to a consultant</h2>' +
+        '<p class="lead info-prose">Not sure where to start with manufacturing? Use the <b>Consultant</b> section on the home page to book a paid session with an industry advisor. Fill in your details, add product photos or a spec sheet, pay the session fee, and a consultant will contact you to arrange the call.</p>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>Frequently asked questions</h2>' +
+        '<div class="faq">' +
+          faq('Does Sonnaع take a commission on deals?', '<p>No. Sonnaع is not a broker. When a buyer and a factory connect here, they deal directly and we take no cut of the transaction.</p>') +
+          faq('Is it free to use?', '<p>Browsing the directory, posting requests and creating a factory page are free. Factories pay a subscription to become <b>verified</b>, which unlocks the full page and the ability to reply to buyer requests. Consultations are a separate paid service.</p>') +
+          faq('How do I get my factory verified?', '<p>Create your factory page, then request verification from your factory page. Our team reviews the submission and, where possible, arranges an on-site visit. Once approved, your page goes live with the verified badge and you can respond to buyers.</p>') +
+          faq('Why can\'t I contact a buyer who posted a request?', '<p>Only owners of a <b>verified</b> factory can contact buyers who post requests. This keeps request conversations high-quality. Get your factory verified to unlock it.</p>') +
+          faq('Are the contact details real?', '<p>Yes. Verified factory pages carry real phone, WhatsApp, email and website details, and buyer requests connect you to real people. There are no fake listings or broker middle-layers.</p>') +
+          faq('What is an RFQ?', '<p>RFQ stands for "Request for Quote." It\'s a structured message you send a factory with your product, quantity, target price and deadline, so they can reply with an accurate quote.</p>') +
+          faq('How do payments work?', '<p>Verification and consultation payments are processed through a secure payment gateway. Payment is confirmed by a signed, server-side check — never trusted from the browser — and your verification or booking updates automatically once payment succeeds.</p>') +
+          faq('I deleted my factory but I still appear verified. Why?', '<p>Deleting from your account only <i>requests</i> removal; an admin completes it. Once removed (or if your verification is revoked), your verified privileges end. If something looks wrong, contact us.</p>') +
+          faq('Which languages does Sonnaع support?', '<p>The whole platform is available in Arabic and English. Use the language toggle in the header to switch at any time. Dark mode is available too.</p>') +
+          faq('How do I contact the Sonnaع team?', '<p>Use <b>Contact us</b> in the footer to reach us by WhatsApp or email.</p>') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-callout">' +
+        '<h2>Still need help?</h2>' +
+        '<p>Our team is happy to walk you through anything.</p>' +
+        '<button class="btn btn-primary" onclick="openContactModal()">' + ICONS.chat + ' Contact us</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function AR() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.clipboard + ' مركز المساعدة</span>' +
+      '<h1>كيف تعمل صُنّاع</h1>' +
+      '<p>كل ما تحتاجه للشراء من المصانع المصرية — أو البيع لها — بثقة. ابدأ بالدليل، ثم اطّلع على الأسئلة الشائعة بالأسفل.</p>' +
+    '</div>' +
+    '<div class="info-wrap">' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.search + ' للمشترين والعلامات</h2>' +
+        '<p class="lead">اعثر على مصنع وابدأ محادثة حقيقية في أربع خطوات.</p>' +
+        '<div class="step-list">' +
+          step(1, 'تصفّح الدليل أو ابحث فيه', 'افتح <b>تصفّح المصانع</b> وصفِّ النتائج حسب الصناعة والمحافظة والحد الأدنى للطلب (MOQ) والشهادات والطاقة اليومية. تُظهر كل بطاقة القطاع وشارة التوثيق بنظرة واحدة.') +
+          step(2, 'افتح صفحة المصنع', 'اطّلع على منتجات المصنع وقدراته وخدماته وشهاداته وساعات عمله، وصور المنتجات وصور المصنع. تحمل المصانع الموثّقة شارة خضراء.') +
+          step(3, 'انشر طلبًا (اختياري)', 'في عجلة أو لم تجد المطابقة الدقيقة؟ استخدم <b>انشر طلبًا</b> لوصف ما تحتاجه، وستراه المصانع الموثّقة وتتواصل معك.') +
+          step(4, 'راسِل واطلب عرض سعر', 'سجّل الدخول ثم راسِل المورّد مباشرةً أو أرسِل طلب عرض سعر رسمي (RFQ) بكميتك وسعرك المستهدف وموعدك النهائي. بيانات التواصل حقيقية — تتحدّث مع المصنع لا مع وسيط.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.factory + ' للمصانع</h2>' +
+        '<p class="lead">حوِّل صفحتك إلى مصدر دائم للعملاء.</p>' +
+        '<div class="step-list">' +
+          step(1, 'أنشئ حسابك وصفحة مصنعك', 'أنشئ حسابًا ثم أنشئ مصنعك باسمه وقطاعه وموقعه. هذا مجّاني.') +
+          step(2, 'احصل على التوثيق', 'اطلب التوثيق لفتح صفحتك بالكامل والقدرة على الرد على طلبات المشترين. يشمل التوثيق مراجعة وزيارة ميدانية كلما أمكن.') +
+          step(3, 'أكمِل صفحتك', 'بعد التوثيق، افتح <b>تعديل مصنعي</b> وأضِف منتجاتك وقدراتك وخدماتك وشهاداتك وساعات عملك، وصور المنتجات وصور المصنع بشكل منفصل. كلما اكتملت صفحتك زادت الثقة بك.') +
+          step(4, 'استجب بسرعة', 'ردّ على الرسائل وطلبات الأسعار بسرعة — يظهر معدّل استجابتك على صفحتك، والمصانع السريعة الموثوقة تكسب صفقات أكثر.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.shieldCheck + ' التوثيق والشارات</h2>' +
+        '<div class="info-cards">' +
+          '<div class="info-card"><span class="ic">' + ICONS.shieldCheck + '</span><h3>موثّق · بانتظار الزيارة</h3><p>أتمّ المصنع التوثيق وصفحته منشورة، وفريقنا يرتّب زيارة ميدانية لإتمام الفحص الكامل.</p></div>' +
+          '<div class="info-card"><span class="ic">' + ICONS.check + '</span><h3>موثّق</h3><p>تمّ توثيق المصنع بالكامل بما في ذلك الزيارة الميدانية. وهو أعلى مستوى ثقة على صُنّاع.</p></div>' +
+          '<div class="info-card"><span class="ic">' + ICONS.clock + '</span><h3>غير موثّق</h3><p>صفحة مُرسَلة لم تُوثَّق بعد. تُظهر الاسم والقطاع فقط، ولا يمكنها مراسلة المشترين حتى يكتمل التوثيق.</p></div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.compass + ' تحدّث مع استشاري</h2>' +
+        '<p class="lead info-prose">لست متأكّدًا من أين تبدأ في التصنيع؟ استخدم قسم <b>الاستشاري</b> في الصفحة الرئيسية لحجز جلسة مدفوعة مع مستشار صناعي. املأ بياناتك، وأضِف صور المنتج أو ورقة المواصفات، وادفع رسوم الجلسة، وسيتواصل معك استشاري لترتيب المكالمة.</p>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>الأسئلة الشائعة</h2>' +
+        '<div class="faq">' +
+          faq('هل تأخذ صُنّاع عمولة على الصفقات؟', '<p>لا. صُنّاع ليست وسيطًا. عندما يتواصل المشتري والمصنع هنا، يتعاملان مباشرةً ولا نأخذ أي نسبة من الصفقة.</p>') +
+          faq('هل الاستخدام مجّاني؟', '<p>تصفّح الدليل ونشر الطلبات وإنشاء صفحة مصنع، كلها مجّانية. تدفع المصانع اشتراكًا لتصبح <b>موثّقة</b>، ما يفتح الصفحة كاملةً والقدرة على الرد على الطلبات. أما الاستشارات فخدمة مدفوعة منفصلة.</p>') +
+          faq('كيف أوثّق مصنعي؟', '<p>أنشئ صفحة مصنعك ثم اطلب التوثيق من صفحة المصنع. يراجع فريقنا الطلب ويرتّب زيارة ميدانية كلما أمكن. بعد الموافقة تُنشر صفحتك بشارة التوثيق ويمكنك الرد على المشترين.</p>') +
+          faq('لماذا لا أستطيع التواصل مع مشترٍ نشر طلبًا؟', '<p>يستطيع أصحاب المصانع <b>الموثّقة</b> فقط التواصل مع المشترين الذين ينشرون طلبات، للحفاظ على جودة المحادثات. وثّق مصنعك لفتح هذه الميزة.</p>') +
+          faq('هل بيانات التواصل حقيقية؟', '<p>نعم. تحمل صفحات المصانع الموثّقة بيانات هاتف وواتساب وبريد وموقع حقيقية، وتربطك الطلبات بأشخاص حقيقيين. لا قوائم وهمية ولا طبقات وسطاء.</p>') +
+          faq('ما هو الـ RFQ؟', '<p>هو "طلب عرض سعر" — رسالة منظّمة ترسلها للمصنع بمنتجك وكميتك وسعرك المستهدف وموعدك، ليردّ بعرض سعر دقيق.</p>') +
+          faq('كيف تعمل المدفوعات؟', '<p>تُعالَج مدفوعات التوثيق والاستشارات عبر بوابة دفع آمنة. يُؤكَّد الدفع بفحص موقّع من الخادم — لا يُوثَق به من المتصفّح — ويتحدّث توثيقك أو حجزك تلقائيًّا بمجرد نجاح الدفع.</p>') +
+          faq('حذفت مصنعي لكنه ما زال يظهر موثّقًا. لماذا؟', '<p>الحذف من حسابك <i>يطلب</i> الإزالة فقط، ويُتمّها المشرف. بعد الإزالة (أو عند سحب التوثيق) تنتهي صلاحياتك الموثّقة. إن بدا شيء غير صحيح، تواصل معنا.</p>') +
+          faq('ما اللغات التي تدعمها صُنّاع؟', '<p>المنصّة كاملةً متاحة بالعربية والإنجليزية. استخدم زر اللغة في الأعلى للتبديل في أي وقت. كما يتوفّر الوضع الليلي.</p>') +
+          faq('كيف أتواصل مع فريق صُنّاع؟', '<p>استخدم <b>تواصل معنا</b> في التذييل للوصول إلينا عبر واتساب أو البريد الإلكتروني.</p>') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-callout">' +
+        '<h2>ما زلت بحاجة إلى مساعدة؟</h2>' +
+        '<p>يسعد فريقنا بمساعدتك في أي شيء.</p>' +
+        '<button class="btn btn-primary" onclick="openContactModal()">' + ICONS.chat + ' تواصل معنا</button>' +
+      '</div>' +
+    '</div>';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  AdminStore.bootstrap().then(function () {
+    var s = localStorage.getItem('sonnaLang'); if (s === 'en' || s === 'ar') LANG = s;
+    document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + (LANG === 'ar' ? AR() : EN()) + '</main>' + footerHTML();
+  });
+});
+</script>
+</body>
+</html>

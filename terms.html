@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
+<title>الشروط والخصوصية | Terms &amp; Privacy — Sonnaع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script>
+function sec(id, title, body) { return '<h2 id="' + id + '">' + title + '</h2>' + body; }
+
+function EN() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.shieldCheck + ' Legal</span>' +
+      '<h1>Terms &amp; Privacy</h1>' +
+      '<p>The rules of using Sonnaع and how we handle your data, in plain language. Last updated 17 July 2026.</p>' +
+    '</div>' +
+    '<div class="info-wrap legal">' +
+      '<div class="cb-proto" style="max-width:none">' + ICONS.clipboard + ' This is a general, good-faith summary — not legal advice. For a binding agreement tailored to your business, consult a qualified lawyer.</div>' +
+
+      '<div class="info-block"><h2 style="margin-top:0">Terms of Service</h2>' +
+        '<div class="legal-toc">' +
+          '<a href="#accept">Acceptance</a><a href="#eligible">Eligibility</a><a href="#accounts">Accounts</a>' +
+          '<a href="#listings">Listings &amp; verification</a><a href="#deals">Dealing between users</a><a href="#pay">Payments</a>' +
+          '<a href="#use">Acceptable use</a><a href="#ip">Content &amp; IP</a><a href="#liability">Disclaimers</a><a href="#law">Governing law</a>' +
+        '</div>' +
+
+        sec('accept', '1. Acceptance of these terms', '<p>By accessing or using Sonnaع (the "Platform"), you agree to these Terms. If you use the Platform on behalf of a company, you confirm you\'re authorised to bind that company. If you don\'t agree, please don\'t use the Platform.</p>') +
+        sec('eligible', '2. Eligibility', '<p>You must be at least 18 years old and able to enter into a binding contract. Factory accounts must represent a real, operating manufacturing business in Egypt.</p>') +
+        sec('accounts', '3. Your account', '<p>You\'re responsible for the accuracy of the information you provide and for keeping your login secure. You\'re responsible for all activity under your account. Tell us promptly if you suspect unauthorised use.</p>') +
+        sec('listings', '4. Factory listings &amp; verification', '<p>Factories are responsible for the accuracy of their pages. A "verified" badge means we\'ve reviewed — and where possible visited — the factory; it is a trust signal, not a guarantee of any outcome, quality or transaction. We may verify, decline to verify, suspend, or remove a listing at our discretion, including where information appears false or misleading.</p>') +
+        sec('deals', '5. Dealings between users', '<p>Sonnaع connects buyers and factories; it is <b>not a party</b> to any transaction, contract, payment or shipment between them, and takes no commission on their deals. Any agreement, quality standard, price, delivery or dispute is strictly between the buyer and the factory. Do your own due diligence before committing funds or orders.</p>') +
+        sec('pay', '6. Payments &amp; subscriptions', '<p>Some features — such as factory verification and consultations — are paid. Fees are shown before you pay and are processed by a third-party payment provider; we don\'t store your full card details. Unless stated otherwise or required by law, fees are non-refundable once the paid service has been delivered. We may change pricing prospectively.</p>') +
+        sec('use', '7. Acceptable use', '<p>You agree not to: post false, misleading or unlawful content; impersonate others; harvest data or scrape the Platform; spam or harass; attempt to bypass verification, payments or security; or use the Platform for anything illegal. We may remove content or suspend accounts that breach these rules.</p>') +
+        sec('ip', '8. Content &amp; intellectual property', '<p>You keep ownership of the content you upload (logos, photos, descriptions) and grant Sonnaع a licence to host and display it to operate the Platform. The Sonnaع name, brand and software remain ours. Don\'t copy or reuse them without permission.</p>') +
+        sec('liability', '9. Disclaimers &amp; limitation of liability', '<p>The Platform is provided "as is." To the fullest extent permitted by law, Sonnaع is not liable for losses arising from dealings between users, inaccurate listings, missed deals, or interruptions to the service. Nothing here excludes liability that cannot be excluded under Egyptian law.</p>') +
+        sec('term', '10. Suspension &amp; termination', '<p>You can stop using the Platform at any time. We may suspend or end access if these Terms are breached or to protect the Platform and its users.</p>') +
+        sec('changes', '11. Changes', '<p>We may update these Terms as the Platform evolves. Material changes will be reflected here with a new "last updated" date; continuing to use the Platform means you accept the updated Terms.</p>') +
+        sec('law', '12. Governing law', '<p>These Terms are governed by the laws of the Arab Republic of Egypt, and disputes fall under the jurisdiction of the competent Egyptian courts.</p>') +
+      '</div>' +
+
+      '<div class="info-block"><h2 style="margin-top:0">Privacy Policy</h2>' +
+        sec('collect', '1. What we collect', '<p>Account details (name, email, phone), your factory or request content, messages you send on the Platform, subscription and consultation details you provide, and basic technical data (such as pages viewed) to keep the service working.</p>') +
+        sec('usedata', '2. How we use it', '<p>To operate the Platform — create your account, show your listings, connect buyers and factories, process verification and payments, provide support, prevent abuse, and improve the product.</p>') +
+        sec('share', '3. Sharing', '<p>Information you choose to publish (your factory page, a request) is visible to other users by design. We share data with service providers that run the Platform (e.g. hosting, database, email and payment processing) only as needed to operate it, and when required by law. We do not sell your personal data.</p>') +
+        sec('paydata', '4. Payments', '<p>Payments are handled by a third-party payment provider. We receive confirmation of payment and limited transaction references, but we do not store your full card number.</p>') +
+        sec('cookies', '5. Cookies &amp; local storage', '<p>We use your browser\'s local storage for essentials such as your login session, language and theme preferences. These are needed for the Platform to function.</p>') +
+        sec('retain', '6. Data retention', '<p>We keep your data while your account is active and as needed to provide the service, resolve disputes and meet legal obligations. You can ask us to delete your account and associated data.</p>') +
+        sec('rights', '7. Your choices', '<p>You can view and edit your information from your account, request deletion of your account, and contact us with any privacy question or request.</p>') +
+        sec('security', '8. Security', '<p>We protect the Platform with access controls, row-level security on our database, and payment verification that is never trusted from the browser. No system is perfectly secure, but we work hard to keep your data safe.</p>') +
+        sec('contact', '9. Contact', '<p>Questions about these terms or your data? Reach us any time via <b>Contact us</b> in the footer.</p>') +
+      '</div>' +
+
+      '<div class="info-callout"><h2>Questions?</h2><p>We\'re happy to explain anything here.</p>' +
+        '<button class="btn btn-primary" onclick="openContactModal()">' + ICONS.chat + ' Contact us</button></div>' +
+    '</div>';
+}
+
+function AR() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.shieldCheck + ' قانوني</span>' +
+      '<h1>الشروط والخصوصية</h1>' +
+      '<p>قواعد استخدام صُنّاع وكيفية تعاملنا مع بياناتك، بلغة واضحة. آخر تحديث ١٧ يوليو ٢٠٢٦.</p>' +
+    '</div>' +
+    '<div class="info-wrap legal">' +
+      '<div class="cb-proto" style="max-width:none">' + ICONS.clipboard + ' هذا ملخّص عام بحسن نية — وليس استشارة قانونية. للحصول على اتفاق مُلزِم مُصمَّم لنشاطك، استشِر محاميًا مختصًّا.</div>' +
+
+      '<div class="info-block"><h2 style="margin-top:0">شروط الخدمة</h2>' +
+        '<div class="legal-toc">' +
+          '<a href="#accept">القبول</a><a href="#eligible">الأهلية</a><a href="#accounts">الحسابات</a>' +
+          '<a href="#listings">القوائم والتوثيق</a><a href="#deals">التعامل بين المستخدمين</a><a href="#pay">المدفوعات</a>' +
+          '<a href="#use">الاستخدام المقبول</a><a href="#ip">المحتوى والملكية</a><a href="#liability">إخلاء المسؤولية</a><a href="#law">القانون الحاكم</a>' +
+        '</div>' +
+
+        sec('accept', '١. قبول هذه الشروط', '<p>بدخولك أو استخدامك صُنّاع ("المنصّة") فإنك توافق على هذه الشروط. وإن كنت تستخدم المنصّة نيابةً عن شركة، فأنت تؤكّد أنك مخوّل بإلزامها. وإن لم توافق، فيُرجى عدم استخدام المنصّة.</p>') +
+        sec('eligible', '٢. الأهلية', '<p>يجب أن يكون عمرك ١٨ عامًا على الأقل وقادرًا على إبرام عقد مُلزِم. ويجب أن تمثّل حسابات المصانع نشاطًا صناعيًّا حقيقيًّا قائمًا في مصر.</p>') +
+        sec('accounts', '٣. حسابك', '<p>أنت مسؤول عن دقّة المعلومات التي تقدّمها وعن الحفاظ على أمان بيانات دخولك، وعن كل نشاط يجري عبر حسابك. أخبِرنا فورًا إذا اشتبهت في استخدام غير مصرّح به.</p>') +
+        sec('listings', '٤. قوائم المصانع والتوثيق', '<p>المصانع مسؤولة عن دقّة صفحاتها. وشارة "موثّق" تعني أننا راجعنا المصنع — وزرناه كلما أمكن — وهي إشارة ثقة لا ضمانًا لأي نتيجة أو جودة أو صفقة. ويجوز لنا التوثيق أو رفضه أو تعليق قائمة أو إزالتها وفق تقديرنا، بما في ذلك حين تبدو المعلومات كاذبة أو مضلِّلة.</p>') +
+        sec('deals', '٥. التعامل بين المستخدمين', '<p>تربط صُنّاع المشترين بالمصانع، وهي <b>ليست طرفًا</b> في أي معاملة أو عقد أو دفعة أو شحنة بينهم، ولا تأخذ عمولة على صفقاتهم. وأي اتفاق أو معيار جودة أو سعر أو تسليم أو نزاع يخصّ المشتري والمصنع وحدهما. توخَّ العناية الواجبة قبل الالتزام بأموال أو طلبات.</p>') +
+        sec('pay', '٦. المدفوعات والاشتراكات', '<p>بعض الميزات — كتوثيق المصانع والاستشارات — مدفوعة. تُعرَض الرسوم قبل الدفع وتُعالَج عبر مزوّد دفع خارجي، ولا نخزّن بيانات بطاقتك كاملةً. وما لم يُذكر خلاف ذلك أو يقتضِ القانون، فالرسوم غير قابلة للاسترداد بعد تقديم الخدمة المدفوعة. وقد نغيّر الأسعار مستقبلًا.</p>') +
+        sec('use', '٧. الاستخدام المقبول', '<p>توافق على ألّا: تنشر محتوى كاذبًا أو مضلِّلًا أو مخالفًا؛ أو تنتحل صفة غيرك؛ أو تجمع البيانات أو تكشط المنصّة؛ أو ترسل رسائل مزعجة أو تتحرّش؛ أو تحاول تجاوز التوثيق أو المدفوعات أو الأمان؛ أو تستخدم المنصّة لأي غرض غير قانوني. ويجوز لنا إزالة المحتوى أو تعليق الحسابات المخالِفة.</p>') +
+        sec('ip', '٨. المحتوى والملكية الفكرية', '<p>تحتفظ بملكية المحتوى الذي ترفعه (الشعارات والصور والأوصاف)، وتمنح صُنّاع ترخيصًا لاستضافته وعرضه لتشغيل المنصّة. ويبقى اسم صُنّاع وعلامتها وبرمجياتها ملكًا لنا؛ فلا تنسخها أو تعيد استخدامها دون إذن.</p>') +
+        sec('liability', '٩. إخلاء المسؤولية وحدودها', '<p>تُقدَّم المنصّة "كما هي". وإلى أقصى حدٍّ يسمح به القانون، لا تتحمّل صُنّاع مسؤولية الخسائر الناشئة عن التعامل بين المستخدمين أو القوائم غير الدقيقة أو الصفقات الفائتة أو انقطاع الخدمة. ولا يستثني أيٌّ ممّا سبق مسؤوليةً لا يمكن استثناؤها بموجب القانون المصري.</p>') +
+        sec('term', '١٠. التعليق والإنهاء', '<p>يمكنك التوقّف عن استخدام المنصّة في أي وقت. ويجوز لنا تعليق الوصول أو إنهاؤه عند مخالفة هذه الشروط أو لحماية المنصّة ومستخدميها.</p>') +
+        sec('changes', '١١. التغييرات', '<p>قد نحدّث هذه الشروط مع تطوّر المنصّة. وستُبيَّن التغييرات الجوهرية هنا بتاريخ "آخر تحديث" جديد، واستمرارك في الاستخدام يعني قبولك الشروط المُحدَّثة.</p>') +
+        sec('law', '١٢. القانون الحاكم', '<p>تخضع هذه الشروط لقوانين جمهورية مصر العربية، وتختصّ المحاكم المصرية المختصّة بالنظر في النزاعات.</p>') +
+      '</div>' +
+
+      '<div class="info-block"><h2 style="margin-top:0">سياسة الخصوصية</h2>' +
+        sec('collect', '١. ما الذي نجمعه', '<p>بيانات الحساب (الاسم والبريد والهاتف)، ومحتوى مصنعك أو طلبك، والرسائل التي ترسلها على المنصّة، وبيانات الاشتراك والاستشارة التي تقدّمها، وبيانات تقنية أساسية (كالصفحات المُشاهَدة) للحفاظ على عمل الخدمة.</p>') +
+        sec('usedata', '٢. كيف نستخدمه', '<p>لتشغيل المنصّة — إنشاء حسابك، وعرض قوائمك، وربط المشترين بالمصانع، ومعالجة التوثيق والمدفوعات، وتقديم الدعم، ومنع إساءة الاستخدام، وتحسين المنتج.</p>') +
+        sec('share', '٣. المشاركة', '<p>المعلومات التي تختار نشرها (صفحة مصنعك، طلبك) مرئية للمستخدمين الآخرين بحكم التصميم. ونشارك البيانات مع مزوّدي الخدمة الذين يشغّلون المنصّة (كالاستضافة وقاعدة البيانات والبريد ومعالجة الدفع) بالقدر اللازم فقط، وحين يقتضي القانون. ولا نبيع بياناتك الشخصية.</p>') +
+        sec('paydata', '٤. المدفوعات', '<p>تُدار المدفوعات عبر مزوّد دفع خارجي. ونستلم تأكيد الدفع ومراجع محدودة للمعاملة، لكننا لا نخزّن رقم بطاقتك كاملًا.</p>') +
+        sec('cookies', '٥. الكوكيز والتخزين المحلّي', '<p>نستخدم التخزين المحلّي في متصفّحك للأساسيات كجلسة الدخول وتفضيلات اللغة والمظهر، وهي ضرورية لعمل المنصّة.</p>') +
+        sec('retain', '٦. الاحتفاظ بالبيانات', '<p>نحتفظ ببياناتك ما دام حسابك نشطًا وبالقدر اللازم لتقديم الخدمة وحلّ النزاعات والوفاء بالالتزامات القانونية. ويمكنك أن تطلب حذف حسابك والبيانات المرتبطة به.</p>') +
+        sec('rights', '٧. خياراتك', '<p>يمكنك عرض معلوماتك وتعديلها من حسابك، وطلب حذف حسابك، والتواصل معنا لأي سؤال أو طلب يتعلّق بالخصوصية.</p>') +
+        sec('security', '٨. الأمان', '<p>نحمي المنصّة بضوابط وصول، وأمانٍ على مستوى الصفوف في قاعدة بياناتنا، والتحقّق من الدفع الذي لا يُوثَق به من المتصفّح أبدًا. لا يوجد نظام آمن تمامًا، لكننا نجتهد للحفاظ على بياناتك.</p>') +
+        sec('contact', '٩. التواصل', '<p>أسئلة حول هذه الشروط أو بياناتك؟ تواصل معنا في أي وقت عبر <b>تواصل معنا</b> في التذييل.</p>') +
+      '</div>' +
+
+      '<div class="info-callout"><h2>لديك سؤال؟</h2><p>يسعدنا توضيح أي شيء هنا.</p>' +
+        '<button class="btn btn-primary" onclick="openContactModal()">' + ICONS.chat + ' تواصل معنا</button></div>' +
+    '</div>';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  AdminStore.bootstrap().then(function () {
+    var s = localStorage.getItem('sonnaLang'); if (s === 'en' || s === 'ar') LANG = s;
+    document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + (LANG === 'ar' ? AR() : EN()) + '</main>' + footerHTML();
+  });
+});
+</script>
+</body>
+</html>

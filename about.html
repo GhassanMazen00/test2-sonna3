@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
+<title>عن صُنّاع | About Sonnaع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script>
+function card(icon, title, body) {
+  return '<div class="info-card"><span class="ic">' + icon + '</span><h3>' + title + '</h3><p>' + body + '</p></div>';
+}
+
+function EN() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.sparkle + ' About Sonnaع</span>' +
+      '<h1>Egypt makes it.<br>We help the world find it.</h1>' +
+      '<p>Sonnaع (صُنّاع — Arabic for "makers") is a B2B marketplace that connects traders, brands and businesses directly with trusted Egyptian manufacturers. No middlemen, no commissions, no guesswork.</p>' +
+    '</div>' +
+    '<div class="info-wrap">' +
+
+      '<div class="info-block info-prose">' +
+        '<h2>' + ICONS.compass + ' Why we exist</h2>' +
+        '<p>Egypt has one of the largest and most versatile manufacturing bases in the Middle East and Africa — textiles and apparel in Mahalla and 10th of Ramadan, furniture in Damietta, food and packaging across the Delta, chemicals, plastics, metal fabrication, cosmetics and more. Yet finding the right factory has always been the hard part. Buyers rely on word of mouth, brokers who add cost and hide the source, or trade shows that happen once a year.</p>' +
+        '<p>We built Sonnaع to remove that friction. A buyer anywhere in the world should be able to discover a capable Egyptian factory, see what it really makes, and talk to it directly — in minutes, not months. And a factory that does great work should be able to reach real demand without paying a broker a cut of every deal.</p>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>What we do</h2>' +
+        '<p class="lead">Sonnaع is two things at once — a directory buyers can trust and a growth channel factories can rely on.</p>' +
+        '<div class="info-cards">' +
+          card(ICONS.search, 'For buyers &amp; brands', 'Browse a curated directory of Egyptian factories by industry, location, capacity and certifications. Post a manufacturing request and let verified factories come to you. Message suppliers and request quotes directly — the contact details are real.') +
+          card(ICONS.factory, 'For manufacturers', 'Create a professional factory page that shows your products, capabilities, capacity and certifications. Get discovered by serious buyers, receive quote requests, and build a verified reputation that wins trust before the first call.') +
+          card(ICONS.handshake, 'A direct connection', 'We are not a broker and we do not take a commission on your deals. When a buyer and a factory find each other on Sonnaع, they talk directly and keep the full value of the relationship.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.shieldCheck + ' Trust is the product</h2>' +
+        '<p class="lead">A directory is only useful if you can believe what is in it. That is why verification sits at the heart of Sonnaع.</p>' +
+        '<div class="info-cards">' +
+          card(ICONS.shieldCheck, 'Verified factories', 'Verified factories are reviewed and — where possible — visited by our team before they carry the verified badge, so buyers know they are dealing with a real, operating manufacturer.') +
+          card(ICONS.clipboard, 'Real requests', 'Buyers post genuine manufacturing needs. Only verified factories can respond, which keeps the quality of every conversation high on both sides.') +
+          card(ICONS.chartBar, 'Reputation that is earned', 'Ratings, reviews and response stats are built from real interactions on the platform — not vanity numbers — so a good factory\'s track record speaks for itself.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>What we believe</h2>' +
+        '<div class="info-cards">' +
+          card(ICONS.globe, 'Egyptian industry deserves a global stage', 'World-class work is made here every day. Our job is to make it visible and easy to reach.') +
+          card(ICONS.handshake, 'Cut the middleman, not the trust', 'Direct relationships are better relationships. We remove cost and opacity, not accountability.') +
+          card(ICONS.sparkle, 'Simple beats complicated', 'Sourcing is stressful enough. The tools around it should feel clear, fast and honest.') +
+          card(ICONS.check, 'Local knowledge, global standard', 'We are built in Egypt, for Egyptian makers — with the polish that international buyers expect.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block info-prose">' +
+        '<h2>Where we are headed</h2>' +
+        '<p>Today Sonnaع is a directory, a request board and a direct line between buyers and factories. Tomorrow we want it to be the operating system for Egyptian manufacturing trade — trusted verification, sample handling, logistics, financing and quality assurance woven into one simple flow. Every feature we add answers the same question: does this help a good factory and a serious buyer do business with less friction and more confidence?</p>' +
+        '<p>We are just getting started, and we would love for you to be part of it.</p>' +
+      '</div>' +
+
+      '<div class="info-callout">' +
+        '<h2>Ready to get started?</h2>' +
+        '<p>Whether you make things or buy them, Sonnaع is built for you.</p>' +
+        '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+          '<a class="btn btn-primary" href="factories.html">' + ICONS.factory + ' Browse factories</a>' +
+          '<button class="btn btn-ghost" onclick="listYourFactory()">' + ICONS.megaphone + ' List your factory</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function AR() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.sparkle + ' عن صُنّاع</span>' +
+      '<h1>مصر تصنع.<br>ونحن نساعد العالم على إيجادها.</h1>' +
+      '<p>صُنّاع منصّة B2B تربط التجار والعلامات التجارية والشركات مباشرةً بمصانع مصرية موثوقة. بدون وسطاء، بدون عمولات، وبدون تخمين.</p>' +
+    '</div>' +
+    '<div class="info-wrap">' +
+
+      '<div class="info-block info-prose">' +
+        '<h2>' + ICONS.compass + ' لماذا وُجدنا</h2>' +
+        '<p>تمتلك مصر واحدة من أكبر وأكثر القواعد الصناعية تنوّعًا في الشرق الأوسط وأفريقيا — الغزل والنسيج في المحلّة والعاشر من رمضان، والأثاث في دمياط، والأغذية والتغليف في الدلتا، إضافةً إلى الكيماويات والبلاستيك وتشكيل المعادن ومستحضرات التجميل وغيرها. ومع ذلك ظل إيجاد المصنع المناسب هو الجزء الأصعب: اعتماد على المعارف، أو وسطاء يرفعون التكلفة ويُخفون المصدر، أو معارض تُقام مرّة واحدة في العام.</p>' +
+        '<p>بنينا صُنّاع لإزالة هذا العائق. ينبغي أن يتمكّن أي مشترٍ في العالم من اكتشاف مصنع مصري قادر، ورؤية ما يصنعه فعلًا، والتواصل معه مباشرةً — في دقائق لا في شهور. وينبغي للمصنع المتميّز أن يصل إلى طلبٍ حقيقي دون أن يدفع لوسيط نصيبًا من كل صفقة.</p>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>ماذا نفعل</h2>' +
+        '<p class="lead">صُنّاع شيئان في آنٍ واحد — دليل يثق به المشترون، وقناة نموّ يعتمد عليها المصنّعون.</p>' +
+        '<div class="info-cards">' +
+          card(ICONS.search, 'للمشترين والعلامات', 'تصفّح دليلًا مختارًا من المصانع المصرية حسب الصناعة والموقع والطاقة الإنتاجية والشهادات. انشر طلب تصنيع ودَع المصانع الموثّقة تأتي إليك. راسِل المورّدين واطلب عروض أسعار مباشرةً — وبيانات التواصل حقيقية.') +
+          card(ICONS.factory, 'للمصنّعين', 'أنشئ صفحة مصنع احترافية تعرض منتجاتك وقدراتك وطاقتك وشهاداتك. كُن مرئيًّا أمام مشترين جادّين، واستقبل طلبات الأسعار، وابنِ سمعة موثّقة تكسب الثقة قبل أول مكالمة.') +
+          card(ICONS.handshake, 'صلة مباشرة', 'نحن لسنا وسيطًا ولا نأخذ عمولة على صفقاتك. عندما يجد المشتري والمصنع بعضهما على صُنّاع، يتواصلان مباشرةً ويحتفظان بكامل قيمة العلاقة.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>' + ICONS.shieldCheck + ' الثقة هي المنتج</h2>' +
+        '<p class="lead">لا قيمة لدليلٍ لا تُصدّق ما فيه. لذلك يقع التوثيق في قلب صُنّاع.</p>' +
+        '<div class="info-cards">' +
+          card(ICONS.shieldCheck, 'مصانع موثّقة', 'تُراجَع المصانع الموثّقة — ويُزار بعضها كلما أمكن — قبل حصولها على شارة التوثيق، ليطمئن المشتري أنه يتعامل مع مصنع حقيقي قائم بالفعل.') +
+          card(ICONS.clipboard, 'طلبات حقيقية', 'ينشر المشترون احتياجات تصنيع حقيقية، ولا يستطيع الرد عليها إلا المصانع الموثّقة، ما يرفع جودة كل محادثة على الجانبين.') +
+          card(ICONS.chartBar, 'سمعة تُكتسب', 'تُبنى التقييمات والمراجعات ومعدّلات الاستجابة من تفاعلات حقيقية على المنصّة — لا أرقامًا شكلية — فيتحدّث سجلّ المصنع الجيّد عن نفسه.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>بماذا نؤمن</h2>' +
+        '<div class="info-cards">' +
+          card(ICONS.globe, 'الصناعة المصرية تستحق منصّة عالمية', 'يُصنع هنا عملٌ عالمي المستوى كل يوم، ومهمّتنا أن نجعله مرئيًّا وسهل الوصول.') +
+          card(ICONS.handshake, 'احذف الوسيط لا الثقة', 'العلاقات المباشرة أفضل. نُزيل التكلفة والغموض، لا المساءلة.') +
+          card(ICONS.sparkle, 'البساطة تتفوّق على التعقيد', 'التوريد مرهق بما يكفي؛ يجب أن تكون الأدوات حوله واضحة وسريعة وصادقة.') +
+          card(ICONS.check, 'معرفة محلّية بمعيار عالمي', 'صُنّاع مبنيّة في مصر ولأجل صُنّاعها — بالإتقان الذي يتوقّعه المشترون الدوليون.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block info-prose">' +
+        '<h2>إلى أين نتّجه</h2>' +
+        '<p>اليوم، صُنّاع دليلٌ ولوحة طلبات وخطٌّ مباشر بين المشترين والمصانع. وغدًا نريدها نظام التشغيل لتجارة الصناعة المصرية — توثيقٌ موثوق، وإدارة عيّنات، ولوجستيات، وتمويل، وضمان جودة، منسوجةً في تدفّق واحد بسيط. وكل ميزة نضيفها تجيب عن السؤال ذاته: هل تساعد هذه الميزة مصنعًا جيّدًا ومشتريًا جادًّا على إتمام العمل باحتكاكٍ أقل وثقةٍ أكبر؟</p>' +
+        '<p>نحن في البداية فقط، ويسعدنا أن تكون جزءًا من الرحلة.</p>' +
+      '</div>' +
+
+      '<div class="info-callout">' +
+        '<h2>جاهز للبدء؟</h2>' +
+        '<p>سواء كنت تصنع المنتجات أو تشتريها، صُنّاع مبنيّة من أجلك.</p>' +
+        '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+          '<a class="btn btn-primary" href="factories.html">' + ICONS.factory + ' تصفّح المصانع</a>' +
+          '<button class="btn btn-ghost" onclick="listYourFactory()">' + ICONS.megaphone + ' سجّل مصنعك</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  AdminStore.bootstrap().then(function () {
+    var s = localStorage.getItem('sonnaLang'); if (s === 'en' || s === 'ar') LANG = s;
+    document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + (LANG === 'ar' ? AR() : EN()) + '</main>' + footerHTML();
+  });
+});
+</script>
+</body>
+</html>
