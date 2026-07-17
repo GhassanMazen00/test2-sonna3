@@ -158,6 +158,37 @@ function listYourFactory() {
   else { window.location.href = 'account.html'; }
 }
 
+// Contact-us popup: two channels (WhatsApp + email). Fill CONTACT_WHATSAPP /
+// CONTACT_EMAIL below when they're ready; until then they show "Coming soon".
+var CONTACT_WHATSAPP = '';   // e.g. '201001234567'
+var CONTACT_EMAIL = '';      // e.g. 'hello@sonna3.net'
+function openContactModal() {
+  var ar = LANG === 'ar';
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.addEventListener('click', function (e) { if (e.target === bd) bd.remove(); });
+  var wa = CONTACT_WHATSAPP.replace(/[^0-9]/g, '');
+  var soon = ar ? 'سيتوفّر قريبًا' : 'Coming soon';
+  function option(cls, icon, label, val, href, external) {
+    var on = !!val;
+    return '<a class="contact-option' + (on ? '' : ' disabled') + '" href="' + (on ? href : '#') + '"' +
+      (on && external ? ' target="_blank" rel="noopener"' : (on ? '' : ' onclick="return false"')) + '>' +
+      '<span class="co-ic ' + cls + '">' + icon + '</span>' +
+      '<span class="co-txt"><b>' + label + '</b><small dir="ltr">' + (on ? esc(val) : soon) + '</small></span></a>';
+  }
+  bd.innerHTML =
+    '<div class="modal contact-modal">' +
+      '<h2>' + (ar ? 'تواصل معنا' : 'Contact us') + '</h2>' +
+      '<p class="sub">' + (ar ? 'اختر الطريقة الأنسب لك للتواصل معنا.' : 'Pick the channel that works best for you.') + '</p>' +
+      '<div class="contact-options">' +
+        option('wa', ICONS.whatsapp, (ar ? 'واتساب' : 'WhatsApp'), CONTACT_WHATSAPP, 'https://wa.me/' + wa, true) +
+        option('em', ICONS.envelope, (ar ? 'البريد الإلكتروني' : 'Email'), CONTACT_EMAIL, 'mailto:' + CONTACT_EMAIL, false) +
+      '</div>' +
+      '<div class="modal-actions"><button class="btn btn-ghost" onclick="this.closest(\'.modal-backdrop\').remove()">' + (ar ? 'إغلاق' : 'Close') + '</button></div>' +
+    '</div>';
+  document.body.appendChild(bd);
+}
+
 // Consultant booking — collects the client's details + sample files and sends
 // them to a live Kashier payment. On success the return page shows the
 // "a consultant will contact you soon" message and the booking is logged for

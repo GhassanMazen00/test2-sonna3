@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
+<title>الوظائف | Careers — Sonnaع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/lang.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/chat.js"></script>
+<script>
+function card(icon, title, body) {
+  return '<div class="info-card"><span class="ic">' + icon + '</span><h3>' + title + '</h3><p>' + body + '</p></div>';
+}
+function job(title, tags, body, skills) {
+  return '<div class="job-card">' +
+    '<div class="job-head"><h3>' + title + '</h3><div class="job-tags">' + tags.map(function (t) { return '<span class="job-tag">' + t + '</span>'; }).join('') + '</div></div>' +
+    '<p>' + body + '</p>' +
+    (skills ? '<div class="job-skills"><b>' + skills[0] + '</b> ' + skills[1] + '</div>' : '') +
+  '</div>';
+}
+
+function EN() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.handshake + ' Careers</span>' +
+      '<h1>Help build the backbone of<br>Egyptian manufacturing trade</h1>' +
+      '<p>We\'re a small, ambitious team making it radically easier to discover and trust Egyptian factories. If you want your work to matter in the real economy, you\'ll fit right in.</p>' +
+    '</div>' +
+    '<div class="info-wrap">' +
+
+      '<div class="info-block">' +
+        '<h2>Why join Sonnaع</h2>' +
+        '<div class="info-cards">' +
+          card(ICONS.sparkle, 'Real impact, real economy', 'Your work directly helps Egyptian factories win business and helps buyers source with confidence. This isn\'t another ad-tech app — it moves real goods and real jobs.') +
+          card(ICONS.chartBar, 'Early-stage ownership', 'Join early and shape the product, the culture and the direction. Your ideas ship in days, not quarters, and you see their effect immediately.') +
+          card(ICONS.globe, 'Local roots, global ambition', 'We\'re built in Egypt for Egyptian makers, with the standard international buyers expect. You\'ll work bilingually and think globally.') +
+          card(ICONS.handshake, 'A team that has your back', 'Flat, honest and supportive. We hire for character and curiosity, give you real responsibility, and back you when you take smart risks.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>Open roles we\'re growing into</h2>' +
+        '<p class="lead">These are the roles we\'re building the team around. Don\'t see a perfect match? Tell us how you\'d help anyway.</p>' +
+        '<div class="jobs">' +
+          job('Field Verification Officer', ['Operations', 'Full-time', 'Cairo + travel'],
+            'The trust in Sonnaع is earned on the factory floor. You\'ll visit factories across Egypt, confirm they\'re real and operating, capture photos and details, and complete the verification that puts the green badge on a page.',
+            ['You\'ll love this if:', 'you enjoy being on the ground, meeting people, and have a sharp eye for what\'s genuine.']) +
+          job('Factory Onboarding Specialist', ['Operations', 'Sales', 'Hybrid'],
+            'You\'ll guide factory owners — many non-technical — through creating and completing a great page: products, capabilities, photos and certifications. You make their first experience smooth and their page shine.',
+            ['Great fit:', 'patient, organised, and comfortable explaining tech simply in Arabic and English.']) +
+          job('Sales & Business Development', ['Sales', 'Full-time', 'Cairo'],
+            'Bring the best factories onto Sonnaع and turn interest into verified, active pages. You\'ll build relationships across industrial zones and close subscriptions that grow the marketplace.',
+            ['You\'ll thrive if:', 'you\'re persuasive, resilient, and know the Egyptian manufacturing landscape.']) +
+          job('Customer Success & Support', ['Support', 'Bilingual', 'Remote-friendly'],
+            'Be the friendly, fast voice buyers and factories rely on — over chat, WhatsApp and email. You\'ll solve problems, gather feedback, and turn confused users into confident ones.',
+            ['Ideal:', 'empathetic, clear communicator in Arabic and English, calm under pressure.']) +
+          job('Full-Stack Engineer', ['Engineering', 'Full-time', 'Remote-friendly'],
+            'Build the product end to end — front-end experiences and the Supabase/edge back-end that powers verification, payments and messaging. Ship fast, keep it secure, and own features from idea to launch.',
+            ['Toolbox:', 'JavaScript, HTML/CSS, Postgres/Supabase, an eye for clean UX and solid security.']) +
+          job('Product Designer (UI/UX)', ['Design', 'Full-time', 'Remote-friendly'],
+            'Design flows that feel effortless for non-technical factory owners and demanding international buyers alike — bilingual, RTL-first, in light and dark. You\'ll balance polish with clarity.',
+            ['Bring:', 'strong visual craft, systems thinking, and empathy for real users.']) +
+          job('Content & SEO Specialist', ['Marketing', 'Bilingual', 'Remote-friendly'],
+            'Make Sonnaع the answer people find when they search for Egyptian manufacturing. You\'ll write industry guides, factory spotlights and help content in Arabic and English that ranks and genuinely helps.',
+            ['Fit:', 'excellent bilingual writing, SEO fundamentals, curiosity about industry.']) +
+          job('Growth / Performance Marketing', ['Marketing', 'Full-time', 'Remote-friendly'],
+            'Own acquisition on both sides of the marketplace — buyers and factories. Run experiments across channels, measure what works, and scale it responsibly.',
+            ['You\'ll shine if:', 'you\'re data-driven, creative, and love a fast feedback loop.']) +
+          job('Partnerships Lead', ['Business Dev', 'Full-time', 'Cairo'],
+            'Build relationships with industrial zones, chambers of commerce, export councils and trade bodies to bring factories on board at scale and open doors for buyers.',
+            ['Great fit:', 'well-networked, credible with institutions, strategic and hands-on.']) +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-callout">' +
+        '<h2>Want in?</h2>' +
+        '<p>Tell us who you are, what you\'d work on, and why Sonnaع. We read every message.</p>' +
+        '<button class="btn btn-primary" onclick="openContactModal()">' + ICONS.envelope + ' Get in touch</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function AR() {
+  return '<div class="info-hero">' +
+      '<span class="eyebrow">' + ICONS.handshake + ' الوظائف</span>' +
+      '<h1>ساعِد في بناء العمود الفقري<br>لتجارة الصناعة المصرية</h1>' +
+      '<p>نحن فريق صغير وطموح يجعل اكتشاف المصانع المصرية والثقة بها أسهل بكثير. إن أردت أن يكون لعملك أثرٌ في الاقتصاد الحقيقي، فمكانك معنا.</p>' +
+    '</div>' +
+    '<div class="info-wrap">' +
+
+      '<div class="info-block">' +
+        '<h2>لماذا تنضمّ إلى صُنّاع</h2>' +
+        '<div class="info-cards">' +
+          card(ICONS.sparkle, 'أثر حقيقي في اقتصاد حقيقي', 'عملك يساعد المصانع المصرية على كسب الأعمال ويساعد المشترين على التوريد بثقة. ليست مجرد تطبيق آخر — بل تحرّك سلعًا حقيقية ووظائف حقيقية.') +
+          card(ICONS.chartBar, 'ملكية منذ البداية', 'انضمّ مبكرًا وشكِّل المنتج والثقافة والاتجاه. أفكارك تُطلَق في أيام لا في فصول، وترى أثرها فورًا.') +
+          card(ICONS.globe, 'جذور محلّية وطموح عالمي', 'مبنيّة في مصر لصُنّاعها، بالمعيار الذي يتوقّعه المشترون الدوليون. ستعمل بلغتين وتفكّر عالميًّا.') +
+          card(ICONS.handshake, 'فريق يسندك', 'بنية مسطّحة صادقة وداعمة. نوظّف على أساس الشخصية والفضول، ونمنحك مسؤولية حقيقية، ونساندك حين تخوض مخاطرة ذكية.') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-block">' +
+        '<h2>الأدوار التي ننمو نحوها</h2>' +
+        '<p class="lead">هذه الأدوار التي نبني الفريق حولها. لم تجد المطابقة المثالية؟ أخبِرنا كيف ستساعد على أي حال.</p>' +
+        '<div class="jobs">' +
+          job('مسؤول توثيق ميداني', ['العمليات', 'دوام كامل', 'القاهرة + سفر'],
+            'الثقة في صُنّاع تُكتسب داخل المصنع. ستزور المصانع في أنحاء مصر، وتتأكّد أنها حقيقية وقائمة، وتلتقط الصور والتفاصيل، وتُتمّ التوثيق الذي يضع الشارة الخضراء على الصفحة.',
+            ['ستحبّ هذا إن:', 'كنت تستمتع بالعمل الميداني ولقاء الناس، ولديك عين ثاقبة لما هو حقيقي.']) +
+          job('أخصّائي تهيئة المصانع', ['العمليات', 'مبيعات', 'هجين'],
+            'ستُرشد أصحاب المصانع — كثيرٌ منهم غير تقنيين — خلال إنشاء صفحة رائعة وإكمالها: منتجات وقدرات وصور وشهادات. تجعل تجربتهم الأولى سلسة وصفحتهم متألّقة.',
+            ['مناسب إن:', 'كنت صبورًا ومنظّمًا ومرتاحًا في شرح التقنية ببساطة بالعربية والإنجليزية.']) +
+          job('مبيعات وتطوير أعمال', ['مبيعات', 'دوام كامل', 'القاهرة'],
+            'اجلب أفضل المصانع إلى صُنّاع وحوِّل الاهتمام إلى صفحات موثّقة نشطة. ستبني علاقات عبر المناطق الصناعية وتُغلق اشتراكات تُنمّي السوق.',
+            ['ستزدهر إن:', 'كنت مقنِعًا وصلبًا وتعرف مشهد الصناعة المصرية.']) +
+          job('نجاح العملاء والدعم', ['الدعم', 'ثنائي اللغة', 'يدعم العمل عن بُعد'],
+            'كُن الصوت الودود والسريع الذي يعتمد عليه المشترون والمصانع — عبر المحادثة وواتساب والبريد. تحلّ المشكلات، وتجمع الملاحظات، وتحوّل المستخدم الحائر إلى واثق.',
+            ['مثالي:', 'متعاطف، واضح التواصل بالعربية والإنجليزية، هادئ تحت الضغط.']) +
+          job('مهندس Full-Stack', ['هندسة', 'دوام كامل', 'يدعم العمل عن بُعد'],
+            'ابنِ المنتج من طرفٍ لطرف — واجهات أمامية وخلفية على Supabase/الحوسبة الطرفية تُشغّل التوثيق والمدفوعات والمراسلة. أطلِق بسرعة، وحافِظ على الأمان، وامتلك المزايا من الفكرة إلى الإطلاق.',
+            ['الأدوات:', 'JavaScript وHTML/CSS وPostgres/Supabase، وحسٌّ لتجربة نظيفة وأمانٍ متين.']) +
+          job('مصمّم منتج (UI/UX)', ['تصميم', 'دوام كامل', 'يدعم العمل عن بُعد'],
+            'صمّم تدفّقات تبدو سهلة لأصحاب المصانع غير التقنيين وللمشترين الدوليين المتطلّبين على حدٍّ سواء — ثنائية اللغة، تدعم RTL أولًا، في الوضعين الفاتح والداكن.',
+            ['أحضِر:', 'حرفة بصرية قوية، وتفكيرًا نظاميًّا، وتعاطفًا مع المستخدم الحقيقي.']) +
+          job('أخصّائي محتوى وSEO', ['تسويق', 'ثنائي اللغة', 'يدعم العمل عن بُعد'],
+            'اجعل صُنّاع الإجابة التي يجدها الناس حين يبحثون عن التصنيع المصري. ستكتب أدلّة صناعية وأضواءً على المصانع ومحتوى مساعدة بالعربية والإنجليزية يتصدّر ويفيد فعلًا.',
+            ['مناسب:', 'كتابة ثنائية اللغة ممتازة، وأساسيات SEO، وفضولٌ نحو الصناعة.']) +
+          job('نمو / تسويق أداء', ['تسويق', 'دوام كامل', 'يدعم العمل عن بُعد'],
+            'امتلك اكتساب طرفَي السوق — المشترين والمصانع. أجرِ تجارب عبر القنوات، وقِس ما ينجح، ووسّعه بمسؤولية.',
+            ['ستتألّق إن:', 'كنت مدفوعًا بالبيانات ومبدعًا وتحبّ حلقات التغذية الراجعة السريعة.']) +
+          job('قائد الشراكات', ['تطوير أعمال', 'دوام كامل', 'القاهرة'],
+            'ابنِ علاقات مع المناطق الصناعية والغرف التجارية ومجالس التصدير والهيئات التجارية لجلب المصانع على نطاق واسع وفتح الأبواب للمشترين.',
+            ['مناسب:', 'واسع العلاقات، ذو مصداقية أمام المؤسسات، استراتيجي وعملي.']) +
+        '</div>' +
+      '</div>' +
+
+      '<div class="info-callout">' +
+        '<h2>تريد الانضمام؟</h2>' +
+        '<p>أخبِرنا من أنت، وبماذا ستعمل، ولماذا صُنّاع. نقرأ كل رسالة.</p>' +
+        '<button class="btn btn-primary" onclick="openContactModal()">' + ICONS.envelope + ' تواصل معنا</button>' +
+      '</div>' +
+    '</div>';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  AdminStore.bootstrap().then(function () {
+    var s = localStorage.getItem('sonnaLang'); if (s === 'en' || s === 'ar') LANG = s;
+    document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + (LANG === 'ar' ? AR() : EN()) + '</main>' + footerHTML();
+  });
+});
+</script>
+</body>
+</html>

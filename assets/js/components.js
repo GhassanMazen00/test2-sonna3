@@ -92,21 +92,27 @@ function mobileMenuHTML() {
 
 // Footer
 function footerHTML() {
-  function col(title, items) {
-    return '<div><h4>' + title + '</h4><ul>' + 
-      items.map(function(x) { return '<li><button>' + x + '</button></li>'; }).join('') + 
+  // Each link is [label, target]; a target ending in "()" runs as JS, anything
+  // else is treated as an href to another page.
+  function item(label, target) {
+    if (/\)$/.test(target)) return '<li><button onclick="' + target + '">' + label + '</button></li>';
+    return '<li><a href="' + target + '">' + label + '</a></li>';
+  }
+  function col(title, labels, targets) {
+    return '<div><h4>' + title + '</h4><ul>' +
+      labels.map(function (x, i) { return item(x, targets[i]); }).join('') +
     '</ul></div>';
   }
-  
+
   return '<footer><div class="container">' +
     '<div class="footer-grid">' +
       '<div>' +
         '<div class="logo-text">' + t('brand') + '<span class="logo-ain">ع</span></div>' +
         '<p>' + t('footer_about') + '</p>' +
       '</div>' +
-      col(t('f_platform'), t('f_links1')) +
-      col(t('f_company'), t('f_links2')) +
-      col(t('f_support'), t('f_links3')) +
+      col(t('f_platform'), t('f_links1'), ['factories.html', 'requests.html', 'factories.html']) +
+      col(t('f_company'), t('f_links2'), ['about.html', 'listYourFactory()', 'careers.html']) +
+      col(t('f_support'), t('f_links3'), ['help.html', 'openContactModal()', 'terms.html']) +
     '</div>' +
     '<div class="footer-bottom">' +
       '<span>' + t('rights') + '</span>' +
