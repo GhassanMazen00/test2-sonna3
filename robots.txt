@@ -1,0 +1,16 @@
+# Sonnaع — https://sonna3.net
+User-agent: *
+Allow: /
+
+# Private / app pages — no value to index
+Disallow: /account.html
+Disallow: /dashboard.html
+Disallow: /my-factory.html
+Disallow: /edit-factory.html
+Disallow: /messages.html
+Disallow: /favorites.html
+Disallow: /admin.html
+Disallow: /payment-return.html
+Disallow: /unsubscribe.html
+
+Sitemap: https://sonna3.net/sitemap.xml

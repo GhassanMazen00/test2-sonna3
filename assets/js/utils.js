@@ -38,6 +38,37 @@ function formatHours(h) {
   return [dStr, tStr].filter(Boolean).join(' · ');
 }
 
+// Update page SEO tags at runtime (used by the JS-rendered detail pages so
+// crawlers that execute JavaScript see a real title, description and metadata).
+function seoSet(o) {
+  o = o || {};
+  function meta(selector, attr, key, val) {
+    if (val == null) return;
+    var el = document.head.querySelector(selector);
+    if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
+    el.setAttribute('content', String(val));
+  }
+  if (o.title) document.title = o.title;
+  if (o.description != null) meta('meta[name="description"]', 'name', 'description', o.description);
+  meta('meta[property="og:title"]', 'property', 'og:title', o.title);
+  meta('meta[property="og:description"]', 'property', 'og:description', o.description);
+  meta('meta[property="og:image"]', 'property', 'og:image', o.image);
+  meta('meta[name="twitter:title"]', 'name', 'twitter:title', o.title);
+  meta('meta[name="twitter:description"]', 'name', 'twitter:description', o.description);
+  meta('meta[name="twitter:image"]', 'name', 'twitter:image', o.image);
+  if (o.canonical) {
+    var c = document.head.querySelector('link[rel="canonical"]');
+    if (!c) { c = document.createElement('link'); c.setAttribute('rel', 'canonical'); document.head.appendChild(c); }
+    c.setAttribute('href', o.canonical);
+    meta('meta[property="og:url"]', 'property', 'og:url', o.canonical);
+  }
+  if (o.jsonld) {
+    var s = document.getElementById('seo-jsonld');
+    if (!s) { s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'seo-jsonld'; document.head.appendChild(s); }
+    s.textContent = JSON.stringify(o.jsonld);
+  }
+}
+
 // Valid Egyptian mobile: 010/011/012/015 + 8 digits, with optional +20 / 0.
 function isEgyptMobile(v) {
   var d = String(v || '').replace(/[^\d]/g, '').replace(/^0020/, '').replace(/^20/, '').replace(/^0/, '');

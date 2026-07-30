@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
-<title>تفاصيل الطلب | صُنّاع</title>
+<title>Manufacturing Request | صُنّاع Sonnaع</title>
+<meta name="description" content="A buyer's manufacturing request on Sonnaع. Verified Egyptian factories can respond directly.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Sonnaع">
+<meta property="og:title" content="Manufacturing Request — Sonnaع">
+<meta property="og:description" content="A buyer's manufacturing request on Sonnaع. Verified Egyptian factories can respond directly.">
+<meta property="og:image" content="https://sonna3.net/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sonna3.net/assets/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -81,6 +89,13 @@ function renderRequest(r) {
         '</div>';
 
   window.CURRENT_REQ = r;   // for the owner's Edit action
+
+  // Per-request SEO for JS-rendering crawlers.
+  if (window.seoSet) seoSet({
+    title: (r.title || 'Manufacturing request') + ' — Manufacturing request | Sonnaع',
+    description: (String(r.description || '') || ('A manufacturing request on Sonnaع.')).replace(/\s+/g, ' ').trim().slice(0, 160),
+    canonical: 'https://sonna3.net/request-detail.html?id=' + encodeURIComponent(r.id)
+  });
   var ownerActions = mine
     ? '<div class="req-owner-actions">' +
         '<button class="btn btn-ghost btn-sm" onclick="editThisRequest()">' + ICONS.wrench + ' ' + t('req_edit') + '</button>' +
