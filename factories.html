@@ -280,18 +280,20 @@ function renderFactoryList() {
     return true;
   });
 
+  // Higher subscription tiers rank first (Platinum > Gold > Basic > others).
+  function rk(f) { return window.factoryRank ? factoryRank(f) : 0; }
   if (FILTERS.q) {
-    // Searching: closest matches first (exact/starts-with name beats a
-    // buried substring), then break ties by the chosen sort.
+    // Searching: closest matches first, then tier, then the chosen sort.
     list.sort(function(a, b) {
       var d = relevanceScore(b, FILTERS.q) - relevanceScore(a, FILTERS.q);
       if (d) return d;
+      var r = rk(b) - rk(a); if (r) return r;
       return FILTERS.sort === 'moq' ? a.moq - b.moq : L(a.name).localeCompare(L(b.name), LANG);
     });
   } else if (FILTERS.sort === 'moq') {
-    list.sort(function(a, b) { return a.moq - b.moq; });
+    list.sort(function(a, b) { var r = rk(b) - rk(a); if (r) return r; return a.moq - b.moq; });
   } else {
-    list.sort(function(a, b) { return L(a.name).localeCompare(L(b.name), LANG); });
+    list.sort(function(a, b) { var r = rk(b) - rk(a); if (r) return r; return L(a.name).localeCompare(L(b.name), LANG); });
   }
   
   document.getElementById('resultsCount').textContent = num(list.length);

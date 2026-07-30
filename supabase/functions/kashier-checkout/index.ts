@@ -18,8 +18,16 @@ const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const MID = Deno.env.get("KASHIER_MID") ?? "";
 const PAYMENT_API_KEY = Deno.env.get("KASHIER_PAYMENT_API_KEY") ?? "";
 const MODE = Deno.env.get("KASHIER_MODE") ?? "test";
-const AMOUNT = Deno.env.get("KASHIER_VERIFIED_AMOUNT") ?? "500"; // EGP
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "").replace(/\/+$/, "");
+
+// Per-tier monthly price (EGP). Override with secrets to change pricing without
+// a redeploy. KASHIER_VERIFIED_AMOUNT is kept as a fallback for the old plan id.
+const PLAN_AMOUNTS: Record<string, string> = {
+  basic: Deno.env.get("KASHIER_BASIC_AMOUNT") ?? "500",
+  gold: Deno.env.get("KASHIER_GOLD_AMOUNT") ?? "1200",
+  platinum: Deno.env.get("KASHIER_PLATINUM_AMOUNT") ?? "2500",
+  verified: Deno.env.get("KASHIER_VERIFIED_AMOUNT") ?? "500",
+};
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -61,14 +69,16 @@ Deno.serve(async (req) => {
     if (uErr || !user) { console.log("checkout: no user", uErr?.message); return json({ error: "Please log in again." }, 200); }
     console.log("checkout: user", user.id);
 
-    const amount = String(AMOUNT);
     const currency = "EGP";
-    const plan = "verified";
 
-    // Subscriber contact details (required; the client validates too).
+    // Subscriber contact details + chosen plan (the client validates too).
     const body = await req.json().catch(() => ({}));
     const subName = String(body?.name ?? "").trim();
     const subPhone = String(body?.phone ?? "").trim();
+    let plan = String(body?.plan ?? "basic").trim().toLowerCase();
+    if (!(plan in PLAN_AMOUNTS)) plan = "basic";
+    if (plan === "verified") plan = "basic";   // migrate legacy id
+    const amount = String(PLAN_AMOUNTS[plan]);
     if (!subName) return json({ error: "Your full name is required." }, 200);
     if (!subPhone) return json({ error: "A mobile number is required." }, 200);
 

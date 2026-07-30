@@ -138,6 +138,14 @@
         return !!(f && f.verified && !f.deletion_requested);
       }).catch(function () { return false; });
     },
+    // The subscription tier of the signed-in verified owner ('' if none). Used
+    // to gate tier perks like how soon they can contact a new request.
+    myVerifiedPlan: function () {
+      if (!this.isLoggedIn()) return Promise.resolve('');
+      return this.myFactory().then(function (f) {
+        return (f && f.verified && !f.deletion_requested && f.plan && f.plan !== 'none') ? f.plan : '';
+      }).catch(function () { return ''; });
+    },
     createFactory: function (name, sector, gov) {
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/rest/v1/factories', {

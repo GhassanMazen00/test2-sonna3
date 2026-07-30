@@ -43,32 +43,14 @@ function verifyBox(fac) {
       '<div class="lock-note" style="color:var(--ink)">' + ICONS.clock + ' <b>' + t('mf_req_done') + '</b></div>' +
       '<p class="muted" style="margin-top:8px">' + t('ver_requested_note') + '</p></div>';
   }
-  var L = PLAN_LIMITS;
-  function benefit(icon, title, note) {
-    return '<li class="plan-benefit">' +
-      '<span class="plan-benefit-ic">' + icon + '</span>' +
-      '<span><b>' + title + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</span>' +
-    '</li>';
-  }
-  return '<div class="plan-card">' +
-    '<div class="plan-card-head">' +
+  return '<div style="margin-bottom:8px">' +
+    '<div style="text-align:center;max-width:640px;margin:0 auto 22px">' +
       '<span class="plan-badge">' + ICONS.shieldCheck + ' ' + t('plan_tag') + '</span>' +
-      '<h2>' + t('plan_title') + '</h2>' +
-      '<p>' + t('plan_sub') + '</p>' +
+      '<h2 style="font-size:26px;font-weight:800;margin:12px 0 6px">' + t('tiers_title') + '</h2>' +
+      '<p class="muted">' + t('tiers_sub') + '</p>' +
     '</div>' +
-    '<ul class="plan-benefits">' +
-      benefit(ICONS.shieldCheck, t('plan_f_badge'), t('plan_f_badge_n')) +
-      benefit(ICONS.factory,     t('plan_f_profile'), t('plan_f_profile_n')) +
-      benefit(ICONS.image,       t('plan_f_media').replace('{i}', L.mediaImages).replace('{v}', L.mediaVideos), t('plan_f_media_n')) +
-      benefit(ICONS.clipboard,   t('plan_f_rfq').replace('{n}', L.rfqPerMonth), t('plan_f_rfq_n')) +
-      benefit(ICONS.sparkle,     t('plan_f_priority'), t('plan_f_priority_n')) +
-      benefit(ICONS.eye,         t('plan_f_analytics'), t('plan_f_analytics_n')) +
-      benefit(ICONS.chat,        t('plan_f_support'), t('plan_f_support_n')) +
-    '</ul>' +
-    '<div class="plan-card-foot">' +
-      '<button class="btn btn-primary btn-lg" onclick="startSubscribe(\'verified\')">' + t('plan_cta') + '</button>' +
-      '<p class="plan-note">' + t('plan_pay_note') + '</p>' +
-    '</div>' +
+    pricingTableHTML(factoryPlan(AdminStore.rowToFactory(fac))) +
+    '<p class="plan-note" style="text-align:center;margin-top:16px">' + t('plan_pay_note') + '</p>' +
   '</div>';
 }
 

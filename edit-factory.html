@@ -59,7 +59,9 @@ function tagAdd(key) {
   var el = document.getElementById('taginput_' + key); if (!el) return;
   var v = el.value.trim(); if (!v) return;
   TAGS[key] = TAGS[key] || [];
-  if (TAGS[key].length >= 40) { el.value = ''; return; }
+  // Products are capped by the factory's plan tier; capabilities/services at 40.
+  var cap = (key.indexOf('prod') === 0 && window.MYLIM) ? window.MYLIM.products : 40;
+  if (TAGS[key].length >= cap) { el.value = ''; if (window.toast) toast(t('ef_limit_reached')); return; }
   if (TAGS[key].indexOf(v) < 0) TAGS[key].push(v);
   el.value = '';
   document.getElementById('tagchips_' + key).innerHTML = tagChipsHTML(key);
@@ -156,7 +158,9 @@ function onMediaFor(input, key) {
   var files = Array.prototype.slice.call(input.files || []);
   if (!files.length) return;
   var note = document.getElementById('note_' + key);
-  var lim = window.PLAN_LIMITS || { mediaImages: 10, mediaVideos: 2 };
+  // Per-tier caps: photos and videos come from the factory's plan.
+  var ml = window.MYLIM || { photos: 10, videos: 2 };
+  var lim = { mediaImages: ml.photos, mediaVideos: ml.videos };
   var cur = EDIT[key] || [];
   var roomImg = Math.max(0, lim.mediaImages - cur.filter(function (x) { return x.type !== 'video'; }).length);
   var roomVid = Math.max(0, lim.mediaVideos - cur.filter(function (x) { return x.type === 'video'; }).length);
@@ -199,6 +203,7 @@ function mediaPanel(key, title, hint) {
 function renderEditor(fac) {
   var d = fac.data || {};
   EDIT = { id: fac.id, data: d, logo: d.logo || '', cover: d.cover || '', media: (d.media || []).slice(), productMedia: (d.productMedia || []).slice() };
+  window.MYLIM = window.planLimitsFor ? planLimitsFor(fac.plan) : { photos: 10, videos: 2, products: 40 };
   var name = d.name || { en: fac.name || '', ar: fac.name || '' };
   var sectorOpts = INDUSTRIES.map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === fac.sector ? ' selected' : '') + '>' + esc(L({ en: s.en, ar: s.ar })) + '</option>'; }).join('');
   var govOpts = GOVS.map(function (g, ix) { return '<option value="' + ix + '"' + (ix === fac.gov ? ' selected' : '') + '>' + esc(L(g)) + '</option>'; }).join('');

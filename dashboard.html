@@ -65,8 +65,8 @@ function openQuoteModal(rfqId) {
     alert(t('rfq_verify_to_respond') + '\n' + t('rfq_verify_note'));
     return;
   }
-  var cap = (window.PLAN_LIMITS && PLAN_LIMITS.rfqPerMonth) || 15;
-  if ((window.RFQ_USED || 0) >= cap) {
+  var cap = (window.FAC_LIM && window.FAC_LIM.rfqPerMonth != null) ? window.FAC_LIM.rfqPerMonth : 15;
+  if (isFinite(cap) && (window.RFQ_USED || 0) >= cap) {
     alert(t('limit_rfq_title') + '\n' + t('limit_rfq_msg').replace('{n}', cap));
     return;
   }
@@ -142,6 +142,9 @@ function renderDashboard() {
       var rfqs = res[4] || [];
       window.RFQ_USED = res[6] || 0;   // quotes sent this month (for the monthly cap)
       window.FAC_VERIFIED = !!fac.verified;   // only verified factories may reply to RFQs
+      window.FAC_PLAN = fac.plan || 'none';   // subscription tier (for per-tier limits)
+      window.FAC_LIM = window.planLimitsFor ? planLimitsFor(window.FAC_PLAN) : { rfqPerMonth: 15, stats: 'basic' };
+      window.FAC_STATS = (window.planTier && planTier(window.FAC_PLAN)) ? planTier(window.FAC_PLAN).stats : 'basic';
       var matches = (res[5] || []).filter(function (r) {
         if (String(r.owner) === String(me)) return false;
         return (r.sector && r.sector === fac.sector) || (r.gov != null && String(r.gov) === String(fac.gov));
@@ -172,7 +175,7 @@ function renderDashboard() {
 
         '<div class="panel"><h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
           (fac.verified
-            ? '<div class="muted" style="font-size:12.5px;margin:-2px 0 10px">' + t('rfq_quota').replace('{used}', num(window.RFQ_USED)).replace('{n}', num(PLAN_LIMITS.rfqPerMonth)) + '</div>'
+            ? '<div class="muted" style="font-size:12.5px;margin:-2px 0 10px">' + t('rfq_quota').replace('{used}', num(window.RFQ_USED)).replace('{n}', (isFinite(window.FAC_LIM.rfqPerMonth) ? num(window.FAC_LIM.rfqPerMonth) : (LANG === 'ar' ? 'غير محدود' : 'Unlimited'))) + '</div>'
             : '') +
           (rfqs.length ? rfqs.map(rfqOwnerCard).join('') : '<p class="muted">' + t('rfq_none') + '</p>') +
         '</div>' +

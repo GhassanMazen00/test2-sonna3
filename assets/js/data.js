@@ -11,6 +11,50 @@ window.PLAN_LIMITS = {
   rfqPerMonth: 15    // buyer quote-requests a verified factory may answer / calendar month
 };
 
+// ---------------------------------------------------------------------------
+// Subscription tiers. Prices are display values (EGP / month) — the Kashier
+// checkout Edge Function is the source of truth for what's actually charged
+// (set KASHIER_BASIC_AMOUNT / KASHIER_GOLD_AMOUNT / KASHIER_PLATINUM_AMOUNT to
+// match). Infinity = unlimited. `requestDelayHours` = how long after a buyer
+// posts a request before this tier may contact them (access speed).
+// ---------------------------------------------------------------------------
+window.PLAN_TIERS = [
+  {
+    id: 'basic', priceEGP: 500, color: '#0E6B5E',
+    name: { en: 'Basic', ar: 'الباقة الأساسية' },
+    tagline: { en: 'A strong start reaching customers', ar: 'لبداية قوية في الوصول للعملاء' },
+    limits: { photos: 3, videos: 0, products: 20, rfqPerMonth: 20, requestDelayHours: 12 },
+    ranking: 1, homepage: 'none', stats: 'basic', video: false, support: false, matchNotify: false
+  },
+  {
+    id: 'gold', priceEGP: 1200, color: '#C98A2B',
+    name: { en: 'Gold', ar: 'الباقة الذهبية' },
+    tagline: { en: 'More opportunities & premium visibility', ar: 'فرص أكثر وظهور مميز' },
+    limits: { photos: 7, videos: 1, products: 100, rfqPerMonth: 75, requestDelayHours: 1 },
+    ranking: 2, homepage: 'rotate', stats: 'advanced', video: true, support: true, matchNotify: true
+  },
+  {
+    id: 'platinum', priceEGP: 2500, color: '#1D5FA8',
+    name: { en: 'Platinum', ar: 'الباقة البلاتينية' },
+    tagline: { en: 'Best visibility & biggest opportunities', ar: 'أفضل ظهور وأكبر فرص' },
+    limits: { photos: 20, videos: 3, products: Infinity, rfqPerMonth: Infinity, requestDelayHours: 0 },
+    ranking: 3, homepage: 'priority', stats: 'pro', video: true, support: true, matchNotify: true
+  }
+];
+window.PLAN_TIER_MAP = {};
+window.PLAN_TIERS.forEach(function (tr) { PLAN_TIER_MAP[tr.id] = tr; });
+window.planTier = function (id) { return PLAN_TIER_MAP[id] || null; };
+// The plan id of a runtime factory (from its protected `plan` column). Returns
+// '' when the factory isn't on a paid tier.
+window.factoryPlan = function (f) { return (f && f.plan && PLAN_TIER_MAP[f.plan]) ? f.plan : ''; };
+window.factoryRank = function (f) { var t = PLAN_TIER_MAP[f && f.plan]; return t ? t.ranking : 0; };
+// Limits for a given plan id. Unknown/none -> everything zeroed (locked).
+window.planLimitsFor = function (planId) {
+  var t = PLAN_TIER_MAP[planId];
+  if (!t) return { tier: '', photos: 0, videos: 0, products: 0, rfqPerMonth: 0, requestDelayHours: 0 };
+  return Object.assign({ tier: t.id }, t.limits);
+};
+
 const INDUSTRIES = [
   { id: "textile", en: "Textile & Apparel", ar: "المنسوجات والملابس", icon: ICONS.textile, g: ["#0E6B5E", "#12897A"] },
   { id: "packaging", en: "Packaging & Printing", ar: "التعبئة والطباعة", icon: ICONS.box, g: ["#C98A2B", "#E0A94F"] },
