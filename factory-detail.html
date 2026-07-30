@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
-<title>ملف المصنع | صُنّاع</title>
+<title>Factory Profile | صُنّاع Sonnaع</title>
+<meta name="description" content="View an Egyptian factory's products, capabilities, certifications and contact details on Sonnaع.">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Sonnaع">
+<meta property="og:title" content="Factory Profile — Sonnaع">
+<meta property="og:description" content="View an Egyptian factory's products, capabilities, certifications and contact details on Sonnaع.">
+<meta property="og:image" content="https://sonna3.net/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sonna3.net/assets/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -248,6 +256,26 @@ document.addEventListener('DOMContentLoaded', function() {
   var emailAddr = f.email || ('info@' + slug + '.example');
   var siteUrl = f.website || (slug + '.example.com');
   
+  // Per-factory SEO: real title, description, canonical + structured data so
+  // crawlers that render JS index this page properly.
+  (function () {
+    var indName = L({ en: id.en, ar: id.ar });
+    var title = L(f.name) + ' — ' + indName + ' | Sonnaع';
+    var desc = (L(f.desc) || (L(f.name) + ' — a ' + indName + ' manufacturer in Egypt on Sonnaع.')).replace(/\s+/g, ' ').trim().slice(0, 160);
+    var canonical = 'https://sonna3.net/factory-detail.html?id=' + encodeURIComponent(f.id);
+    var img = (f.cover || f.logo); if (img && !/^https?:/.test(img)) img = null;
+    var seo = { title: title, description: desc, canonical: canonical, image: img || 'https://sonna3.net/assets/og-image.png' };
+    if (!locked) {
+      seo.jsonld = {
+        '@context': 'https://schema.org', '@type': 'Organization',
+        name: L(f.name), description: desc, url: canonical,
+        image: img || 'https://sonna3.net/assets/og-image.png',
+        address: { '@type': 'PostalAddress', addressRegion: (f.gov ? L(f.gov) : undefined), addressCountry: 'EG' }
+      };
+    }
+    if (window.seoSet) seoSet(seo);
+  })();
+
   var app = document.getElementById('app');
   app.innerHTML = headerHTML() + mobileMenuHTML() + '<main>' +
     '<div class="container">' +

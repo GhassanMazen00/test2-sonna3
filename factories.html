@@ -4,7 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
-<title>دليل المصانع | صُنّاع</title>
+<title>Egyptian Factories Directory — Browse Manufacturers | صُنّاع Sonnaع</title>
+<meta name="description" content="Browse and filter verified Egyptian factories by industry, location, minimum order quantity and certifications. Message manufacturers directly on Sonnaع.">
+<link rel="canonical" href="https://sonna3.net/factories.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sonnaع">
+<meta property="og:url" content="https://sonna3.net/factories.html">
+<meta property="og:title" content="Egyptian Factories Directory — Sonnaع">
+<meta property="og:description" content="Browse and filter verified Egyptian factories by industry, location, capacity and certifications. Message manufacturers directly.">
+<meta property="og:image" content="https://sonna3.net/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sonna3.net/assets/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -45,7 +57,10 @@ document.addEventListener('DOMContentLoaded', function() {
   if (savedFilters) {
     try { FILTERS = JSON.parse(savedFilters); } catch(e) {}
   }
-  
+  // Honor a ?q= search term in the URL (shareable search links + site search).
+  var qParam = new URLSearchParams(window.location.search).get('q');
+  if (qParam != null) { FILTERS.q = qParam; }
+
   // Build the page
   var html = headerHTML() + mobileMenuHTML() + '<main>' +
     '<div class="page-head">' +
