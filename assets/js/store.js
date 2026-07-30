@@ -371,6 +371,7 @@ AdminStore.rowToFactory = function (row) {
     certs: d.certs || [], dailyCapacity: Number(d.dailyCapacity) || 0, monthlyCapacity: Number(d.monthlyCapacity) || 0,
     rating: Number(d.rating) || 0, reviewCount: Number(d.reviewCount) || 0,
     services: normalizeServices(d.services), products: d.products || { en: [], ar: [] }, capabilities: d.capabilities || { en: [], ar: [] },
+    productItems: Array.isArray(d.productItems) ? d.productItems : [],
     hours: d.hours || { en: '', ar: '' }, keywords: d.keywords || '',
     whatsapp: d.whatsapp || '', email: d.email || '', website: d.website || '',
     facebook: d.facebook || '', instagram: d.instagram || '', linkedin: d.linkedin || '',

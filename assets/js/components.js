@@ -295,6 +295,23 @@ var PLAN_FEATURES = [
   { label: { en: 'Instant matching alerts', ar: 'إشعار فوري بالطلبات المطابقة' }, val: function (tr) { return tr.matchNotify; } }
 ];
 
+// Products shown as combined image + name cards. Falls back to legacy name
+// chips when a factory has no productItems. Returns '' when there's nothing.
+function productCardsHTML(f) {
+  var items = (f && Array.isArray(f.productItems)) ? f.productItems : [];
+  if (items.length) {
+    return '<div class="prod-view-grid">' + items.map(function (p) {
+      return '<div class="prod-view">' +
+        (p.img ? '<div class="pv-img" style="background-image:url(\'' + safeUrl(p.img) + '\')"></div>' : '<div class="pv-img empty">' + ICONS.image + '</div>') +
+        '<div class="pv-name">' + esc(p.name || '') + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+  var names = L((f && f.products) || { en: [], ar: [] });
+  if (!names.length) return '';
+  return '<div class="chip-row">' + names.map(function (p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>';
+}
+
 // The three-tier pricing table (used on the factory dashboard/my-factory page).
 // currentPlan highlights the plan the owner is already on.
 function pricingTableHTML(currentPlan) {
