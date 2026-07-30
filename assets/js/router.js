@@ -21,7 +21,11 @@
 function renderHomePage() {
   // Only feature verified factories — an unverified one would open to a locked
   // page, so it shouldn't be showcased in full on the home page.
-  var featured = FACTORIES.filter(function(f) { return f.featured && f.verified !== false; });
+  // Homepage placement is a tier perk: Platinum first, then Gold ("rotating"),
+  // plus any admin-featured factory. Basic factories don't appear here.
+  var featured = FACTORIES
+    .filter(function(f) { return f.verified !== false && (f.featured || (window.factoryRank && factoryRank(f) >= 2)); })
+    .sort(function(a, b) { return (window.factoryRank ? factoryRank(b) - factoryRank(a) : 0); });
   var app = document.getElementById('app');
 
   // Real counts for the hero stats (no more hardcoded numbers).

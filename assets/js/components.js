@@ -269,6 +269,60 @@ function verifyBadge(f) {
   return '<span class="vbadge v-yes">' + ICONS.check + ' ' + t('badge_verified') + '</span>';
 }
 
+// A small tier chip (only surfaced for Gold/Platinum — Basic stays plain).
+function planBadge(f) {
+  var id = (window.factoryPlan ? factoryPlan(f) : (f && f.plan)) || '';
+  var tr = window.planTier ? planTier(id) : null;
+  if (!tr || id === 'basic') return '';
+  return '<span class="tier-chip tier-' + id + '">' + (id === 'platinum' ? ICONS.sparkle : ICONS.star) + ' ' + L(tr.name) + '</span>';
+}
+
+// Feature matrix rows for the pricing table. A value of true/false renders a
+// check / cross; a string renders as text.
+var PLAN_FEATURES = [
+  { label: { en: 'Professional factory page', ar: 'صفحة مصنع احترافية' }, val: function () { return true; } },
+  { label: { en: 'Verified factory badge', ar: 'علامة مصنع موثق' }, val: function () { return true; } },
+  { label: { en: 'Search ranking', ar: 'ترتيب الظهور في نتائج البحث' }, val: function (tr) { return tr.id === 'basic' ? (LANG === 'ar' ? 'عادي' : 'Normal') : tr.id === 'gold' ? (LANG === 'ar' ? 'مميز' : 'Featured') : (LANG === 'ar' ? 'أولوية قصوى' : 'Top priority'); } },
+  { label: { en: 'Factory photos', ar: 'عدد صور المصنع' }, val: function (tr) { return num(tr.limits.photos) + (LANG === 'ar' ? ' صور' : ' photos'); } },
+  { label: { en: 'Intro video', ar: 'فيديو تعريفي' }, val: function (tr) { return tr.video; } },
+  { label: { en: 'Products', ar: 'عدد المنتجات' }, val: function (tr) { return isFinite(tr.limits.products) ? num(tr.limits.products) : (LANG === 'ar' ? 'غير محدود' : 'Unlimited'); } },
+  { label: { en: 'Reply to requests', ar: 'الرد على طلبات التصنيع' }, val: function (tr) { return isFinite(tr.limits.rfqPerMonth) ? (num(tr.limits.rfqPerMonth) + (LANG === 'ar' ? ' شهرياً' : '/mo')) : (LANG === 'ar' ? 'غير محدود' : 'Unlimited'); } },
+  { label: { en: 'Receive company messages', ar: 'استقبال رسائل الشركات' }, val: function () { return true; } },
+  { label: { en: 'Homepage placement', ar: 'الظهور في الصفحة الرئيسية' }, val: function (tr) { return tr.homepage === 'none' ? false : tr.homepage === 'rotate' ? (LANG === 'ar' ? 'بالتناوب' : 'Rotating') : (LANG === 'ar' ? 'بأولوية أعلى' : 'Priority'); } },
+  { label: { en: 'Visit & view analytics', ar: 'إحصائيات الزيارات والمشاهدات' }, val: function (tr) { return tr.stats === 'basic' ? (LANG === 'ar' ? 'أساسية' : 'Basic') : tr.stats === 'advanced' ? (LANG === 'ar' ? 'متقدمة' : 'Advanced') : (LANG === 'ar' ? 'احترافية' : 'Professional'); } },
+  { label: { en: 'Priority support', ar: 'أولوية الدعم الفني' }, val: function (tr) { return tr.support; } },
+  { label: { en: 'Access to new requests', ar: 'سرعة الوصول لطلبات التصنيع الجديدة' }, val: function (tr) { return tr.limits.requestDelayHours === 0 ? (LANG === 'ar' ? 'فوراً عند النشر' : 'Instant') : (LANG === 'ar' ? ('بعد ' + tr.limits.requestDelayHours + ' ساعة') : (tr.limits.requestDelayHours + 'h after posting')); } },
+  { label: { en: 'Instant matching alerts', ar: 'إشعار فوري بالطلبات المطابقة' }, val: function (tr) { return tr.matchNotify; } }
+];
+
+// The three-tier pricing table (used on the factory dashboard/my-factory page).
+// currentPlan highlights the plan the owner is already on.
+function pricingTableHTML(currentPlan) {
+  return '<div class="tier-cards">' + PLAN_TIERS.map(function (tr) {
+    var cur = currentPlan && currentPlan === tr.id;
+    var feats = PLAN_FEATURES.map(function (ft) {
+      var v = ft.val(tr);
+      var disp = v === true ? '<span class="tf-ok">' + ICONS.check + '</span>'
+        : v === false ? '<span class="tf-no">' + ICONS.close + '</span>'
+          : '<span class="tf-val">' + esc(String(v)) + '</span>';
+      return '<li><span class="tf-label">' + L(ft.label) + '</span>' + disp + '</li>';
+    }).join('');
+    return '<div class="tier-card tier-' + tr.id + (tr.id === 'gold' ? ' featured' : '') + '">' +
+      (tr.id === 'gold' ? '<div class="tier-ribbon">' + (LANG === 'ar' ? 'الأكثر شيوعاً' : 'Most popular') + '</div>' : '') +
+      '<div class="tier-head" style="background:' + tr.color + '">' +
+        '<div class="tier-name">' + esc(L(tr.name)) + '</div>' +
+        '<div class="tier-tag">' + esc(L(tr.tagline)) + '</div>' +
+      '</div>' +
+      '<div class="tier-price"><b>' + num(tr.priceEGP) + '</b> <span>' + t('egp') + ' / ' + (LANG === 'ar' ? 'شهر' : 'mo') + '</span></div>' +
+      '<ul class="tier-feats">' + feats + '</ul>' +
+      '<div class="tier-foot">' + (cur
+        ? '<span class="tier-current">' + ICONS.check + ' ' + (LANG === 'ar' ? 'باقتك الحالية' : 'Your current plan') + '</span>'
+        : '<button class="btn btn-primary" style="width:100%" onclick="startSubscribe(\'' + tr.id + '\')">' + (LANG === 'ar' ? 'اشترك الآن' : 'Subscribe') + '</button>') +
+      '</div>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
 // Factory card
 function factoryCardHTML(f) {
   var i = ind(f.industry);

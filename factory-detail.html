@@ -306,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   : '<div class="rating-stars" style="margin-top:8px;color:var(--ink-soft);font-size:13px">' + t('no_reviews_yet') + '</div>') +
                 '<div class="badge-row">' +
                   verifyBadge(f) +
+                  planBadge(f) +
                   '<span class="chip" id="respStat" style="display:none"></span>' +
                   '<span class="chip teal">' + t('moq') + ': ' + num(f.moq) + ' ' + t('units') + '</span>' +
                   (f.exp ? '<span class="chip amber">' + ICONS.globe + ' ' + t('exports') + '</span>' : '') +

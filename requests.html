@@ -68,7 +68,13 @@ function liveRequestCard(r) {
         ? '<div class="req-owner-tag">' + ICONS.user + ' ' + t('req_yours') + '</div>'
         : !window.MY_VERIFIED_OWNER
           ? '<a class="btn btn-ghost btn-sm req-msg-btn" href="my-factory.html" onclick="event.stopPropagation()">' + ICONS.shieldCheck + ' ' + t('rfq_verify_to_respond') + '</a>'
-          : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>') +
+          : (function () {
+              var dh = (window.MY_PLAN && window.planTier && planTier(window.MY_PLAN)) ? planTier(window.MY_PLAN).limits.requestDelayHours : 0;
+              var left = Math.max(0, Math.ceil(dh - (Date.now() - new Date(r.created_at).getTime()) / 3600000));
+              return left > 0
+                ? '<div class="req-owner-tag" style="background:var(--amber-soft);color:#8A5A12">' + ICONS.clock + ' ' + t('req_opens_in').replace('{h}', left) + '</div>'
+                : '<button class="btn btn-primary btn-sm req-msg-btn" onclick="event.stopPropagation();Chat.openWith(\'' + esc(r.owner) + '\',\'' + esc(r.owner_name || 'User').replace(/'/g, '&#39;') + '\',{requestId:\'' + esc(r.id) + '\',requestTitle:\'' + titleAttr + '\'})">' + ICONS.chat + ' ' + t('req_message') + '</button>';
+            })()) +
   '</div>';
 }
 
@@ -115,13 +121,14 @@ document.addEventListener('DOMContentLoaded', function() {
   '</main>' +
   footerHTML();
 
-  var verChk = (window.Auth && Auth.isLoggedIn())
-    ? Auth.isVerifiedOwner().catch(function () { return false; })
-    : Promise.resolve(false);
+  var planChk = (window.Auth && Auth.isLoggedIn())
+    ? Auth.myVerifiedPlan().catch(function () { return ''; })
+    : Promise.resolve('');
 
-  Promise.all([AdminStore.fetchRequests(), verChk]).then(function (res) {
+  Promise.all([AdminStore.fetchRequests(), planChk]).then(function (res) {
     REQ_ROWS = res[0] || [];
-    window.MY_VERIFIED_OWNER = !!res[1];
+    window.MY_PLAN = res[1] || '';
+    window.MY_VERIFIED_OWNER = !!window.MY_PLAN;
     renderReqList();
     if (window.updateChatBadge) updateChatBadge();
   });

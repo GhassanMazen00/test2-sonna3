@@ -375,6 +375,7 @@ AdminStore.rowToFactory = function (row) {
     whatsapp: d.whatsapp || '', email: d.email || '', website: d.website || '',
     facebook: d.facebook || '', instagram: d.instagram || '', linkedin: d.linkedin || '',
     logo: d.logo || '', cover: d.cover || '', media: d.media || [], productMedia: d.productMedia || [],
+    plan: row.plan || 'none', planExpires: row.plan_expires || null,
     verified: !!row.verified, verificationStatus: row.verification_status || (row.verified ? 'visited' : 'unverified'),
     userSubmitted: true, ownerId: row.owner
   };
@@ -384,7 +385,7 @@ AdminStore.rowToFactory = function (row) {
 // separate, admin-only table now). verification_status only exists once
 // payments.sql has been run, so it's requested optionally (see below).
 var FACTORY_PUBLIC_COLS = 'id,owner,name,sector,gov,data,verified,verification_requested,deletion_requested,created_at';
-var FACTORY_PUBLIC_COLS_EXT = 'id,owner,name,sector,gov,data,verified,verification_status,verification_requested,deletion_requested,created_at';
+var FACTORY_PUBLIC_COLS_EXT = 'id,owner,name,sector,gov,data,verified,verification_status,plan,plan_expires,verification_requested,deletion_requested,created_at';
 
 // Fetch all rows from the factories table (public read). Tries the extended
 // column set (with verification_status); if that column doesn't exist yet

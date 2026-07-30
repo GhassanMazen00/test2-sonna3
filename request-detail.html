@@ -64,6 +64,13 @@ function renderRequest(r) {
     return out ? '<div class="req-contacts">' + out + '</div>' : '';
   }
 
+  // Access speed is a tier perk: lower tiers can only contact a request once
+  // it's older than their delay (Basic 12h, Gold 1h, Platinum instant).
+  var tierDelayHrs = (window.MY_PLAN && window.planTier && planTier(window.MY_PLAN)) ? planTier(window.MY_PLAN).limits.requestDelayHours : 0;
+  var reqAgeHrs = (Date.now() - new Date(r.created_at).getTime()) / 3600000;
+  var delayLeft = Math.max(0, Math.ceil(tierDelayHrs - reqAgeHrs));
+  var contactLocked = window.MY_VERIFIED_OWNER && delayLeft > 0;
+
   var contactBox = !signedIn()
     ? '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('req_interested') + '</h2>' +
@@ -81,6 +88,12 @@ function renderRequest(r) {
         '<h2>' + t('req_verify_to_contact') + '</h2>' +
         '<p style="font-size:13px;margin-bottom:12px">' + t('req_verify_contact_note') + '</p>' +
         '<a class="btn btn-primary" href="my-factory.html">' + ICONS.shieldCheck + ' ' + t('req_verify_contact_cta') + '</a></div>'
+    : contactLocked
+    // Verified, but this request hasn't opened to their tier yet.
+    ? '<div class="panel" style="margin:18px 0 0;background:var(--amber-soft);border-color:transparent">' +
+        '<h2>' + t('req_early_title') + '</h2>' +
+        '<p style="font-size:13px;margin-bottom:12px">' + t('req_early_note').replace('{h}', delayLeft) + '</p>' +
+        '<a class="btn btn-primary" href="my-factory.html">' + ICONS.sparkle + ' ' + t('req_early_cta') + '</a></div>'
     : '<div class="panel" style="margin:18px 0 0;background:var(--teal-tint);border-color:transparent">' +
         '<h2>' + t('req_interested') + '</h2>' +
         '<p style="font-size:13px;margin-bottom:12px">' + t('req_message_sub') + '</p>' +
@@ -167,13 +180,14 @@ document.addEventListener('DOMContentLoaded', function() {
   var requestId = params.get('id');
   if (!requestId) { window.location.href = 'requests.html'; return; }
 
-  var verChk = (window.Auth && Auth.isLoggedIn())
-    ? Auth.isVerifiedOwner().catch(function () { return false; })
-    : Promise.resolve(false);
+  var planChk = (window.Auth && Auth.isLoggedIn())
+    ? Auth.myVerifiedPlan().catch(function () { return ''; })
+    : Promise.resolve('');
 
-  Promise.all([AdminStore.getRequest(requestId), verChk]).then(function (res) {
+  Promise.all([AdminStore.getRequest(requestId), planChk]).then(function (res) {
     var r = res[0];
-    window.MY_VERIFIED_OWNER = !!res[1];
+    window.MY_PLAN = res[1] || '';
+    window.MY_VERIFIED_OWNER = !!window.MY_PLAN;
     if (!r) { window.location.href = 'requests.html'; return; }
     renderRequest(r);
   }).catch(function () { window.location.href = 'requests.html'; });
