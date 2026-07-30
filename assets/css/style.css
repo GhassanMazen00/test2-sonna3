@@ -4691,12 +4691,18 @@ button.cert-chip { background: var(--card); color: inherit; font: inherit; font-
   border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
 }
 .tier-card.featured { border-color: var(--amber); box-shadow: 0 14px 40px -18px rgba(201,138,43,.5); }
+/* Centered "most popular" pill — no diagonal banner, so it can't overlap text. */
 .tier-ribbon {
-  position: absolute; top: 14px; inset-inline-end: -34px; transform: rotate(45deg);
-  background: var(--amber); color: #fff; font-size: 10.5px; font-weight: 700;
-  letter-spacing: .04em; padding: 4px 40px; z-index: 2;
+  position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+  background: #fff; color: #B8791F; font-size: 10.5px; font-weight: 800;
+  letter-spacing: .02em; padding: 3px 14px; border-radius: 99px; z-index: 3;
+  white-space: nowrap; box-shadow: 0 2px 7px rgba(0, 0, 0, .2);
 }
-.tier-head { padding: 22px 20px 18px; color: #fff; text-align: center; }
+/* Uniform header on every card (room for the pill) so all three line up. */
+.tier-head {
+  padding: 30px 18px 16px; color: #fff; text-align: center;
+  min-height: 104px; display: flex; flex-direction: column; justify-content: center;
+}
 .tier-name { font-family: var(--font-display); font-weight: 800; font-size: 21px; }
 .tier-tag { font-size: 12.5px; opacity: .92; margin-top: 4px; }
 .tier-price { text-align: center; padding: 16px; border-bottom: 1px solid var(--line); }
@@ -4705,8 +4711,9 @@ button.cert-chip { background: var(--card); color: inherit; font: inherit; font-
 .tier-feats { list-style: none; padding: 8px 18px; margin: 0; flex: 1; }
 .tier-feats li {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 13px;
+  min-height: 48px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px;
 }
+.tier-feats .tf-val { flex: 0 0 auto; max-width: 52%; }
 .tier-feats li:last-child { border-bottom: none; }
 .tier-feats .tf-label { color: var(--ink-soft); }
 .tier-feats .tf-val { font-weight: 700; color: var(--ink); text-align: end; }
