@@ -334,18 +334,12 @@ document.addEventListener('DOMContentLoaded', function() {
           '</div>' +
           '<div class="panel">' +
             '<h2>' + t('products') + '</h2>' +
-            '<div class="chip-row">' + L(prodList).map(function(p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>' +
+            (productCardsHTML(f) || '<div class="chip-row">' + L(prodList).map(function(p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>') +
           '</div>' +
           '<div class="panel">' +
             '<h2>' + t('capabilities') + '</h2>' +
             '<div class="chip-row">' + L(capList).map(function(p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>' +
           '</div>' +
-          ((f.productMedia && f.productMedia.length)
-            ? '<div class="panel">' +
-                '<h2>' + t('ef_product_photos') + '</h2>' +
-                '<div class="gallery">' + galleryHTML(f.productMedia) + '</div>' +
-              '</div>'
-            : '') +
           '<div class="panel">' +
             '<h2>' + t('ef_factory_photos') + '</h2>' +
             '<div class="gallery">' +

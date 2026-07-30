@@ -70,6 +70,68 @@ function tagAdd(key) {
 function tagRemove(key, i) { TAGS[key].splice(i, 1); document.getElementById('tagchips_' + key).innerHTML = tagChipsHTML(key); }
 function tagKey(e, key) { if (e.key === 'Enter') { e.preventDefault(); tagAdd(key); } }
 
+/* ---------- Products (image + name in one card) ---------- */
+var PRODUCTS = [];   // [{ img, name }]
+var PROD_IMG = '';   // staged image for the add box
+function prodInit(items, legacyNames) {
+  if (Array.isArray(items) && items.length) {
+    PRODUCTS = items.map(function (p) { return { img: p.img || '', name: p.name || '' }; });
+  } else {
+    PRODUCTS = (legacyNames || []).map(function (n) { return { img: '', name: n }; });
+  }
+}
+function prodListHTML() {
+  if (!PRODUCTS.length) return '<p class="muted" style="font-size:13px">' + t('ef_no_products') + '</p>';
+  return '<div class="prod-grid">' + PRODUCTS.map(function (p, i) {
+    return '<div class="prod-card">' +
+      (p.img ? '<div class="prod-img" style="background-image:url(\'' + safeUrl(p.img) + '\')"></div>' : '<div class="prod-img empty">' + ICONS.image + '</div>') +
+      '<div class="prod-name">' + esc(p.name) + '</div>' +
+      '<button type="button" class="prod-del" onclick="prodRemove(' + i + ')" aria-label="remove">' + ICONS.close + '</button>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+function prodRefresh() { var el = document.getElementById('prodList'); if (el) el.innerHTML = prodListHTML(); }
+function prodRemove(i) { PRODUCTS.splice(i, 1); prodRefresh(); }
+function prodClearStaged() {
+  PROD_IMG = '';
+  var b = document.getElementById('prodImgPrev');
+  if (b) { b.style.backgroundImage = ''; b.classList.add('empty'); b.innerHTML = ICONS.image; }
+}
+function onProdImg(input) {
+  var f = input.files && input.files[0]; if (!f) return;
+  var note = document.getElementById('prodImgNote'); if (note) note.textContent = t('ef_uploading');
+  Auth.uploadFactoryMedia(f).then(function (url) {
+    PROD_IMG = url;
+    var b = document.getElementById('prodImgPrev');
+    if (b) { b.style.backgroundImage = 'url(\'' + url + '\')'; b.classList.remove('empty'); b.innerHTML = ''; }
+    if (note) note.textContent = '';
+  }).catch(function (e) { if (note) note.textContent = (e.message || e); });
+  input.value = '';
+}
+function prodAdd() {
+  var nameEl = document.getElementById('prodNameInput');
+  var name = nameEl ? nameEl.value.trim() : '';
+  if (!name) { if (window.toast) toast(t('ef_prod_need_name')); return; }
+  var cap = window.MYLIM ? window.MYLIM.products : 40;
+  if (PRODUCTS.length >= cap) { if (window.toast) toast(t('ef_limit_reached')); return; }
+  PRODUCTS.push({ img: PROD_IMG || '', name: name });
+  nameEl.value = ''; prodClearStaged(); prodRefresh(); nameEl.focus();
+}
+function prodKey(e) { if (e.key === 'Enter') { e.preventDefault(); prodAdd(); } }
+function productsPanel() {
+  return '<div class="panel" style="margin-bottom:16px"><h2>' + t('products') + '</h2>' +
+    '<p class="muted" style="font-size:12.5px;margin-bottom:12px">' + t('ef_products_hint2') + '</p>' +
+    '<div class="prod-add">' +
+      '<label class="prod-img-pick" for="prodImgFile"><div class="prod-img empty" id="prodImgPrev">' + ICONS.image + '</div></label>' +
+      '<input id="prodImgFile" type="file" accept="image/*" style="display:none" onchange="onProdImg(this)">' +
+      '<input id="prodNameInput" maxlength="60" placeholder="' + esc(t('ef_prod_name_ph')) + '" onkeydown="prodKey(event)">' +
+      '<button type="button" class="btn btn-primary" onclick="prodAdd()">' + t('ef_add_product') + '</button>' +
+    '</div>' +
+    '<div class="muted" id="prodImgNote" style="font-size:12px;margin:6px 0"></div>' +
+    '<div id="prodList" style="margin-top:14px">' + prodListHTML() + '</div>' +
+  '</div>';
+}
+
 /* ---------- Certifications (predefined toggles + custom) ---------- */
 function certsInit(arr) { CERT_SEL = (arr || []).slice(); }
 function certsRender() {
@@ -211,9 +273,9 @@ function renderEditor(fac) {
   var prod = d.products || { en: [], ar: [] };
   var caps = d.capabilities || { en: [], ar: [] };
 
-  tagInit('prod_en', prod.en); tagInit('prod_ar', prod.ar);
   tagInit('cap_en', caps.en); tagInit('cap_ar', caps.ar);
   tagInit('svc_en', Array.isArray(svc.en) ? svc.en : []); tagInit('svc_ar', Array.isArray(svc.ar) ? svc.ar : []);
+  prodInit(d.productItems, prod.en || []);
   certsInit(d.certs);
   hoursInit(d.hours);
 
@@ -253,7 +315,7 @@ function renderEditor(fac) {
         '<p class="muted" style="font-size:12.5px;margin-bottom:12px">' + t('ef_cert_hint') + '</p>' +
         '<div id="e_certs">' + certsRender() + '</div></div>' +
 
-      listPanel(t('products'), t('ef_products_hint'), 'prod') +
+      productsPanel() +
       listPanel(t('capabilities'), t('ef_caps_hint'), 'cap') +
       listPanel(t('services_title'), t('ef_svc_hint'), 'svc') +
 
@@ -276,7 +338,6 @@ function renderEditor(fac) {
         field(t('ef_cover'), '<div class="media-pick"><div class="media-thumb wide" id="coverPrev" style="background-image:url(\'' + safeUrl(EDIT.cover) + '\')"></div><input type="file" accept="image/*" onchange="onCover(this)"></div>') +
       '</div></div>' +
 
-      mediaPanel('productMedia', t('ef_product_photos'), t('ef_product_photos_hint')) +
       mediaPanel('media', t('ef_factory_photos'), t('ef_factory_photos_hint')) +
 
       '<div style="display:flex;gap:10px;justify-content:flex-end">' +
@@ -298,13 +359,14 @@ function saveFactory() {
     yr: Number(val('e_yr')) || 0, moq: Number(val('e_moq')) || 0, emp: Number(val('e_emp')) || 0,
     phone: val('e_phone'), exp: document.getElementById('e_exp').checked, certs: CERT_SEL.slice(),
     dailyCapacity: Number(val('e_daily')) || 0, monthlyCapacity: Number(val('e_monthly')) || 0,
-    products: { en: (TAGS.prod_en || []).slice(), ar: (TAGS.prod_ar || []).slice() },
+    productItems: PRODUCTS.map(function (p) { return { img: p.img || '', name: p.name }; }),
+    products: { en: PRODUCTS.map(function (p) { return p.name; }), ar: PRODUCTS.map(function (p) { return p.name; }) },
     capabilities: { en: (TAGS.cap_en || []).slice(), ar: (TAGS.cap_ar || []).slice() },
     services: { en: (TAGS.svc_en || []).slice(), ar: (TAGS.svc_ar || []).slice() },
     hours: { days: HOURS.days.slice(), open: HOURS.open || '', close: HOURS.close || '' }, keywords: val('e_keywords'),
     whatsapp: val('e_whatsapp'), email: val('e_email'), website: val('e_website'),
     facebook: val('e_facebook'), instagram: val('e_instagram'), linkedin: val('e_linkedin'),
-    logo: EDIT.logo || '', cover: EDIT.cover || '', media: EDIT.media || [], productMedia: EDIT.productMedia || []
+    logo: EDIT.logo || '', cover: EDIT.cover || '', media: EDIT.media || []
   });
   var sector = document.getElementById('e_sector').value;
   var gov = Number(document.getElementById('e_gov').value);

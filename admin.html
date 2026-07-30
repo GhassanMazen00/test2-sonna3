@@ -369,6 +369,7 @@ function verifiedSubRows() {
         '<td>'+(d.featured?'★':'')+'</td>' +
         '<td><div class="row-actions">' +
           (pending ? '<button class="btn btn-primary btn-sm" onclick="markVisited(\''+row.id+'\')">Mark visited</button>' : '') +
+          planSelectHTML(row.id, row.plan) +
           '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
           '<button class="btn btn-sm btn-danger" onclick="deleteSubmission(\''+row.id+'\')">Delete</button>' +
         '</div></td>' +
@@ -664,6 +665,7 @@ function submissionRows() {
       '<td>'+subStatusChip(row)+deletionChip(row)+'</td>' +
       '<td><div class="row-actions">' +
         (row.verified ? '' : '<button class="btn btn-primary btn-sm" onclick="verifyRow(\''+row.id+'\')">Verify</button>') +
+        planSelectHTML(row.id, row.plan) +
         '<button class="btn btn-ghost btn-sm" onclick="editSubmittedFactory(\''+row.id+'\')">Edit</button>' +
         '<button class="btn btn-sm btn-danger" onclick="deleteSubmission(\''+row.id+'\')">Delete</button>' +
       '</div></td>' +
@@ -729,14 +731,23 @@ function subRpc(fn, body) {
 }
 function subCancel(factoryId, name) {
   if (!confirm('Cancel the subscription for "'+(name||'this factory')+'"? Their factory will be unverified immediately.')) return;
-  subRpc('admin_cancel_subscription', { p_factory: factoryId }).then(function(){ renderSubscriptions(); }).catch(function(e){ alert('Could not cancel: '+(e.message||e)); });
+  subRpc('admin_cancel_subscription', { p_factory: factoryId }).then(function(){ renderTab(); }).catch(function(e){ alert('Could not cancel: '+(e.message||e)); });
 }
 function subExtend(factoryId) {
-  subRpc('admin_extend_subscription', { p_factory: factoryId, p_days: 30 }).then(function(){ renderSubscriptions(); }).catch(function(e){ alert('Could not extend: '+(e.message||e)); });
+  subRpc('admin_extend_subscription', { p_factory: factoryId, p_days: 30 }).then(function(){ renderTab(); }).catch(function(e){ alert('Could not extend: '+(e.message||e)); });
 }
 function subSetPlan(factoryId, sel) {
-  var plan = sel.value; if (!plan) return;
-  subRpc('admin_set_plan', { p_factory: factoryId, p_plan: plan }).then(function(){ renderSubscriptions(); }).catch(function(e){ alert('Could not change plan: '+(e.message||e)); });
+  var plan = sel.value; if (!plan) { return; }
+  if (plan === 'none') { subCancel(factoryId, ''); return; }
+  subRpc('admin_set_plan', { p_factory: factoryId, p_plan: plan }).then(function(){ renderTab(); }).catch(function(e){ alert('Could not set plan: '+(e.message||e)); });
+}
+// A tier selector used in the submissions & factories tables to grant/change a
+// factory's subscription tier manually (no payment).
+function planSelectHTML(factoryId, currentPlan) {
+  var opts = [['none','— No plan —'],['basic','Basic'],['gold','Gold'],['platinum','Platinum']].map(function(o){
+    return '<option value="'+o[0]+'"'+(o[0]===(currentPlan||'none')?' selected':'')+'>'+o[1]+'</option>';
+  }).join('');
+  return '<select title="Set subscription tier" onchange="subSetPlan(\''+factoryId+'\',this)" style="padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:12.5px">'+opts+'</select>';
 }
 function renderSubscriptions() {
   document.getElementById('tabBody').innerHTML =

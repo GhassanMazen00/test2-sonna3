@@ -43,14 +43,12 @@ function verifyBox(fac) {
       '<div class="lock-note" style="color:var(--ink)">' + ICONS.clock + ' <b>' + t('mf_req_done') + '</b></div>' +
       '<p class="muted" style="margin-top:8px">' + t('ver_requested_note') + '</p></div>';
   }
-  return '<div style="margin-bottom:8px">' +
-    '<div style="text-align:center;max-width:640px;margin:0 auto 22px">' +
-      '<span class="plan-badge">' + ICONS.shieldCheck + ' ' + t('plan_tag') + '</span>' +
-      '<h2 style="font-size:26px;font-weight:800;margin:12px 0 6px">' + t('tiers_title') + '</h2>' +
-      '<p class="muted">' + t('tiers_sub') + '</p>' +
-    '</div>' +
-    pricingTableHTML(factoryPlan(AdminStore.rowToFactory(fac))) +
-    '<p class="plan-note" style="text-align:center;margin-top:16px">' + t('plan_pay_note') + '</p>' +
+  return '<div class="panel verify-cta" style="text-align:center">' +
+    '<span class="plan-badge">' + ICONS.shieldCheck + ' ' + t('plan_tag') + '</span>' +
+    '<h2 style="font-size:24px;font-weight:800;margin:12px 0 6px">' + t('tiers_title') + '</h2>' +
+    '<p class="muted" style="max-width:520px;margin:0 auto 18px">' + t('tiers_sub') + '</p>' +
+    '<a class="btn btn-primary btn-lg" href="subscribe.html">' + ICONS.sparkle + ' ' + t('subscribe_now') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
+    '<p class="plan-note" style="margin-top:12px">' + t('plan_pay_note') + '</p>' +
   '</div>';
 }
 
@@ -100,11 +98,8 @@ function verifiedFactoryHTML(fac) {
         '<div class="panel"><h2>' + t('services_title') + '</h2>' +
           (svcNames.length ? '<div class="services-grid">' + svcNames.map(function (n) { return '<div class="service-card"><span class="svc-icon">' + ICONS.wrench + '</span><span>' + esc(n) + '</span></div>'; }).join('') + '</div>' : '<p>' + t('no_services') + '</p>') +
         '</div>' +
-        '<div class="panel"><h2>' + t('products') + '</h2><div class="chip-row">' + L(prodList).map(function (p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div></div>' +
+        '<div class="panel"><h2>' + t('products') + '</h2>' + (productCardsHTML(f) || '<div class="chip-row">' + L(prodList).map(function (p) { return '<span class="chip" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div>') + '</div>' +
         '<div class="panel"><h2>' + t('capabilities') + '</h2><div class="chip-row">' + L(capList).map(function (p) { return '<span class="chip teal" style="font-size:13px;padding:7px 14px">' + esc(p) + '</span>'; }).join('') + '</div></div>' +
-        ((f.productMedia && f.productMedia.length)
-          ? '<div class="panel"><h2>' + t('ef_product_photos') + '</h2><div class="gallery">' + galleryHTML(f.productMedia) + '</div></div>'
-          : '') +
         '<div class="panel"><h2>' + t('ef_factory_photos') + '</h2><div class="gallery">' +
           ((f.media && f.media.length)
             ? galleryHTML(f.media)
