@@ -105,18 +105,28 @@ Deno.serve(async (req) => {
   </div>
 </body></html>`;
 
+    // Plain-text alternative (multipart mail scores better with spam filters).
+    const text = `${n.title || "New notification"}\n\n${n.body ? n.body + "\n\n" : ""}Open Sonnaع: ${link}\n\nUnsubscribe: ${unsub}`;
+    const REPLY_TO = Deno.env.get("REPLY_TO") ?? "";
+
+    const payload: Record<string, unknown> = {
+      from: FROM_EMAIL,
+      to: [email],
+      subject: n.title || "New notification — Sonnaع",
+      html,
+      text,
+      // A real List-Unsubscribe header is a strong deliverability signal.
+      headers: { "List-Unsubscribe": `<${unsub}>` },
+    };
+    if (REPLY_TO) payload.reply_to = REPLY_TO;
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [email],
-        subject: n.title || "New notification — Sonnaع",
-        html,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
