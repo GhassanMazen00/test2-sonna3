@@ -216,36 +216,62 @@ function mediaPreviews(key) {
 }
 function refreshMedia(key) { var el = document.getElementById('wrap_' + key); if (el) el.innerHTML = mediaPreviews(key); }
 function removeMedia(key, i) { EDIT[key].splice(i, 1); refreshMedia(key); }
+// Read a video file's duration (seconds) in the browser before uploading.
+function videoDuration(file) {
+  return new Promise(function (resolve) {
+    try {
+      var v = document.createElement('video'); v.preload = 'metadata';
+      v.onloadedmetadata = function () { var d = v.duration; try { URL.revokeObjectURL(v.src); } catch (e) {} resolve(isFinite(d) ? Math.round(d) : 0); };
+      v.onerror = function () { resolve(0); };
+      v.src = URL.createObjectURL(file);
+    } catch (e) { resolve(0); }
+  });
+}
 function onMediaFor(input, key) {
   var files = Array.prototype.slice.call(input.files || []);
   if (!files.length) return;
   var note = document.getElementById('note_' + key);
-  // Per-tier caps: photos and videos come from the factory's plan.
-  var ml = window.MYLIM || { photos: 10, videos: 2 };
+  // Per-tier caps: photos, videos, and video length come from the factory's plan.
+  var ml = window.MYLIM || { photos: 10, videos: 2, videoMaxSec: 0 };
   var lim = { mediaImages: ml.photos, mediaVideos: ml.videos };
+  var maxSec = ml.videoMaxSec || 0;
   var cur = EDIT[key] || [];
   var roomImg = Math.max(0, lim.mediaImages - cur.filter(function (x) { return x.type !== 'video'; }).length);
   var roomVid = Math.max(0, lim.mediaVideos - cur.filter(function (x) { return x.type === 'video'; }).length);
-  var accepted = [], trimmed = false;
-  files.forEach(function (f) {
-    var isVid = f.type && f.type.indexOf('video') === 0;
-    if (isVid) { if (roomVid > 0) { accepted.push(f); roomVid--; } else trimmed = true; }
-    else { if (roomImg > 0) { accepted.push(f); roomImg--; } else trimmed = true; }
-  });
-  if (!accepted.length) {
-    input.value = '';
-    alert(t('limit_media_title') + '\n' + t('limit_media_msg').replace('{i}', lim.mediaImages).replace('{v}', lim.mediaVideos));
-    return;
-  }
   if (note) note.textContent = t('ef_uploading');
-  Promise.all(accepted.map(function (f) {
-    return Auth.uploadFactoryMedia(f).then(function (url) { return { url: url, type: (f.type && f.type.indexOf('video') === 0) ? 'video' : 'image' }; });
-  })).then(function (items) {
-    EDIT[key] = (EDIT[key] || []).concat(items); refreshMedia(key);
-    if (note) note.textContent = '';
-    input.value = '';
-    if (trimmed) alert(t('limit_media_title') + '\n' + t('limit_media_msg').replace('{i}', lim.mediaImages).replace('{v}', lim.mediaVideos));
-  }).catch(function (e) { if (note) note.textContent = (e.message || e); });
+  // Measure durations first so over-length videos are rejected before upload.
+  Promise.all(files.map(function (f) {
+    var isVid = f.type && f.type.indexOf('video') === 0;
+    return isVid ? videoDuration(f).then(function (d) { return { f: f, vid: true, dur: d }; }) : Promise.resolve({ f: f, vid: false, dur: 0 });
+  })).then(function (metas) {
+    var accepted = [], trimmed = false, tooLong = false;
+    metas.forEach(function (m) {
+      if (m.vid) {
+        if (maxSec && m.dur > maxSec + 1) { tooLong = true; return; }
+        if (roomVid > 0) { accepted.push(m); roomVid--; } else trimmed = true;
+      } else {
+        if (roomImg > 0) { accepted.push(m); roomImg--; } else trimmed = true;
+      }
+    });
+    if (tooLong) alert(t('ef_video_too_long').replace('{m}', Math.round(maxSec / 60)));
+    if (!accepted.length) {
+      input.value = ''; if (note) note.textContent = '';
+      if (!tooLong) alert(t('limit_media_title') + '\n' + t('limit_media_msg').replace('{i}', lim.mediaImages).replace('{v}', lim.mediaVideos));
+      return;
+    }
+    Promise.all(accepted.map(function (m) {
+      return Auth.uploadFactoryMedia(m.f).then(function (url) {
+        var item = { url: url, type: m.vid ? 'video' : 'image' };
+        if (m.vid) item.dur = m.dur;   // stamped so the server can sanity-check
+        return item;
+      });
+    })).then(function (items) {
+      EDIT[key] = (EDIT[key] || []).concat(items); refreshMedia(key);
+      if (note) note.textContent = '';
+      input.value = '';
+      if (trimmed) alert(t('limit_media_title') + '\n' + t('limit_media_msg').replace('{i}', lim.mediaImages).replace('{v}', lim.mediaVideos));
+    }).catch(function (e) { if (note) note.textContent = (e.message || e); });
+  });
 }
 function onLogo(input) { uploadInto(input, function (url) { EDIT.logo = url; var b = document.getElementById('logoPrev'); if (b) b.style.backgroundImage = 'url(\'' + url + '\')'; }); }
 function onCover(input) { uploadInto(input, function (url) { EDIT.cover = url; var b = document.getElementById('coverPrev'); if (b) b.style.backgroundImage = 'url(\'' + url + '\')'; }); }
