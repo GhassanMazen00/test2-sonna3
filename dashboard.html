@@ -162,16 +162,42 @@ function renderDashboard() {
 
       var recentReviews = reviews.slice(0, 3);
 
-      var dashBody =
+      // Analytics is a tier perk: Basic gets none, Gold "advanced", Platinum
+      // "professional" (advanced + a performance panel). Everyone verified keeps
+      // their leads (incoming RFQs + matching requests) below.
+      var statGrid =
         '<div class="stat-grid">' +
           statTile(ICONS.eye, num(views), t('dash_views'), true) +
           statTile(ICONS.chat, num((stats && stats.threads) || 0), t('dash_convos')) +
           statTile(ICONS.star, reviews.length ? avgRating + ' <small>(' + num(reviews.length) + ')</small>' : t('new_badge'), t('reviews_title')) +
           statTile(ICONS.heart, num(saves), t('dash_saves')) +
           statTile(ICONS.clipboard, num(rfqs.length) + (openRfqs ? ' <small>(' + num(openRfqs) + ' ' + t('dash_open') + ')</small>' : ''), t('rfq_incoming')) +
-        '</div>' +
+        '</div>';
 
-        respLine +
+      var proPanel = '';
+      if (window.FAC_STATS === 'pro') {
+        var conv = views ? Math.round((rfqs.length / views) * 1000) / 10 : 0;
+        var saveRate = views ? Math.round((saves / views) * 1000) / 10 : 0;
+        proPanel =
+          '<div class="panel"><h2>' + t('dash_pro_title') + ' <span class="tier-chip tier-platinum" style="vertical-align:middle">' + ICONS.sparkle + ' ' + t('dash_pro_badge') + '</span></h2>' +
+            '<div class="stat-grid">' +
+              statTile(ICONS.clipboard, conv + '%', t('dash_conv')) +
+              statTile(ICONS.heart, saveRate + '%', t('dash_save_rate')) +
+              statTile(ICONS.chat, (stats && stats.rate != null ? stats.rate + '%' : '—'), t('dash_resp_rate')) +
+            '</div></div>';
+      }
+
+      var analyticsHTML = (window.FAC_STATS === 'none' || !window.FAC_STATS)
+        ? '<div class="panel dash-stats-lock">' +
+            '<span class="dash-lock-ic">' + ICONS.chartBar + '</span>' +
+            '<h2>' + t('dash_stats_locked_title') + '</h2>' +
+            '<p class="muted">' + t('dash_stats_locked_msg') + '</p>' +
+            '<a class="btn btn-primary btn-sm" href="subscribe.html">' + ICONS.sparkle + ' ' + t('dash_stats_upgrade') + '</a>' +
+          '</div>'
+        : (statGrid + respLine + proPanel);
+
+      var dashBody =
+        analyticsHTML +
 
         '<div class="panel"><h2>' + t('rfq_incoming') + (rfqs.length ? ' <span class="rating-count">(' + num(rfqs.length) + ')</span>' : '') + '</h2>' +
           (fac.verified

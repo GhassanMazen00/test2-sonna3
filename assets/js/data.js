@@ -23,21 +23,21 @@ window.PLAN_TIERS = [
     id: 'basic', priceEGP: 500, color: '#0E6B5E',
     name: { en: 'Basic', ar: 'الباقة الأساسية' },
     tagline: { en: 'A strong start reaching customers', ar: 'لبداية قوية في الوصول للعملاء' },
-    limits: { photos: 3, videos: 0, products: 20, rfqPerMonth: 20, requestDelayHours: 12 },
-    ranking: 1, homepage: 'none', stats: 'basic', video: false, support: false, matchNotify: false
+    limits: { photos: 3, videos: 0, videoMaxSec: 0, products: 20, rfqPerMonth: 20, requestDelayHours: 12 },
+    ranking: 1, homepage: 'none', stats: 'none', video: false, support: false, matchNotify: false
   },
   {
     id: 'gold', priceEGP: 1200, color: '#C98A2B',
     name: { en: 'Gold', ar: 'الباقة الذهبية' },
     tagline: { en: 'More opportunities & premium visibility', ar: 'فرص أكثر وظهور مميز' },
-    limits: { photos: 7, videos: 1, products: 100, rfqPerMonth: 75, requestDelayHours: 1 },
+    limits: { photos: 7, videos: 1, videoMaxSec: 60, products: 100, rfqPerMonth: 75, requestDelayHours: 1 },
     ranking: 2, homepage: 'rotate', stats: 'advanced', video: true, support: true, matchNotify: true
   },
   {
     id: 'platinum', priceEGP: 2500, color: '#1D5FA8',
     name: { en: 'Platinum', ar: 'الباقة البلاتينية' },
     tagline: { en: 'Best visibility & biggest opportunities', ar: 'أفضل ظهور وأكبر فرص' },
-    limits: { photos: 20, videos: 3, products: Infinity, rfqPerMonth: Infinity, requestDelayHours: 0 },
+    limits: { photos: 20, videos: 1, videoMaxSec: 300, products: Infinity, rfqPerMonth: Infinity, requestDelayHours: 0 },
     ranking: 3, homepage: 'priority', stats: 'pro', video: true, support: true, matchNotify: true
   }
 ];
