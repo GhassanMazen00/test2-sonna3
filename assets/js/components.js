@@ -176,7 +176,7 @@ function galleryItem(m) {
 function galleryHTML(media) { return (media || []).map(galleryItem).join(''); }
 
 window.openLightbox = function (btn) {
-  var group = btn.closest ? btn.closest('.gallery') : null;
+  var group = btn.closest ? (btn.closest('.gallery') || btn.closest('.prod-view-grid')) : null;
   var items = group ? Array.prototype.slice.call(group.querySelectorAll('.lb-ph')) : [btn];
   var media = items.map(function (b) { return { url: b.getAttribute('data-url'), type: b.getAttribute('data-type') }; });
   var idx = items.indexOf(btn); if (idx < 0) idx = 0;
@@ -302,7 +302,9 @@ function productCardsHTML(f) {
   if (items.length) {
     return '<div class="prod-view-grid">' + items.map(function (p) {
       return '<div class="prod-view">' +
-        (p.img ? '<div class="pv-img" style="background-image:url(\'' + safeUrl(p.img) + '\')"></div>' : '<div class="pv-img empty">' + ICONS.image + '</div>') +
+        (p.img
+          ? '<button type="button" class="pv-img lb-ph" data-url="' + esc(p.img) + '" data-type="image" onclick="openLightbox(this)" style="background-image:url(\'' + safeUrl(p.img) + '\')" aria-label="' + esc(p.name || 'product') + '"></button>'
+          : '<div class="pv-img empty">' + ICONS.image + '</div>') +
         '<div class="pv-name">' + esc(p.name || '') + '</div>' +
       '</div>';
     }).join('') + '</div>';

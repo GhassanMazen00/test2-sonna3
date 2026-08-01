@@ -51,9 +51,15 @@ function factorySection(fac) {
       (fac.deletion_requested
         ? '<div class="lock-note" style="margin-top:14px;color:#B4322A">' + ICONS.clock + ' ' + t('fac_del_pending') + '</div>'
         : '') +
+      ((fac.verified && fac.plan && fac.plan !== 'none')
+        ? '<div class="lock-note" style="margin-top:14px;color:var(--ink)">' + ICONS.shieldCheck + ' ' + t('acc_current_plan') + ': <b style="text-transform:capitalize">' + esc(fac.plan) + '</b>' + (fac.plan_expires ? ' · ' + t('acc_expires') + ' ' + new Date(fac.plan_expires).toLocaleDateString() : '') + '</div>'
+        : '') +
       '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">' +
         '<a class="btn btn-primary btn-sm" href="dashboard.html">' + ICONS.chartBar + ' ' + t('dash_link') + '</a>' +
         '<a class="btn btn-ghost btn-sm" href="my-factory.html">' + t('fac_view') + ' ' + (LANG==='ar'?'←':'→') + '</a>' +
+        ((fac.verified && fac.plan && fac.plan !== 'none')
+          ? '<a class="btn btn-ghost btn-sm" href="subscribe.html">' + ICONS.sparkle + ' ' + t('acc_change_plan') + '</a>'
+          : '<a class="btn btn-ghost btn-sm" href="subscribe.html">' + ICONS.sparkle + ' ' + t('subscribe_now') + '</a>') +
         (fac.deletion_requested ? '' : '<button class="btn btn-ghost btn-sm" onclick="requestFactoryDeletion(\'' + esc(fac.id) + '\')">' + t('fac_del_request') + '</button>') +
       '</div>' +
     '</div>';

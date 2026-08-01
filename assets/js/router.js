@@ -120,6 +120,25 @@ function renderHomePage() {
         '</div>' +
       '</div>' +
     '</section>' +
+    // Requests section (swapped above the industries landscape)
+    '<section class="requests-section">' +
+      '<div class="container">' +
+        '<div class="requests-header">' +
+          '<div>' +
+            '<div class="section-label">' + t('requests_label') + '</div>' +
+            '<h2>' + t('requests_title') + '</h2>' +
+            '<p>' + t('requests_sub') + '</p>' +
+          '</div>' +
+          '<a href="requests.html" class="btn btn-ghost btn-sm">' + t('requests_view_all') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
+        '</div>' +
+        '<div class="requests-carousel" id="reqCarousel">' +
+          '<div class="requests-track" id="reqTrack">' +
+            loadingHTML() +
+          '</div>' +
+        '</div>' +
+        '<div class="carousel-controls" id="reqControls"></div>' +
+      '</div>' +
+    '</section>' +
     // Industries section
     '<section class="industries-section">' +
       '<div class="industries-grid-overlay"></div>' +
@@ -143,25 +162,6 @@ function renderHomePage() {
         '<div class="industries-cta">' +
           '<a href="factories.html" class="btn btn-primary">' + t('industries_cta') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
         '</div>' +
-      '</div>' +
-    '</section>' +
-    // Requests section
-    '<section class="requests-section">' +
-      '<div class="container">' +
-        '<div class="requests-header">' +
-          '<div>' +
-            '<div class="section-label">' + t('requests_label') + '</div>' +
-            '<h2>' + t('requests_title') + '</h2>' +
-            '<p>' + t('requests_sub') + '</p>' +
-          '</div>' +
-          '<a href="requests.html" class="btn btn-ghost btn-sm">' + t('requests_view_all') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
-        '</div>' +
-        '<div class="requests-carousel" id="reqCarousel">' +
-          '<div class="requests-track" id="reqTrack">' +
-            loadingHTML() +
-          '</div>' +
-        '</div>' +
-        '<div class="carousel-controls" id="reqControls"></div>' +
       '</div>' +
     '</section>' +
     // Consultant section (paid feature — matched to the sector you choose)
@@ -202,6 +202,15 @@ function renderHomePage() {
         '</div>' +
       '</div>' +
     '</section>' +
+    // Subscription plans promo — links to the standalone plans page.
+    '<section class="block"><div class="container">' +
+      '<div class="plans-promo">' +
+        '<span class="pp-badge">' + ICONS.shieldCheck + ' ' + t('plans_hero_eyebrow') + '</span>' +
+        '<h2>' + t('home_plans_title') + '</h2>' +
+        '<p>' + t('home_plans_sub') + '</p>' +
+        '<a class="btn btn-primary btn-lg" id="homePlansCta" href="subscribe.html">' + ICONS.sparkle + ' ' + t('subscribe_now') + '</a>' +
+      '</div>' +
+    '</div></section>' +
     // CTA section
     '<section class="block">' +
       '<div class="container">' +
@@ -221,6 +230,14 @@ function renderHomePage() {
   initFeaturedRotation();
   loadHomeRequests();     // pull the latest live requests from Supabase
   initFloatRotation();
+
+  // Subscribed factory owners see "Change plan"; everyone else "Subscribe now".
+  if (window.Auth && Auth.isLoggedIn() && Auth.myVerifiedPlan) {
+    Auth.myVerifiedPlan().then(function (plan) {
+      var cta = document.getElementById('homePlansCta');
+      if (cta && plan) cta.innerHTML = ICONS.sparkle + ' ' + t('acc_change_plan');
+    }).catch(function () {});
+  }
 
   // If arriving via a #consultant link (e.g. from another page), scroll to the
   // section once it has been built.
