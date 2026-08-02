@@ -360,6 +360,11 @@ header {
   box-shadow: 0 1px 3px rgba(21, 34, 31, .04);
 }
 
+/* ---- Native app (Capacitor) notch / safe-area handling ---- */
+.native-app header { padding-top: env(safe-area-inset-top); }
+.native-app footer { padding-bottom: calc(env(safe-area-inset-bottom) + 12px); }
+.native-app .modal-backdrop { padding-top: env(safe-area-inset-top); }
+
 .header-inner {
   display: flex;
   align-items: center;
