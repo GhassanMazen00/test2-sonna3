@@ -83,10 +83,12 @@
     token: freshToken,
     logout: function () { clearCache(); window.location.href = 'index.html'; },
 
-    login: function (email, password) {
+    login: function (email, password, captchaToken) {
+      var body = { email: email, password: password };
+      if (captchaToken) body.gotrue_meta_security = { captcha_token: captchaToken };
       return fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
         method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, password: password })
+        body: JSON.stringify(body)
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (res) {
           if (!res.ok || !res.j.access_token) throw new Error(res.j.error_description || res.j.msg || AL('Wrong email or password.', 'بريد إلكتروني أو كلمة مرور غير صحيحة.'));
@@ -95,10 +97,12 @@
         });
     },
 
-    signup: function (email, password, accountType, fields) {
+    signup: function (email, password, accountType, fields, captchaToken) {
+      var body = { email: email, password: password, data: Object.assign({ account_type: accountType }, fields || {}) };
+      if (captchaToken) body.gotrue_meta_security = { captcha_token: captchaToken };
       return fetch(SUPABASE_URL + '/auth/v1/signup', {
         method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, password: password, data: Object.assign({ account_type: accountType }, fields || {}) })
+        body: JSON.stringify(body)
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (res) {
           if (!res.ok) throw new Error(res.j.msg || res.j.error_description || res.j.error || AL('Sign up failed', 'فشل إنشاء الحساب'));
@@ -372,10 +376,12 @@
 
     // ---- Email verification ----
     // Re-send the confirmation email (used from the "check your inbox" screen).
-    resendConfirmation: function (email) {
+    resendConfirmation: function (email, captchaToken) {
+      var body = { type: 'signup', email: email };
+      if (captchaToken) body.gotrue_meta_security = { captcha_token: captchaToken };
       return fetch(SUPABASE_URL + '/auth/v1/resend', {
         method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'signup', email: email })
+        body: JSON.stringify(body)
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (res) {
           if (!res.ok) throw new Error(res.j.msg || res.j.error_description || res.j.error || AL('Could not resend. Try again shortly.', 'تعذر إعادة الإرسال. حاول بعد قليل.'));
@@ -490,6 +496,49 @@
 
   function field(label, inputHTML) { return '<div class="form-field full"><label>' + label + '</label>' + inputHTML + '</div>'; }
 
+  // ---- Cloudflare Turnstile (bot protection on signup / login / resend) ----
+  // The widget renders a token client-side; Supabase verifies it once
+  // "Enable Captcha protection" (Turnstile) is switched on in the dashboard.
+  // Until then the token is simply ignored, so this never blocks sign-in.
+  var TURNSTILE_SITEKEY = '0x4AAAAAAEEHTneezpC_D8fO';
+
+  function ensureTurnstile(cb) {
+    if (window.turnstile && window.turnstile.render) { cb(); return; }
+    if (!document.getElementById('cf-turnstile-js')) {
+      var s = document.createElement('script');
+      s.id = 'cf-turnstile-js';
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+    }
+    var tries = 0;
+    var iv = setInterval(function () {
+      if (window.turnstile && window.turnstile.render) { clearInterval(iv); cb(); }
+      else if (++tries > 100) { clearInterval(iv); }   // give up after ~10s
+    }, 100);
+  }
+  function mountCaptcha(holder) {
+    if (!holder) return;
+    ensureTurnstile(function () {
+      try {
+        holder.dataset.wid = window.turnstile.render(holder, {
+          sitekey: TURNSTILE_SITEKEY,
+          theme: 'auto',
+          callback: function (tok) { holder.dataset.token = tok; },
+          'expired-callback': function () { holder.dataset.token = ''; },
+          'error-callback': function () { holder.dataset.token = ''; }
+        });
+      } catch (e) { /* already rendered or blocked */ }
+    });
+  }
+  function capToken(holder) { return holder ? (holder.dataset.token || '') : ''; }
+  function capReset(holder) {
+    if (holder && holder.dataset.wid && window.turnstile) {
+      try { window.turnstile.reset(holder.dataset.wid); } catch (e) {}
+      holder.dataset.token = '';
+    }
+  }
+
   function renderAuth(bd, mode) {
     var isSignup = mode === 'signup';
     bd.innerHTML =
@@ -503,6 +552,7 @@
           field(t('au_password'), '<input id="au_password" type="password">') +
           (isSignup ? field(t('au_phone') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="au_phone" type="text">') : '') +
         '</div>' +
+        '<div class="cf-holder" id="auCaptcha"></div>' +
         '<div class="modal-actions">' +
           '<button class="btn btn-ghost" id="auSwitch">' + (isSignup ? t('au_have') : t('au_no')) + '</button>' +
           '<button class="btn btn-primary" id="auSubmit">' + (isSignup ? t('au_submit_signup') : t('au_submit_login')) + '</button>' +
@@ -510,6 +560,7 @@
       '</div>';
     bd.querySelector('#auSwitch').onclick = function () { renderAuth(bd, isSignup ? 'login' : 'signup'); };
     bd.querySelector('#auSubmit').onclick = function () { submitAuth(bd, mode); };
+    mountCaptcha(bd.querySelector('#auCaptcha'));
   }
 
   function submitAuth(bd, mode) {
@@ -518,14 +569,18 @@
     var v = function (id) { var el = bd.querySelector('#' + id); return el ? el.value.trim() : ''; };
     var email = v('au_email'), pw = v('au_password');
     if (!email || !pw) { show(AL('Enter your email and password.', 'أدخل البريد الإلكتروني وكلمة المرور.')); return; }
-    var btn = bd.querySelector('#auSubmit'); btn.textContent = '…'; btn.disabled = true;
-    var done = function (e) { btn.disabled = false; show(e.message || String(e)); };
+    var cap = bd.querySelector('#auCaptcha');
+    var token = capToken(cap);
+    if (!token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
+    var btn = bd.querySelector('#auSubmit'); var label = btn.textContent; btn.textContent = '…'; btn.disabled = true;
+    // Turnstile tokens are single-use — reset the widget so a retry gets a fresh one.
+    var done = function (e) { btn.disabled = false; btn.textContent = label; capReset(cap); show(e.message || String(e)); };
 
     if (mode === 'login') {
-      Auth.login(email, pw).then(function () { window.location.reload(); }).catch(done);
+      Auth.login(email, pw, token).then(function () { window.location.reload(); }).catch(done);
     } else {
       var fields = { full_name: v('au_name'), phone: v('au_phone') };
-      Auth.signup(email, pw, 'user', fields).then(function (r) {
+      Auth.signup(email, pw, 'user', fields, token).then(function (r) {
         if (r.needConfirm) { showConfirmScreen(bd, email); }
         else { window.location.href = 'account.html'; }   // land in the dashboard
       }).catch(done);
@@ -542,21 +597,26 @@
         '<p class="sub">' + t('au_confirm_to') + ' <strong>' + email + '</strong>. ' + t('au_confirm_note') + '</p>' +
         '<div class="au-err" id="cfErr" style="display:none"></div>' +
         '<div class="cf-ok" id="cfOk" style="display:none;color:var(--teal);font-weight:600;margin:6px 0">' + t('au_resent') + '</div>' +
+        '<div class="cf-holder" id="cfCaptcha" style="justify-content:center"></div>' +
       '</div>' +
       '<div class="modal-actions" style="justify-content:center">' +
         '<button class="btn btn-ghost" id="cfResend">' + t('au_resend') + '</button>' +
         '<button class="btn btn-primary" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('au_done') + '</button>' +
       '</div>';
+    var cap = m.querySelector('#cfCaptcha');
+    mountCaptcha(cap);
     var rb = m.querySelector('#cfResend');
     rb.onclick = function () {
+      var token = capToken(cap);
+      if (!token) { var e0 = m.querySelector('#cfErr'); e0.textContent = AL('Please complete the verification.', 'يرجى إكمال التحقق.'); e0.style.display = 'block'; return; }
       rb.disabled = true; rb.textContent = '…';
       m.querySelector('#cfErr').style.display = 'none';
-      Auth.resendConfirmation(email).then(function () {
+      Auth.resendConfirmation(email, token).then(function () {
         m.querySelector('#cfOk').style.display = 'block'; rb.textContent = t('au_resend');
         setTimeout(function () { rb.disabled = false; }, 15000);
       }).catch(function (e) {
         var er = m.querySelector('#cfErr'); er.textContent = e.message || String(e); er.style.display = 'block';
-        rb.disabled = false; rb.textContent = t('au_resend');
+        rb.disabled = false; rb.textContent = t('au_resend'); capReset(cap);
       });
     };
   }
