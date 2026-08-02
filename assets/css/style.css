@@ -3228,6 +3228,10 @@ section.block.alt::before {
   margin-top: 20px;
 }
 
+/* Cloudflare Turnstile widget holder in the auth modal */
+.cf-holder { display: flex; margin: 14px 0 2px; min-height: 65px; }
+.cf-holder:empty { display: none; }
+
 .toast {
   position: fixed;
   bottom: 24px;
