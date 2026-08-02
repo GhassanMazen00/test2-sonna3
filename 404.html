@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var l=localStorage.getItem('sonnaLang');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}else if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}var th=localStorage.getItem('sonnaTheme');if(!th){th='light';}document.documentElement.setAttribute('data-theme',th);}catch(e){}})();</script>
+<title>404 — الصفحة غير موجودة | Page Not Found · Sonnaع</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="The page you were looking for could not be found.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/css/style.css">
+<script defer data-domain="sonna3.net" src="https://plausible.io/js/script.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script src="/assets/js/icons.js"></script>
+<script src="/assets/js/lang.js"></script>
+<script src="/assets/js/data.js"></script>
+<script src="/assets/js/supabase-config.js"></script>
+<script src="/assets/js/store.js"></script>
+<script src="/assets/js/utils.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/components.js"></script>
+<script src="/assets/js/chat.js"></script>
+<script>
+function EN() {
+  return '<div class="notfound-wrap">' +
+      '<div class="notfound-code">4<span class="logo-ain">ع</span>4</div>' +
+      '<h1>This page slipped off the production line</h1>' +
+      '<p>The link may be broken, or the page may have moved. Let\'s get you back to something useful.</p>' +
+      '<div class="notfound-actions">' +
+        '<a class="btn btn-primary" href="/index.html">' + ICONS.home + ' Back to home</a>' +
+        '<a class="btn btn-ghost" href="/factories.html">' + ICONS.factory + ' Browse factories</a>' +
+        '<a class="btn btn-ghost" href="/requests.html">' + ICONS.clipboard + ' View requests</a>' +
+      '</div>' +
+    '</div>';
+}
+function AR() {
+  return '<div class="notfound-wrap">' +
+      '<div class="notfound-code">4<span class="logo-ain">ع</span>4</div>' +
+      '<h1>هذه الصفحة خرجت عن خط الإنتاج</h1>' +
+      '<p>قد يكون الرابط غير صحيح أو أن الصفحة قد نُقلت. دعنا نعيدك إلى شيء مفيد.</p>' +
+      '<div class="notfound-actions">' +
+        '<a class="btn btn-primary" href="/index.html">' + ICONS.home + ' العودة للرئيسية</a>' +
+        '<a class="btn btn-ghost" href="/factories.html">' + ICONS.factory + ' تصفح المصانع</a>' +
+        '<a class="btn btn-ghost" href="/requests.html">' + ICONS.clipboard + ' عرض الطلبات</a>' +
+      '</div>' +
+    '</div>';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  AdminStore.bootstrap().then(function () {
+    var s = localStorage.getItem('sonnaLang'); if (s === 'en' || s === 'ar') LANG = s;
+    document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('app').innerHTML = headerHTML() + mobileMenuHTML() + '<main>' + (LANG === 'ar' ? AR() : EN()) + '</main>' + footerHTML();
+  });
+});
+</script>
+</body>
+</html>

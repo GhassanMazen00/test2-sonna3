@@ -4587,6 +4587,21 @@ button.cert-chip { background: var(--card); color: inherit; font: inherit; font-
 .contact-option .co-txt b { font-size: 15px; }
 .contact-option .co-txt small { font-size: 12.5px; color: var(--ink-soft); }
 
+/* ---- 404 page ---- */
+.notfound-wrap {
+  max-width: 640px; margin: 0 auto; text-align: center;
+  padding: 90px 24px 110px; display: flex; flex-direction: column; align-items: center;
+}
+.notfound-code {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: clamp(84px, 18vw, 160px); line-height: 1;
+  letter-spacing: -.04em; color: var(--teal); margin-bottom: 18px;
+}
+.notfound-code .logo-ain { color: var(--ink-soft); }
+.notfound-wrap h1 { font-size: clamp(24px, 4.5vw, 34px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 12px; }
+.notfound-wrap p { font-size: 16px; color: var(--ink-soft); line-height: 1.7; max-width: 480px; margin: 0 auto 28px; }
+.notfound-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
 /* ---- Info-page shell ---- */
 .info-hero {
   text-align: center; padding: 72px 24px 40px; position: relative;
