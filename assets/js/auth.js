@@ -374,6 +374,20 @@
       }).then(function () { clearCache(); return true; });
     },
 
+    // ---- Push notifications (native app) ----
+    // Store this device's FCM token against the signed-in user so the
+    // send-push edge function can reach them. No-op when logged out (the RPC
+    // itself also guards on auth.uid()).
+    registerPushToken: function (token, platform) {
+      if (!this.isLoggedIn() || !token) return Promise.resolve(false);
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rpc/register_device_token', {
+          method: 'POST', headers: restHeaders(tok),
+          body: JSON.stringify({ p_token: token, p_platform: platform || 'unknown' })
+        }).then(function (r) { return r.ok; });
+      }).catch(function () { return false; });
+    },
+
     // ---- Email verification ----
     // Re-send the confirmation email (used from the "check your inbox" screen).
     resendConfirmation: function (email, captchaToken) {

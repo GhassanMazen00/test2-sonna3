@@ -33,4 +33,31 @@
       else if (P.App.exitApp) P.App.exitApp();
     });
   }
+
+  // ---- Push notifications ----
+  var Push = P.PushNotifications;
+  if (Push && Push.addListener) {
+    var platform = (typeof Cap.getPlatform === 'function') ? Cap.getPlatform() : 'unknown';
+
+    // FCM/APNs handed us a device token — store it against the signed-in user.
+    Push.addListener('registration', function (t) {
+      if (window.Auth && Auth.registerPushToken) Auth.registerPushToken(t && t.value, platform);
+    });
+    Push.addListener('registrationError', function () { /* offline / no play services — ignore */ });
+
+    // Tapped a notification while the app was backgrounded → open its link.
+    Push.addListener('pushNotificationActionPerformed', function (action) {
+      var data = action && action.notification && action.notification.data;
+      var link = data && data.link;
+      if (link) window.location.href = link;
+    });
+
+    // Ask permission (first launch), then register with FCM/APNs.
+    Push.checkPermissions().then(function (res) {
+      if (res.receive === 'prompt' || res.receive === 'prompt-with-rationale') return Push.requestPermissions();
+      return res;
+    }).then(function (res) {
+      if (res && res.receive === 'granted') return Push.register();
+    }).catch(function () { /* permission denied — nothing to do */ });
+  }
 })();
