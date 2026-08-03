@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "888507104500",
+    "project_id": "sonna3-6e2c5",
+    "storage_bucket": "sonna3-6e2c5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888507104500:android:c85546e3470fecabe5b2a1",
+        "android_client_info": {
+          "package_name": "net.sonna3.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXGIm89u7UEnuqIj20OJEs4Da5D8Dg__8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
