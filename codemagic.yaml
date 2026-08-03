@@ -1,0 +1,27 @@
+# Codemagic CI — Sonnaع native builds.
+# Detected automatically when you connect this repo in Codemagic.
+# The `android-debug` workflow produces an INSTALLABLE Android APK you can put
+# straight onto a phone — no Google Play account or signing key required.
+
+workflows:
+  android-debug:
+    name: Sonna3 · Android (installable APK)
+    max_build_duration: 60
+    instance_type: mac_mini_m2      # part of Codemagic's free monthly minutes
+    environment:
+      node: 20
+      java: 17
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web bundle (www/)
+        script: npm run build:www
+      - name: Capacitor sync (Android)
+        script: npx cap sync android
+      - name: Build debug APK
+        script: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
+    artifacts:
+      - android/app/build/outputs/**/*.apk
