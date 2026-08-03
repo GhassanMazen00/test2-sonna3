@@ -384,6 +384,70 @@ header {
 }
 /* The bottom bar owns Home, so the floating top-right home shortcut is redundant. */
 .app-mode .mobile-home-btn { display: none !important; }
+/* Drop the burger — its contents now live in the Account/Settings hub — and
+   surface the notifications bell in the slim app top bar instead. */
+.app-mode .mobile-menu-btn { display: none !important; }
+.app-mode .nav-bell { display: inline-flex !important; }
+.app-mode .header-inner { min-height: 52px; }
+/* Home hides its logo on the web (the hero carried the brand); the app has no
+   hero brand, so show the logo in the top bar on every screen. */
+.app-mode .logo.home-hidden { display: flex !important; }
+
+/* ---- Declutter the home hero inside the app ---- */
+.app-mode .hero .float-chips-container,
+.app-mode .hero .hero-node,
+.app-mode .hero .orbit-ring,
+.app-mode .hero .brand-display,
+.app-mode .hero-slider { display: none !important; }
+.app-mode .hero { padding-top: 16px; padding-bottom: 6px; min-height: 0; }
+.app-mode .hero::before, .app-mode .hero::after { opacity: .3; }
+.app-mode .hero h1 { font-size: clamp(23px, 6.6vw, 30px); margin-top: 4px; }
+.app-mode .hero .sub { font-size: 14.5px; margin-top: 6px; }
+.app-mode .hero-stats { margin-top: 16px; }
+.app-mode .featured-section { padding-top: 10px; }
+
+/* ---- Settings hub (Account tab) ---- */
+.app-settings-head {
+  display: flex; align-items: center; gap: 14px; padding: 6px 2px 18px;
+}
+.app-settings-head .avatar {
+  width: 56px; height: 56px; border-radius: 50%; flex: none;
+  background: var(--teal-tint); color: var(--teal); display: grid; place-items: center;
+}
+.app-settings-head .avatar svg { width: 28px; height: 28px; }
+.app-settings-head h1 { font-size: 20px; font-weight: 800; line-height: 1.2; }
+.app-settings-head .muted { font-size: 13px; }
+.set-group { margin-bottom: 14px; }
+.set-group-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 4px 8px;
+}
+.set-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.set-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 600;
+}
+.set-row:last-child { border-bottom: none; }
+.set-row .set-ic { color: var(--teal); display: inline-flex; margin-inline-end: 10px; vertical-align: -5px; }
+.set-row .set-ic svg { width: 20px; height: 20px; }
+.set-link {
+  width: 100%; background: none; border: none; cursor: pointer; text-align: start;
+  display: flex; align-items: center; gap: 0; color: var(--ink); text-decoration: none;
+}
+.set-link .chev { margin-inline-start: auto; color: var(--ink-soft); }
+.set-link .chev::before { content: "›"; font-size: 20px; }
+:root[dir="rtl"] .set-link .chev::before { content: "‹"; }
+.set-seg { display: inline-flex; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.set-seg button {
+  border: none; background: none; cursor: pointer; padding: 6px 14px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; color: var(--ink-soft); font-family: inherit;
+}
+.set-seg button.on { background: var(--teal); color: #fff; }
+.set-signout {
+  width: 100%; margin-top: 4px; padding: 14px; border-radius: 14px;
+  background: var(--card); border: 1px solid var(--line); color: #E5484D;
+  font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit;
+}
 
 /* ---- Bottom tab bar ---- */
 .app-tabbar {
