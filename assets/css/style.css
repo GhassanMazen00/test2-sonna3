@@ -362,8 +362,58 @@ header {
 
 /* ---- Native app (Capacitor) notch / safe-area handling ---- */
 .native-app header { padding-top: env(safe-area-inset-top); }
-.native-app footer { padding-bottom: calc(env(safe-area-inset-bottom) + 12px); }
 .native-app .modal-backdrop { padding-top: env(safe-area-inset-top); }
+
+/* ================= APP-MODE CHROME (native app + ?app=1 preview) ================= */
+/* Turns the responsive website into an app-shaped experience: a bottom tab
+   bar, no web footer, an app-styled top bar, and content that clears the bar. */
+
+/* Web footer belongs to the website, not the app. */
+.app-mode footer { display: none !important; }
+
+/* Make room for the fixed tab bar. */
+.app-mode body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+
+/* Slim, app-like top bar: keep the logo + quick actions, drop the site-nav
+   hamburger (the bottom bar is the navigation now). */
+.app-mode header {
+  position: sticky; top: 0;
+  padding-top: env(safe-area-inset-top);
+  background: var(--card);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+/* The bottom bar owns Home, so the floating top-right home shortcut is redundant. */
+.app-mode .mobile-home-btn { display: none !important; }
+
+/* ---- Bottom tab bar ---- */
+.app-tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+  display: flex; align-items: stretch;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -3px 20px rgba(21, 34, 31, .07);
+}
+.app-tab {
+  flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 8px 2px 7px; text-decoration: none;
+  color: var(--ink-soft); font-size: 10.5px; font-weight: 600; line-height: 1.1;
+  -webkit-tap-highlight-color: transparent; position: relative;
+  transition: color .15s ease;
+}
+.app-tab-ic { position: relative; display: inline-flex; }
+.app-tab-ic svg { width: 23px; height: 23px; display: block; }
+.app-tab-lb { white-space: nowrap; }
+.app-tab.active { color: var(--teal); }
+.app-tab.active .app-tab-ic::after {
+  content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+  top: -9px; width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: var(--teal);
+}
+.app-tab-dot {
+  position: absolute; top: -2px; right: -4px; width: 8px; height: 8px;
+  background: #E5484D; border: 1.5px solid var(--card); border-radius: 50%;
+}
+:root[data-theme="dark"] .app-tabbar { box-shadow: 0 -3px 20px rgba(0, 0, 0, .35); }
 
 .header-inner {
   display: flex;
