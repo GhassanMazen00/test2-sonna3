@@ -11,15 +11,21 @@
   var isNative = !!(Cap && typeof Cap.isNativePlatform === 'function' && Cap.isNativePlatform());
 
   // Browser preview toggle: ?app=1 turns app chrome on, ?app=0 turns it off.
+  // Scoped to the tab (sessionStorage) so it clears when the tab closes and can
+  // never "stick" to the real website. Any old persistent flag is cleaned up.
+  try { localStorage.removeItem('sonnaAppPreview'); } catch (e) {}
   try {
     var qs = new URLSearchParams(location.search);
-    if (qs.get('app') === '1') localStorage.setItem('sonnaAppPreview', '1');
-    if (qs.get('app') === '0') localStorage.removeItem('sonnaAppPreview');
+    if (qs.get('app') === '1') sessionStorage.setItem('sonnaAppPreview', '1');
+    if (qs.get('app') === '0') sessionStorage.removeItem('sonnaAppPreview');
   } catch (e) {}
   var isPreview = false;
-  try { isPreview = localStorage.getItem('sonnaAppPreview') === '1'; } catch (e) {}
+  try { isPreview = sessionStorage.getItem('sonnaAppPreview') === '1'; } catch (e) {}
 
-  var appMode = isNative || isPreview;
+  // The app layout is for phones only. The real native app always gets it; the
+  // browser preview only on a phone-width viewport — so the desktop website is
+  // never affected, even with the preview flag set.
+  var appMode = isNative || (isPreview && window.innerWidth <= 860);
   if (!appMode) return;                       // plain website — do nothing.
 
   var root = document.documentElement;
