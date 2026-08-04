@@ -26,6 +26,12 @@ function renderHomePage() {
   var featured = FACTORIES
     .filter(function(f) { return f.verified !== false && (f.featured || (window.factoryRank && factoryRank(f) >= 2)); })
     .sort(function(a, b) { return (window.factoryRank ? factoryRank(b) - factoryRank(a) : 0); });
+  // Newest verified factories to join — powers the "New on Sonnaع" row.
+  var newFactories = FACTORIES
+    .filter(function(f) { return f.verified !== false; })
+    .slice()
+    .sort(function(a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); })
+    .slice(0, 8);
   var app = document.getElementById('app');
 
   // Real counts for the hero stats (no more hardcoded numbers).
@@ -77,6 +83,8 @@ function renderHomePage() {
         '</div>' +
       '</div>' +
     '</div>' +
+    // How it works (3 steps) — orients first-time visitors right after the hero
+    howItWorksSection() +
     // Featured section (moved up — appears right after the hero/search)
     '<section class="featured-section">' +
       '<div class="container">' +
@@ -139,15 +147,17 @@ function renderHomePage() {
         '<div class="carousel-controls" id="reqControls"></div>' +
       '</div>' +
     '</section>' +
-    // Industries section
+    // New on Sonnaع — freshest verified factories
+    newOnSonnaSection(newFactories) +
+    // Shop by category (redesigned industries browser)
     '<section class="industries-section">' +
       '<div class="industries-grid-overlay"></div>' +
       '<span class="industries-orb o1"></span><span class="industries-orb o2"></span><span class="industries-orb o3"></span>' +
       '<div class="container">' +
         '<div class="industries-intro">' +
-          '<div class="section-badge"><span class="badge-dot"></span>' + t('industries_badge') + '</div>' +
-          '<h2>' + t('industries_title') + '</h2>' +
-          '<p>' + t('industries_desc') + '</p>' +
+          '<div class="section-badge"><span class="badge-dot"></span>' + t('cat_label') + '</div>' +
+          '<h2>' + t('cat_title') + '</h2>' +
+          '<p>' + t('cat_sub') + '</p>' +
         '</div>' +
         '<div class="industries-grid-new">' +
           INDUSTRIES.map(function(i) {
@@ -247,6 +257,62 @@ function renderHomePage() {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 60);
   }
+}
+
+// ---- Home: "How it works" (3 steps) ----
+function howItWorksSection() {
+  return '<section class="how-section"><div class="container">' +
+    '<div class="sec-head-center">' +
+      '<div class="section-badge"><span class="badge-dot"></span>' + t('how_label') + '</div>' +
+      '<h2>' + t('how_title') + '</h2>' +
+      '<p>' + t('how_sub') + '</p>' +
+    '</div>' +
+    '<div class="how-grid">' +
+      t('how_steps').map(function (s, ix) {
+        return '<div class="how-card">' +
+          '<span class="how-num">' + (ix + 1) + '</span>' +
+          '<span class="how-ic">' + s[0] + '</span>' +
+          '<h3>' + s[1] + '</h3><p>' + s[2] + '</p>' +
+        '</div>';
+      }).join('') +
+    '</div>' +
+  '</div></section>';
+}
+
+// ---- Home: compact factory card (used by "New on Sonnaع") ----
+function homeFactoryCard(f) {
+  var i = ind(f.industry);
+  var gov = (f.govIndex != null && GOVS[f.govIndex]) ? L(GOVS[f.govIndex]) : (f.gov ? L(f.gov) : '');
+  return '<a class="home-fac-card" href="factory-detail.html?id=' + f.id + '">' +
+    '<div class="hfc-visual" style="background:' + grad(i.g) + '">' +
+      '<span class="hfc-ic">' + i.icon + '</span>' +
+      '<span class="hfc-logo" style="color:' + i.g[0] + '">' + esc(L(f.name).charAt(0)) + '</span>' +
+    '</div>' +
+    '<div class="hfc-body">' +
+      '<span class="hfc-ind">' + i.icon + ' ' + esc(L({ en: i.en, ar: i.ar })) + '</span>' +
+      '<h3>' + esc(L(f.name)) + '</h3>' +
+      '<div class="hfc-meta">' +
+        (gov ? '<span>' + ICONS.pin + ' ' + esc(gov) + '</span>' : '') +
+        '<span class="hfc-verified">' + ICONS.shieldCheck + ' ' + t('acc_verified') + '</span>' +
+      '</div>' +
+    '</div>' +
+  '</a>';
+}
+
+// ---- Home: "New on Sonnaع" section ----
+function newOnSonnaSection(list) {
+  if (!list || !list.length) return '';
+  return '<section class="new-section"><div class="container">' +
+    '<div class="sec-head-row">' +
+      '<div>' +
+        '<div class="section-label">' + t('new_label') + '</div>' +
+        '<h2>' + t('new_title') + '</h2>' +
+        '<p>' + t('new_sub') + '</p>' +
+      '</div>' +
+      '<a href="factories.html" class="btn btn-ghost btn-sm">' + t('new_view') + ' ' + (LANG === 'ar' ? '←' : '→') + '</a>' +
+    '</div>' +
+    '<div class="home-fac-row">' + list.map(homeFactoryCard).join('') + '</div>' +
+  '</div></section>';
 }
 
 // A home "latest requests" card built from a live Supabase request row.

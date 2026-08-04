@@ -4995,3 +4995,48 @@ button.pv-img:hover { opacity: .92; }
 .plans-promo .pp-badge .svg-ic { width: 14px; height: 14px; }
 .plans-promo h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 800; letter-spacing: -.01em; margin-bottom: 10px; }
 .plans-promo p { color: var(--ink-soft); font-size: 15.5px; max-width: 560px; margin: 0 auto 22px; line-height: 1.7; }
+
+/* ============================================================
+   Home redesign — How it works · New on Sonnaع
+   ============================================================ */
+.sec-head-center { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+.sec-head-center h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.02em; margin: 12px 0 10px; }
+.sec-head-center p { color: var(--ink-soft); font-size: 16px; line-height: 1.6; }
+
+/* How it works */
+.how-section { padding: 64px 0; }
+.how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; }
+.how-card { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px 24px 26px; text-align: center; }
+.how-num { position: absolute; top: 18px; inset-inline-end: 20px; font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--teal); opacity: .5; }
+.how-ic { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 16px; background: var(--teal-tint); color: var(--teal); display: grid; place-items: center; }
+.how-ic svg { width: 26px; height: 26px; }
+.how-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.how-card p { color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+
+/* New on Sonnaع */
+.new-section { padding: 12px 0 56px; }
+.sec-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.sec-head-row h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 800; letter-spacing: -.02em; margin: 8px 0 6px; }
+.sec-head-row p { color: var(--ink-soft); font-size: 15px; max-width: 520px; }
+.home-fac-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+.home-fac-row::-webkit-scrollbar { height: 6px; }
+.home-fac-row::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
+.home-fac-card { scroll-snap-align: start; background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: transform .15s ease, box-shadow .15s ease; }
+.home-fac-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.hfc-visual { position: relative; height: 96px; display: grid; place-items: center; }
+.hfc-ic { color: #fff; opacity: .92; }
+.hfc-ic svg { width: 30px; height: 30px; }
+.hfc-logo { position: absolute; bottom: -18px; inset-inline-start: 16px; width: 40px; height: 40px; border-radius: 12px; background: var(--card); display: grid; place-items: center; font-weight: 800; font-size: 18px; border: 1px solid var(--line); box-shadow: 0 3px 8px rgba(21,34,31,.08); }
+.hfc-body { padding: 26px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.hfc-ind { font-size: 11.5px; color: var(--teal); font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.hfc-ind svg { width: 14px; height: 14px; }
+.hfc-body h3 { font-size: 16px; font-weight: 700; line-height: 1.25; }
+.hfc-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.hfc-meta svg { width: 13px; height: 13px; vertical-align: -2px; }
+.hfc-verified { color: var(--teal); font-weight: 600; }
+
+@media (max-width: 720px) {
+  .how-section { padding: 44px 0; }
+  .how-grid { grid-template-columns: 1fr; max-width: 460px; gap: 14px; }
+  .how-card { padding: 24px 20px; }
+}

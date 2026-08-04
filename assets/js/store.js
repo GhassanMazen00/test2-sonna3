@@ -378,6 +378,7 @@ AdminStore.rowToFactory = function (row) {
     logo: d.logo || '', cover: d.cover || '', media: d.media || [], productMedia: d.productMedia || [],
     plan: row.plan || 'none', planExpires: row.plan_expires || null,
     verified: !!row.verified, verificationStatus: row.verification_status || (row.verified ? 'visited' : 'unverified'),
+    createdAt: row.created_at || null,
     userSubmitted: true, ownerId: row.owner
   };
 };
