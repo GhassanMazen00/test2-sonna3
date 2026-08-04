@@ -16,6 +16,14 @@ const STR = {
     acc_consult_sub: "Talk to a sourcing expert who'll guide your manufacturing.",
     acc_plans_t: "Subscription plans", acc_plans_sub: "Get more reach, opportunities and direct contact.",
     acc_factory_sub: "Own a factory? List it and reach buyers directly.",
+    new_label: "Fresh on the platform", new_title: "New on Sonnaع", new_sub: "The latest verified factories to join the network.", new_view: "See all factories",
+    cat_label: "Explore", cat_title: "Shop by category", cat_sub: "Jump straight to the manufacturing sector you need.",
+    how_label: "How it works", how_title: "From idea to factory in 3 steps", how_sub: "No middleman, no commissions — you deal with the factory directly.",
+    how_steps: [
+      [ICONS.search, "Search or post", "Browse verified factories, or post a manufacturing request describing what you need."],
+      [ICONS.chat, "Factories reach out", "Matching factories contact you directly with their offers and quotes."],
+      [ICONS.handshake, "Deal direct", "Talk, agree and produce — straight with the factory, no commission."]
+    ],
     msg_supplier: "Message supplier", req_message: "Message poster", req_yours: "Your request",
     req_yours_note: "This is your request. Interested manufacturers can message you here.",
     req_none: "No requests yet", req_none_sub: "Be the first to post what you need manufactured.",
@@ -355,6 +363,14 @@ const STR = {
     acc_consult_sub: "تحدّث مع خبير تصنيع يرشدك في تصنيع منتجك.",
     acc_plans_t: "باقات الاشتراك", acc_plans_sub: "وصول أوسع وفرص أكثر وتواصل مباشر.",
     acc_factory_sub: "عندك مصنع؟ سجّله ووصّل للمشترين مباشرة.",
+    new_label: "جديد على المنصة", new_title: "جديد على صُنّاع", new_sub: "أحدث المصانع الموثّقة التي انضمّت إلى الشبكة.", new_view: "كل المصانع",
+    cat_label: "استكشف", cat_title: "تصفّح حسب الفئة", cat_sub: "انتقل مباشرة إلى القطاع الصناعي الذي تحتاجه.",
+    how_label: "كيف تعمل المنصة", how_title: "من الفكرة إلى المصنع في ٣ خطوات", how_sub: "بدون وسيط وبدون عمولات — تتعامل مع المصنع مباشرة.",
+    how_steps: [
+      [ICONS.search, "ابحث أو انشر", "تصفّح المصانع الموثّقة، أو انشر طلب تصنيع يوضّح ما تحتاجه."],
+      [ICONS.chat, "المصانع تتواصل معك", "المصانع المناسبة تتواصل معك مباشرة بعروضها وأسعارها."],
+      [ICONS.handshake, "اتفاق مباشر", "تتحدث وتتفق وتُنتج — مباشرة مع المصنع وبدون عمولة."]
+    ],
     msg_supplier: "مراسلة المورّد", req_message: "مراسلة صاحب الطلب", req_yours: "طلبك",
     req_yours_note: "هذا طلبك. يمكن للمصانع المهتمة مراسلتك هنا.",
     req_none: "لا توجد طلبات بعد", req_none_sub: "كن أول من ينشر ما يحتاج إلى تصنيعه.",
