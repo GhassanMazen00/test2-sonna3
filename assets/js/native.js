@@ -78,7 +78,16 @@
   if (document.readyState === 'complete') setTimeout(hideSplash, 150);
   else window.addEventListener('load', function () { setTimeout(hideSplash, 150); });
 
-  if (P.StatusBar) { try { P.StatusBar.setStyle({ style: 'LIGHT' }); } catch (e) {} }
+  // Solid status bar that does NOT overlay the web view — otherwise the area
+  // behind the app shows through at the top. Colour + icon style follow theme.
+  if (P.StatusBar) {
+    try {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      P.StatusBar.setOverlaysWebView({ overlay: false });
+      P.StatusBar.setStyle({ style: dark ? 'DARK' : 'LIGHT' });     // LIGHT = dark icons on our light bar
+      P.StatusBar.setBackgroundColor({ color: dark ? '#0F241E' : '#FFFFFF' });
+    } catch (e) {}
+  }
 
   // Android hardware back button: close a modal, else navigate back, else exit.
   if (P.App && P.App.addListener) {

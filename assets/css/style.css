@@ -401,10 +401,18 @@ header {
 .app-mode .hero-slider { display: none !important; }
 .app-mode .hero { padding-top: 16px; padding-bottom: 6px; min-height: 0; }
 .app-mode .hero::before, .app-mode .hero::after { opacity: .3; }
-.app-mode .hero h1 { font-size: clamp(23px, 6.6vw, 30px); margin-top: 4px; }
-.app-mode .hero .sub { font-size: 14.5px; margin-top: 6px; }
+.app-mode .hero h1 { font-size: clamp(22px, 6vw, 28px); margin-top: 4px; padding: 0 6px; }
+.app-mode .hero .sub { font-size: 14px !important; margin-top: 6px; padding: 0 8px; }
 .app-mode .hero-stats { margin-top: 16px; }
 .app-mode .featured-section { padding-top: 10px; }
+/* Search bar: stop it hugging the screen edges and crowding the button. */
+.app-mode .search-bar { margin-inline: 2px; }
+.app-mode .search-bar::before, .app-mode .search-bar::after { display: none; }
+.app-mode .search-bar svg { margin-inline-start: 8px; }
+.app-mode .search-bar input { font-size: 14px; padding-inline: 6px; }
+.app-mode .search-bar .btn { padding: 10px 14px; font-size: 14px; white-space: nowrap; }
+/* A touch more side breathing room for app content in general. */
+.app-mode .hero-inner { padding-inline: 20px; }
 
 /* ---- Settings hub (Account tab) ---- */
 .app-settings-head {
@@ -423,20 +431,47 @@ header {
   color: var(--ink-soft); margin: 0 4px 8px;
 }
 .set-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-.set-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 600;
+.set-row, .set-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+  font-size: 15px; font-weight: 600; color: var(--ink);
 }
-.set-row:last-child { border-bottom: none; }
-.set-row .set-ic { color: var(--teal); display: inline-flex; margin-inline-end: 10px; vertical-align: -5px; }
-.set-row .set-ic svg { width: 20px; height: 20px; }
+.set-row { justify-content: space-between; }
+.set-card > .set-row:last-child, .set-card > .set-link:last-child { border-bottom: none; }
 .set-link {
-  width: 100%; background: none; border: none; cursor: pointer; text-align: start;
-  display: flex; align-items: center; gap: 0; color: var(--ink); text-decoration: none;
+  width: 100%; background: none; cursor: pointer; text-align: start; text-decoration: none;
+  border-top: none; border-left: none; border-right: none; font-family: inherit;
 }
-.set-link .chev { margin-inline-start: auto; color: var(--ink-soft); }
-.set-link .chev::before { content: "›"; font-size: 20px; }
+.set-row > span:first-child, .set-link > span:not(.set-ic) { display: inline-flex; align-items: center; }
+/* Tinted rounded-square icons (iOS-settings style) — larger, deliberate. */
+.set-ic {
+  width: 30px; height: 30px; border-radius: 9px; flex: none;
+  background: var(--teal-tint); color: var(--teal);
+  display: inline-grid; place-items: center; margin-inline-end: 12px;
+}
+.set-ic svg { width: 18px; height: 18px; }
+.set-link .chev { margin-inline-start: auto; color: var(--ink-soft); display: inline-flex; }
+.set-link .chev::before { content: "›"; font-size: 22px; line-height: 1; }
 :root[dir="rtl"] .set-link .chev::before { content: "‹"; }
+
+/* Account promo cards (consultant / plans / list a factory) */
+.acc-promo {
+  display: flex; align-items: center; gap: 13px; padding: 14px 16px; margin-bottom: 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  text-decoration: none; color: var(--ink); width: 100%; text-align: start;
+  cursor: pointer; font-family: inherit;
+}
+.acc-promo .ap-ic {
+  width: 44px; height: 44px; border-radius: 13px; flex: none;
+  background: var(--teal-tint); color: var(--teal); display: grid; place-items: center;
+}
+.acc-promo .ap-ic svg { width: 22px; height: 22px; }
+.acc-promo .ap-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.acc-promo .ap-tx b { font-size: 15px; font-weight: 700; }
+.acc-promo .ap-tx span { font-size: 12.5px; color: var(--ink-soft); line-height: 1.4; }
+.acc-promo .chev { margin-inline-start: auto; color: var(--ink-soft); flex: none; }
+.acc-promo .chev::before { content: "›"; font-size: 22px; line-height: 1; }
+:root[dir="rtl"] .acc-promo .chev::before { content: "‹"; }
 .set-seg { display: inline-flex; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
 .set-seg button {
   border: none; background: none; cursor: pointer; padding: 6px 14px; border-radius: 8px;

@@ -92,6 +92,7 @@ function dashboardHtml(p, fac) {
       '<a class="btn btn-ghost" href="favorites.html">' + ICONS.heart + ' ' + t('fav_shortlist') + '</a>' +
       '<button class="btn btn-ghost" onclick="openRequestForm()">' + ICONS.megaphone + ' ' + t('dash_post') + '</button>' +
     '</div>' +
+    (appMode() ? appPromoCards(false) : '') +
     factorySection(fac) +
     '<div class="panel" id="myPostsPanel" style="margin-bottom:16px"><h2>' + t('myposts_title') + '</h2>' + loadingHTML() + '</div>' +
     '<div class="panel" id="myRfqPanel" style="margin-bottom:16px"><h2>' + t('myrfq_title') + '</h2>' + loadingHTML() + '</div>' +
@@ -201,13 +202,30 @@ function appSettingsSection() {
     '<div class="set-group">' +
       '<div class="set-group-title">' + t('set_general') + '</div>' +
       '<div class="set-card">' +
-        setLinkRow(ICONS.compass, t('set_consult'), 'index.html#consultant') +
         setLinkRow(ICONS.clipboard, t('set_help'), 'help.html') +
         setLinkRow(ICONS.factory, t('set_about'), 'about.html') +
         setLinkRow(ICONS.shieldCheck, t('set_terms'), 'terms.html') +
         setLinkRow(ICONS.chat, t('set_contact'), 'openContactModal()', true) +
       '</div>' +
     '</div>';
+}
+function promoCard(icon, title, sub, target, isJs) {
+  var inner = '<span class="ap-ic">' + icon + '</span>' +
+    '<span class="ap-tx"><b>' + title + '</b><span>' + sub + '</span></span>' +
+    '<i class="chev"></i>';
+  return isJs
+    ? '<button class="acc-promo" onclick="' + target + '">' + inner + '</button>'
+    : '<a class="acc-promo" href="' + target + '">' + inner + '</a>';
+}
+// Mini "sections" mirroring the home page: consultant, subscription plans, and
+// (when relevant) listing a factory. showListFactory is false once the user
+// already owns a factory page.
+function appPromoCards(showListFactory) {
+  return '<div class="set-group">' +
+    promoCard(ICONS.compass, t('set_consult'), t('acc_consult_sub'), 'index.html#consultant') +
+    promoCard(ICONS.sparkle, t('acc_plans_t'), t('acc_plans_sub'), 'subscribe.html') +
+    (showListFactory ? promoCard(ICONS.factory, t('list_factory'), t('acc_factory_sub'), 'listYourFactory()', true) : '') +
+  '</div>';
 }
 function appGuestHub() {
   return '<div class="container" style="max-width:820px;padding:20px 20px 44px">' +
@@ -219,6 +237,7 @@ function appGuestHub() {
       '<button class="btn btn-primary" style="flex:1" onclick="openAuthModal(\'login\')">' + t('login') + '</button>' +
       '<button class="btn btn-ghost" style="flex:1" onclick="openAuthModal(\'signup\')">' + t('signup') + '</button>' +
     '</div>' +
+    appPromoCards(true) +
     appSettingsSection() +
   '</div>';
 }
