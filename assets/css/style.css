@@ -5048,3 +5048,11 @@ button.pv-img:hover { opacity: .92; }
   .how-grid { grid-template-columns: 1fr; max-width: 460px; gap: 14px; }
   .how-card { padding: 24px 20px; }
 }
+
+/* Factory detail: verification reassurance line */
+.verified-note {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 12px;
+  font-size: 12.5px; font-weight: 600; color: var(--teal);
+  background: var(--teal-tint); padding: 7px 12px; border-radius: 10px;
+}
+.verified-note svg { width: 15px; height: 15px; flex: none; }
