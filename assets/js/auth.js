@@ -598,6 +598,10 @@
   function mountCaptcha(holder) {
     if (!holder) return;
     ensureTurnstile(function () {
+      // Clear any stale widget so a re-open / mode-switch always re-renders.
+      try { if (holder.dataset.wid) window.turnstile.remove(holder.dataset.wid); } catch (e) {}
+      holder.innerHTML = '';
+      holder.dataset.token = '';
       try {
         holder.dataset.wid = window.turnstile.render(holder, {
           sitekey: TURNSTILE_SITEKEY,

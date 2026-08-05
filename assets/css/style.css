@@ -3382,9 +3382,10 @@ section.block.alt::before {
   margin-top: 20px;
 }
 
-/* Cloudflare Turnstile widget holder in the auth modal */
-.cf-holder { display: flex; margin: 14px 0 2px; min-height: 65px; }
-.cf-holder:empty { display: none; }
+/* Cloudflare Turnstile widget holder in the auth modal. Always kept visible
+   with reserved height — Turnstile can silently fail to render into a
+   display:none element, so we never hide it. */
+.cf-holder { display: flex; margin: 14px 0 2px; min-height: 66px; align-items: center; }
 
 /* Auth modal: forgot-password link + terms checkbox */
 .au-forgot-row { display: flex; justify-content: flex-end; margin: 8px 2px 0; }
