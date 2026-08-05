@@ -298,7 +298,8 @@ document.addEventListener('DOMContentLoaded', function() {
           '<div class="profile-main">' +
             '<h1>' + esc(L(f.name)) + '</h1>' +
             '<div class="meta" style="color:var(--ink-soft);font-size:13.5px">' +
-              id.icon + ' ' + L({en: id.en, ar: id.ar}) + (locked ? '' : (signedIn() ? ' · ' + ICONS.pin + ' ' + L(f.gov) : '') + ' · ' + t('est') + ' ' + num(f.yr)) +
+              id.icon + ' ' + L({en: id.en, ar: id.ar}) + (locked ? '' : (signedIn() ? ' · ' + ICONS.pin + ' ' + L(f.gov) : '') + ' · ' + t('est') + ' ' + num(f.yr) +
+                (f.createdAt ? ' · ' + t('on_since') + ' ' + new Date(f.createdAt).getFullYear() : '')) +
             '</div>' +
             (locked
               ? '<div class="badge-row">' + verifyBadge(f) + '</div>'
@@ -317,7 +318,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   '<span class="capacity-badge daily">' + ICONS.chartBar + ' ' + t('daily_capacity') + ': ' + num(f.dailyCapacity) + '</span>' +
                   '<span class="capacity-badge monthly">' + ICONS.chartLine + ' ' + t('monthly_capacity') + ': ' + num(f.monthlyCapacity) + '</span>' +
                   '<span class="chip">' + ICONS.eye + ' <span id="facViews">…</span> ' + t('views') + '</span>' +
-                '</div>') +
+                '</div>' +
+                '<div class="verified-note">' + ICONS.shieldCheck + ' ' + t('verified_explainer') + '</div>') +
           '</div>' +
         '</div>' +
       '</div>' +
