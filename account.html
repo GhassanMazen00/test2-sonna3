@@ -388,15 +388,34 @@ function buyerRfqCard(rfq) {
     '<div class="muted" style="font-size:12.5px">' + esc(rfq.factory_name || '') + ' · ' + t('qty') + ': ' + esc(rfq.qty || '—') + '</div>' +
     (quotes.length
       ? '<div class="quote-list">' + quotes.map(function (q) {
+          var st = q.status || 'pending';
+          var stChip = st === 'accepted' ? '<span class="chip teal">' + (ICONS.check || '✓') + ' ' + t('quote_accepted') + '</span>'
+                     : st === 'declined' ? '<span class="chip" style="background:#FEE4E2;color:#B42318">' + t('quote_declined') + '</span>'
+                     : '';
           return '<div class="quote-item">' +
-            '<b>' + t('quote_price') + ': ' + esc(q.price || '—') + '</b>' +
-            (q.lead_time ? ' · ' + t('quote_lead') + ': ' + esc(q.lead_time) : '') +
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">' +
+              '<b>' + t('quote_price') + ': ' + esc(q.price || '—') + '</b>' + stChip +
+            '</div>' +
+            (q.lead_time ? '<div class="muted" style="font-size:12.5px;margin-top:2px">' + t('quote_lead') + ': ' + esc(q.lead_time) + (q.moq ? ' · ' + t('quote_moq') + ': ' + esc(q.moq) : '') + '</div>' : (q.moq ? '<div class="muted" style="font-size:12.5px;margin-top:2px">' + t('quote_moq') + ': ' + esc(q.moq) + '</div>' : '')) +
             (q.notes ? '<p style="font-size:13px;margin:4px 0 0">' + esc(q.notes) + '</p>' : '') +
             (q.file_url ? '<a href="' + encodeURI(q.file_url) + '" target="_blank" class="chip" style="margin-top:6px;display:inline-flex">' + ICONS.clipboard + ' ' + esc(q.file_name || t('quote_file')) + '</a>' : '') +
+            (st === 'pending'
+              ? '<div style="display:flex;gap:8px;margin-top:10px">' +
+                  '<button class="btn btn-primary btn-sm" onclick="decideQuote(\'' + esc(q.id) + '\',\'accepted\')">' + (ICONS.check || '✓') + ' ' + t('quote_accept') + '</button>' +
+                  '<button class="btn btn-ghost btn-sm" onclick="decideQuote(\'' + esc(q.id) + '\',\'declined\')">' + t('quote_decline') + '</button>' +
+                '</div>'
+              : '') +
           '</div>';
         }).join('') + '</div>'
       : '<p class="muted" style="font-size:12.5px;margin-top:6px">' + t('myrfq_waiting') + '</p>') +
   '</div>';
+}
+
+function decideQuote(quoteId, status) {
+  if (status === 'declined' && !confirm(t('quote_decline_confirm'))) return;
+  Auth.setQuoteStatus(quoteId, status)
+    .then(function () { toast(status === 'accepted' ? t('quote_accepted') : t('quote_declined')); loadMyRFQs(); })
+    .catch(function (e) { alert('Could not update: ' + (e.message || e)); });
 }
 
 function createFactory() {
