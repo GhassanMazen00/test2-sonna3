@@ -3386,6 +3386,14 @@ section.block.alt::before {
 .cf-holder { display: flex; margin: 14px 0 2px; min-height: 65px; }
 .cf-holder:empty { display: none; }
 
+/* Auth modal: forgot-password link + terms checkbox */
+.au-forgot-row { display: flex; justify-content: flex-end; margin: 8px 2px 0; }
+.au-link { background: none; border: none; cursor: pointer; color: var(--teal); font-weight: 600; font-size: 13px; font-family: inherit; padding: 2px; }
+.au-link:hover { text-decoration: underline; }
+.au-terms { display: flex; align-items: flex-start; gap: 9px; margin: 12px 2px 2px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; cursor: pointer; }
+.au-terms input { margin-top: 3px; flex: none; accent-color: var(--teal); width: 16px; height: 16px; }
+.au-terms a { color: var(--teal); font-weight: 600; }
+
 .toast {
   position: fixed;
   bottom: 24px;

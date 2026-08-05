@@ -388,6 +388,34 @@
       }).catch(function () { return false; });
     },
 
+    // ---- Password reset ----
+    // Send a recovery email. The link lands on reset-password.html with a
+    // recovery token in the URL hash. Captcha token required when captcha is on.
+    recover: function (email, captchaToken) {
+      var body = { email: email };
+      if (captchaToken) body.gotrue_meta_security = { captcha_token: captchaToken };
+      return fetch(SUPABASE_URL + '/auth/v1/recover', {
+        method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.j.msg || res.j.error_description || res.j.error || AL('Could not send the reset email.', 'تعذّر إرسال بريد الاستعادة.'));
+          return true;
+        });
+    },
+    // Set a new password using the recovery access token from the email link.
+    updatePassword: function (accessToken, newPassword) {
+      return fetch(SUPABASE_URL + '/auth/v1/user', {
+        method: 'PUT',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword })
+      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.j.msg || res.j.error_description || res.j.error || AL('Could not update the password.', 'تعذّر تحديث كلمة المرور.'));
+          return true;
+        });
+    },
+
     // ---- Email verification ----
     // Re-send the confirmation email (used from the "check your inbox" screen).
     resendConfirmation: function (email, captchaToken) {
@@ -566,6 +594,9 @@
           field(t('au_password'), '<input id="au_password" type="password">') +
           (isSignup ? field(t('au_phone') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="au_phone" type="text">') : '') +
         '</div>' +
+        (isSignup
+          ? '<label class="au-terms"><input type="checkbox" id="au_terms"><span>' + t('au_terms_agree') + '</span></label>'
+          : '<div class="au-forgot-row"><button type="button" class="au-link" id="auForgot">' + t('au_forgot') + '</button></div>') +
         '<div class="cf-holder" id="auCaptcha"></div>' +
         '<div class="modal-actions">' +
           '<button class="btn btn-ghost" id="auSwitch">' + (isSignup ? t('au_have') : t('au_no')) + '</button>' +
@@ -574,7 +605,42 @@
       '</div>';
     bd.querySelector('#auSwitch').onclick = function () { renderAuth(bd, isSignup ? 'login' : 'signup'); };
     bd.querySelector('#auSubmit').onclick = function () { submitAuth(bd, mode); };
+    var forgot = bd.querySelector('#auForgot');
+    if (forgot) forgot.onclick = function () { renderRecover(bd); };
     mountCaptcha(bd.querySelector('#auCaptcha'));
+  }
+
+  // "Forgot password" view — email + captcha -> recovery email.
+  function renderRecover(bd) {
+    bd.innerHTML =
+      '<div class="modal">' +
+        '<h2>' + t('au_recover_title') + '</h2>' +
+        '<p class="sub">' + t('au_recover_sub') + '</p>' +
+        '<div class="au-err" id="auErr" style="display:none"></div>' +
+        '<div class="cf-ok" id="rcOk" style="display:none;color:var(--teal);font-weight:600;margin:6px 0"></div>' +
+        '<div class="form-grid">' + field(t('au_email'), '<input id="rc_email" type="email">') + '</div>' +
+        '<div class="cf-holder" id="rcCaptcha"></div>' +
+        '<div class="modal-actions">' +
+          '<button class="btn btn-ghost" id="rcBack">' + t('au_recover_back') + '</button>' +
+          '<button class="btn btn-primary" id="rcSend">' + t('au_recover_send') + '</button>' +
+        '</div>' +
+      '</div>';
+    var cap = bd.querySelector('#rcCaptcha');
+    mountCaptcha(cap);
+    bd.querySelector('#rcBack').onclick = function () { renderAuth(bd, 'login'); };
+    bd.querySelector('#rcSend').onclick = function () {
+      var err = bd.querySelector('#auErr'); var show = function (m) { err.textContent = m; err.style.display = 'block'; };
+      var email = (bd.querySelector('#rc_email').value || '').trim();
+      if (!email) { show(AL('Enter your email.', 'أدخل بريدك الإلكتروني.')); return; }
+      var token = capToken(cap);
+      if (!token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
+      var btn = bd.querySelector('#rcSend'); var label = btn.textContent; btn.textContent = '…'; btn.disabled = true;
+      Auth.recover(email, token).then(function () {
+        err.style.display = 'none';
+        var ok = bd.querySelector('#rcOk'); ok.textContent = t('au_recover_sent'); ok.style.display = 'block';
+        btn.textContent = label; btn.disabled = false;
+      }).catch(function (e) { btn.textContent = label; btn.disabled = false; capReset(cap); show(e.message || String(e)); });
+    };
   }
 
   function submitAuth(bd, mode) {
@@ -583,6 +649,10 @@
     var v = function (id) { var el = bd.querySelector('#' + id); return el ? el.value.trim() : ''; };
     var email = v('au_email'), pw = v('au_password');
     if (!email || !pw) { show(AL('Enter your email and password.', 'أدخل البريد الإلكتروني وكلمة المرور.')); return; }
+    if (mode === 'signup') {
+      var termsEl = bd.querySelector('#au_terms');
+      if (termsEl && !termsEl.checked) { show(t('au_terms_required')); return; }
+    }
     var cap = bd.querySelector('#auCaptcha');
     var token = capToken(cap);
     if (!token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
@@ -664,6 +734,9 @@
       return;
     }
     var params = new URLSearchParams(hash.charAt(0) === '#' ? hash.slice(1) : hash);
+    // Password-recovery links carry an access token too, but reset-password.html
+    // must consume it (to set a new password) — don't log the user in here.
+    if (params.get('type') === 'recovery') return;
     var at = params.get('access_token'), rt = params.get('refresh_token');
     var expIn = parseInt(params.get('expires_in') || '3600', 10);
     if (!at) return;
