@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '</select>' +
           '</label>' +
         '</div>' +
+        '<div id="alertBar" class="alert-bar"></div>' +
         '<div class="card-grid" id="factoriesGrid"></div>' +
         '<div id="noResults" class="empty" style="display:none">' +
           '<div class="big">' + ICONS.search + '</div>' +
@@ -167,6 +168,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Load the user's shortlist (for heart state), then render.
   loadFavorites(function () { renderFactoryList(); });
+
+  // Load which sectors the buyer already follows (for the alert button state).
+  if (window.Auth && Auth.isLoggedIn() && Auth.myBuyerAlerts) {
+    Auth.myBuyerAlerts().then(function (list) { window.MY_ALERTS = list || []; renderAlertBar(); });
+  }
   });
 });
 
@@ -174,6 +180,32 @@ function updateFilter(key, value) {
   FILTERS[key] = value;
   localStorage.setItem('sonnaFilters', JSON.stringify(FILTERS));
   renderFactoryList();
+}
+
+// ---- Buyer alerts: follow the currently-filtered sector ----
+window.MY_ALERTS = window.MY_ALERTS || null;   // array of followed sector ids, null until loaded
+function renderAlertBar() {
+  var ab = document.getElementById('alertBar'); if (!ab) return;
+  var sector = FILTERS.industry;
+  if (!sector || !(window.Auth && Auth.isLoggedIn())) { ab.innerHTML = ''; return; }
+  var i = ind(sector);
+  var name = L({ en: i.en, ar: i.ar });
+  var following = window.MY_ALERTS && window.MY_ALERTS.indexOf(sector) >= 0;
+  ab.innerHTML = following
+    ? '<button class="alert-follow on" onclick="toggleFollowSector(\'' + esc(sector) + '\')">' + (ICONS.check || '✓') + ' ' + t('alert_following').replace('{s}', esc(name)) + '</button>'
+    : '<button class="alert-follow" onclick="toggleFollowSector(\'' + esc(sector) + '\')">' + ICONS.bell + ' ' + t('alert_follow').replace('{s}', esc(name)) + '</button>';
+}
+function toggleFollowSector(sector) {
+  if (!(window.Auth && Auth.isLoggedIn())) { if (window.openAuthModal) openAuthModal('login'); return; }
+  if (!window.MY_ALERTS) window.MY_ALERTS = [];
+  var idx = window.MY_ALERTS.indexOf(sector);
+  if (idx >= 0) {
+    window.MY_ALERTS.splice(idx, 1); renderAlertBar();
+    Auth.removeBuyerAlert(sector).catch(function () {});
+  } else {
+    window.MY_ALERTS.push(sector); renderAlertBar();
+    Auth.addBuyerAlert(sector).then(function () { toast(t('alert_added')); }).catch(function () {});
+  }
 }
 
 function setVal(id, val) { var el = document.getElementById(id); if (el) el.value = val; }
@@ -305,6 +337,7 @@ function renderFactoryList() {
   }
   
   document.getElementById('resultsCount').textContent = num(list.length);
+  renderAlertBar();
   
   if (list.length > 0) {
     document.getElementById('factoriesGrid').innerHTML = list.map(factoryCardHTML).join('');
