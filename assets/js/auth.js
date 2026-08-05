@@ -179,7 +179,11 @@
     },
     createRequest: function (fields) {
       return freshToken().then(function (tok) {
-        var row = Object.assign({ owner: AUTH.session.user.id, owner_name: window.Auth.displayName() }, fields || {});
+        var row = Object.assign({
+          owner: AUTH.session.user.id,
+          owner_name: window.Auth.displayName(),
+          owner_company: (AUTH.profile && AUTH.profile.company) || null
+        }, fields || {});
         return fetch(SUPABASE_URL + '/rest/v1/requests', {
           method: 'POST', headers: restHeaders(tok, { Prefer: 'return=representation' }), body: JSON.stringify(row)
         }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return r.json(); })

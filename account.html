@@ -101,7 +101,10 @@ function dashboardHtml(p, fac) {
       '<div class="form-grid">' +
         accField(t('au_name'), '<input id="ac_name" type="text" value="' + esc(p.full_name || '') + '">') +
         accField(t('au_phone'), '<input id="ac_phone" type="text" value="' + esc(p.phone || '') + '">') +
+        accField(t('acc_company') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_company" type="text" value="' + esc(p.company || '') + '">') +
+        accField(t('acc_sourcing') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_sourcing" type="text" placeholder="' + t('acc_sourcing_ph') + '" value="' + esc(p.sourcing || '') + '">') +
       '</div>' +
+      '<p class="muted" style="font-size:12.5px;margin-top:8px">' + t('acc_buyer_note') + '</p>' +
       '<div class="modal-actions" style="margin-top:16px">' +
         '<button class="btn btn-ghost" onclick="Auth.logout()">' + t('logout') + '</button>' +
         '<button class="btn btn-primary" id="ac_save" onclick="saveAccount()">' + t('acc_save') + '</button>' +
@@ -409,7 +412,7 @@ function createFactory() {
 function saveAccount() {
   var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : undefined; };
   var btn = document.getElementById('ac_save'); btn.disabled = true; btn.textContent = '…';
-  Auth.updateProfile({ full_name: v('ac_name'), phone: v('ac_phone') })
+  Auth.updateProfile({ full_name: v('ac_name'), phone: v('ac_phone'), company: v('ac_company'), sourcing: v('ac_sourcing') })
     .then(function(){ btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function(){ btn.textContent = t('acc_save'); }, 2000); })
     .catch(function(e){ btn.disabled = false; btn.textContent = t('acc_save'); alert('Could not save changes: ' + (e.message || e)); });
 }
