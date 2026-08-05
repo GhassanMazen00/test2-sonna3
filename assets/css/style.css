@@ -5112,3 +5112,36 @@ button.pv-img:hover { opacity: .92; }
 .ob-card span { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
 .ob-skip { margin-top: 6px; background: none; border: none; cursor: pointer; color: var(--ink-soft); font-family: inherit; font-size: 13px; padding: 8px; text-decoration: underline; }
 @media (max-width: 480px) { .ob-cards { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   App-mode: requests as a sideways-swipe list + large-screen layout
+   ============================================================ */
+
+/* "Latest requests" — smaller cards, horizontal free-scroll (swipe). */
+.app-mode .requests-carousel { overflow: visible; }
+.app-mode .requests-track {
+  transform: none !important;                 /* neutralise the JS paging */
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  gap: 12px; padding-bottom: 10px; -webkit-overflow-scrolling: touch;
+}
+.app-mode .requests-track::-webkit-scrollbar { height: 5px; }
+.app-mode .requests-track::-webkit-scrollbar-thumb { background: var(--line); border-radius: 5px; }
+.app-mode .request-card-new {
+  flex: 0 0 200px; width: 200px; height: auto; min-height: 200px;
+  padding: 15px; gap: 9px; border-radius: 16px; scroll-snap-align: start;
+}
+.app-mode .request-card-new .req-icon { width: 40px; height: 40px; border-radius: 12px; font-size: 20px; }
+.app-mode .request-card-new h3 { font-size: 14px; -webkit-line-clamp: 2; min-height: 0; }
+.app-mode .request-card-new p { font-size: 12.5px; -webkit-line-clamp: 2; min-height: 0; }
+.app-mode .request-card-new .req-footer { padding-top: 10px; font-size: 11.5px; flex-direction: column; align-items: flex-start; gap: 3px; }
+.app-mode .requests-section .carousel-controls { display: none; }   /* swipe, no arrows/dots */
+
+/* Large screens (tablet / landscape / BlueStacks): keep the phone layout —
+   no website top nav, content held to a phone-width centered column, and no
+   horizontal zoom/scroll. */
+.app-mode .desktop-only, .app-mode .desktop-only-flex { display: none !important; }
+.app-mode nav.main-nav { display: none !important; }
+.app-mode .header-actions .nav-bell { display: inline-flex !important; }   /* keep the bell */
+.app-mode .container { max-width: 600px; }
+.app-mode .app-tabbar { padding-inline: max(0px, calc((100% - 600px) / 2)); }
+html.app-mode, html.app-mode body { overflow-x: hidden; max-width: 100vw; }

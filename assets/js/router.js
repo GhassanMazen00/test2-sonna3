@@ -361,7 +361,7 @@ function loadHomeRequests() {
     var track = document.getElementById('reqTrack');
     var controls = document.getElementById('reqControls');
     if (!track) return;
-    var rows = all.slice(0, 9);   // newest first (query orders by created_at desc)
+    var rows = all.slice(0, 12);   // newest first (query orders by created_at desc)
     if (!rows.length) {
       track.innerHTML = '<div class="empty" style="margin:0;width:100%"><div class="big">' + ICONS.clipboard + '</div><b>' + t('req_none') + '</b><p>' + t('req_none_sub') + '</p></div>';
       if (controls) controls.innerHTML = '';
