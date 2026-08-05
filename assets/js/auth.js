@@ -401,6 +401,29 @@
       }).catch(function () { return false; });
     },
 
+    // ---- Buyer alerts (follow a sector for new-factory notifications) ----
+    addBuyerAlert: function (sector) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rpc/add_buyer_alert', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ p_sector: sector })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      });
+    },
+    removeBuyerAlert: function (sector) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/buyer_alerts?user_id=eq.' + AUTH.session.user.id + '&sector=eq.' + encodeURIComponent(sector), {
+          method: 'DELETE', headers: restHeaders(tok, { Prefer: 'return=minimal' })
+        }).then(function (r) { return r.ok; });
+      });
+    },
+    myBuyerAlerts: function () {
+      if (!this.isLoggedIn()) return Promise.resolve([]);
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/buyer_alerts?user_id=eq.' + AUTH.session.user.id + '&select=sector&order=created_at.desc', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows || []).map(function (x) { return x.sector; }); });
+      }).catch(function () { return []; });
+    },
+
     // ---- Password reset ----
     // Send a recovery email. The link lands on reset-password.html with a
     // recovery token in the URL hash. Captcha token required when captcha is on.
