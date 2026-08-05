@@ -580,6 +580,13 @@
   // Until then the token is simply ignored, so this never blocks sign-in.
   var TURNSTILE_SITEKEY = '0x4AAAAAAEEHTneezpC_D8fO';
 
+  // Turnstile is website-only. It is domain-locked to sonna3.net and can't
+  // render inside the native app (different origin), so we skip it entirely
+  // in the app / app-preview.
+  function captchaEnabled() {
+    return !(document.documentElement.classList.contains('app-mode'));
+  }
+
   function ensureTurnstile(cb, onFail) {
     if (window.turnstile && window.turnstile.render) { cb(); return; }
     if (!document.getElementById('cf-turnstile-js')) {
@@ -656,7 +663,7 @@
         (isSignup
           ? '<label class="au-terms"><input type="checkbox" id="au_terms"><span>' + t('au_terms_agree') + '</span></label>'
           : '<div class="au-forgot-row"><button type="button" class="au-link" id="auForgot">' + t('au_forgot') + '</button></div>') +
-        '<div class="cf-holder" id="auCaptcha"></div>' +
+        (captchaEnabled() ? '<div class="cf-holder" id="auCaptcha"></div>' : '') +
         '<div class="modal-actions">' +
           '<button class="btn btn-ghost" id="auSwitch">' + (isSignup ? t('au_have') : t('au_no')) + '</button>' +
           '<button class="btn btn-primary" id="auSubmit">' + (isSignup ? t('au_submit_signup') : t('au_submit_login')) + '</button>' +
@@ -666,7 +673,7 @@
     bd.querySelector('#auSubmit').onclick = function () { submitAuth(bd, mode); };
     var forgot = bd.querySelector('#auForgot');
     if (forgot) forgot.onclick = function () { renderRecover(bd); };
-    mountCaptcha(bd.querySelector('#auCaptcha'));
+    if (captchaEnabled()) mountCaptcha(bd.querySelector('#auCaptcha'));
   }
 
   // "Forgot password" view — email + captcha -> recovery email.
@@ -678,14 +685,14 @@
         '<div class="au-err" id="auErr" style="display:none"></div>' +
         '<div class="cf-ok" id="rcOk" style="display:none;color:var(--teal);font-weight:600;margin:6px 0"></div>' +
         '<div class="form-grid">' + field(t('au_email'), '<input id="rc_email" type="email">') + '</div>' +
-        '<div class="cf-holder" id="rcCaptcha"></div>' +
+        (captchaEnabled() ? '<div class="cf-holder" id="rcCaptcha"></div>' : '') +
         '<div class="modal-actions">' +
           '<button class="btn btn-ghost" id="rcBack">' + t('au_recover_back') + '</button>' +
           '<button class="btn btn-primary" id="rcSend">' + t('au_recover_send') + '</button>' +
         '</div>' +
       '</div>';
     var cap = bd.querySelector('#rcCaptcha');
-    mountCaptcha(cap);
+    if (cap) mountCaptcha(cap);
     bd.querySelector('#rcBack').onclick = function () { renderAuth(bd, 'login'); };
     bd.querySelector('#rcSend').onclick = function () {
       var err = bd.querySelector('#auErr'); var show = function (m) { err.textContent = m; err.style.display = 'block'; };
@@ -740,14 +747,14 @@
         '<p class="sub">' + t('au_confirm_to') + ' <strong>' + email + '</strong>. ' + t('au_confirm_note') + '</p>' +
         '<div class="au-err" id="cfErr" style="display:none"></div>' +
         '<div class="cf-ok" id="cfOk" style="display:none;color:var(--teal);font-weight:600;margin:6px 0">' + t('au_resent') + '</div>' +
-        '<div class="cf-holder" id="cfCaptcha" style="justify-content:center"></div>' +
+        (captchaEnabled() ? '<div class="cf-holder" id="cfCaptcha" style="justify-content:center"></div>' : '') +
       '</div>' +
       '<div class="modal-actions" style="justify-content:center">' +
         '<button class="btn btn-ghost" id="cfResend">' + t('au_resend') + '</button>' +
         '<button class="btn btn-primary" onclick="this.closest(\'.modal-backdrop\').remove()">' + t('au_done') + '</button>' +
       '</div>';
     var cap = m.querySelector('#cfCaptcha');
-    mountCaptcha(cap);
+    if (cap) mountCaptcha(cap);
     var rb = m.querySelector('#cfResend');
     rb.onclick = function () {
       var token = capToken(cap);
