@@ -430,7 +430,11 @@
     recover: function (email, captchaToken) {
       var body = { email: email };
       if (captchaToken) body.gotrue_meta_security = { captcha_token: captchaToken };
-      return fetch(SUPABASE_URL + '/auth/v1/recover', {
+      // Tell Supabase where the email link should land — otherwise it falls
+      // back to the Site URL (the homepage). Must be in the allowed redirect
+      // URLs list in Supabase → Auth → URL Configuration.
+      var redirectTo = encodeURIComponent(location.origin + '/reset-password.html');
+      return fetch(SUPABASE_URL + '/auth/v1/recover?redirect_to=' + redirectTo, {
         method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
