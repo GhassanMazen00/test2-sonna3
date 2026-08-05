@@ -281,6 +281,15 @@
         }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
       }).then(function () { return self.setRFQStatus(rfqId, 'quoted'); });
     },
+    // Buyer accepts or declines a quote (accepting closes the RFQ).
+    setQuoteStatus: function (quoteId, status) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rpc/set_quote_status', {
+          method: 'POST', headers: restHeaders(tok),
+          body: JSON.stringify({ p_quote: quoteId, p_status: status })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      });
+    },
     setRFQStatus: function (rfqId, status) {
       return freshToken().then(function (tok) {
         return fetch(SUPABASE_URL + '/rest/v1/rfqs?id=eq.' + rfqId, {

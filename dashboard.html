@@ -84,6 +84,7 @@ function openQuoteModal(rfqId) {
       '<div class="form-grid">' +
         '<div class="form-field"><label>' + t('quote_price') + '</label><input id="q_price" type="text" placeholder="' + t('quote_price_ph') + '"></div>' +
         '<div class="form-field"><label>' + t('quote_lead') + '</label><input id="q_lead" type="text" placeholder="' + t('quote_lead_ph') + '"></div>' +
+        '<div class="form-field"><label>' + t('quote_moq') + ' <span class="opt">(' + t('optional') + ')</span></label><input id="q_moq" type="text" placeholder="' + t('quote_moq_ph') + '"></div>' +
         '<div class="form-field full"><label>' + t('quote_notes') + '</label><textarea id="q_notes" rows="3"></textarea></div>' +
         '<div class="form-field full"><label>' + t('quote_file') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
           '<input id="q_file" type="file" accept=".csv,.pdf,application/pdf,text/csv">' +
@@ -106,7 +107,7 @@ function openQuoteModal(rfqId) {
     var btn = bd.querySelector('#qSubmit'); btn.disabled = true; btn.textContent = '…';
     var up = file ? Auth.uploadQuoteFile(file).then(function (url) { return { file_url: url, file_name: file.name }; }) : Promise.resolve({});
     up.then(function (fileFields) {
-      return Auth.sendQuote(rfqId, Object.assign({ price: price || null, lead_time: v('q_lead') || null, notes: notes || '' }, fileFields));
+      return Auth.sendQuote(rfqId, Object.assign({ price: price || null, lead_time: v('q_lead') || null, moq: v('q_moq') || null, notes: notes || '' }, fileFields));
     }).then(function () {
       bd.remove(); toast(t('quote_sent')); renderDashboard();
     }).catch(function (e2) {
