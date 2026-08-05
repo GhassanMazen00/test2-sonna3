@@ -5086,3 +5086,23 @@ button.pv-img:hover { opacity: .92; }
 .alert-follow:hover { border-color: var(--teal); }
 .alert-follow svg { width: 16px; height: 16px; }
 .alert-follow.on { background: var(--card); border-color: var(--teal); }
+
+/* First-run onboarding modal */
+.onboard-modal { max-width: 520px; text-align: center; }
+.onboard-modal .ob-brand { font-family: var(--font-brand); font-weight: 800; font-size: 26px; margin-bottom: 6px; }
+.onboard-modal .ob-brand .logo-ain { color: var(--teal); }
+.onboard-modal h2 { text-align: center; }
+.ob-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 22px 0 8px; }
+.ob-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  padding: 22px 16px; border: 1.5px solid var(--line); border-radius: 16px;
+  background: var(--card); cursor: pointer; font-family: inherit; color: var(--ink);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.ob-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+.ob-card .ob-ic { width: 48px; height: 48px; border-radius: 14px; background: var(--teal-tint); color: var(--teal); display: grid; place-items: center; }
+.ob-card .ob-ic svg { width: 24px; height: 24px; }
+.ob-card b { font-size: 15px; }
+.ob-card span { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+.ob-skip { margin-top: 6px; background: none; border: none; cursor: pointer; color: var(--ink-soft); font-family: inherit; font-size: 13px; padding: 8px; text-decoration: underline; }
+@media (max-width: 480px) { .ob-cards { grid-template-columns: 1fr; } }
