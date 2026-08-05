@@ -90,6 +90,43 @@ function mobileMenuHTML() {
     '</div>';
 }
 
+// ---- First-run onboarding (buyer vs factory path) ----
+// Shows once per browser for logged-out first-time visitors.
+function maybeShowOnboarding() {
+  try { if (localStorage.getItem('sonnaOnboarded')) return; } catch (e) {}
+  if (window.Auth && Auth.isLoggedIn()) return;
+  if (document.querySelector('.onboard-modal')) return;
+  var bd = document.createElement('div');
+  bd.className = 'modal-backdrop';
+  bd.innerHTML =
+    '<div class="modal onboard-modal">' +
+      '<div class="ob-brand">' + t('brand') + '<span class="logo-ain">ع</span></div>' +
+      '<h2>' + t('ob_title') + '</h2>' +
+      '<p class="sub" style="text-align:center">' + t('ob_sub') + '</p>' +
+      '<div class="ob-cards">' +
+        '<button class="ob-card" onclick="obPick(\'buyer\')">' +
+          '<span class="ob-ic">' + ICONS.search + '</span>' +
+          '<b>' + t('ob_buyer') + '</b><span>' + t('ob_buyer_sub') + '</span></button>' +
+        '<button class="ob-card" onclick="obPick(\'factory\')">' +
+          '<span class="ob-ic">' + ICONS.factory + '</span>' +
+          '<b>' + t('ob_factory') + '</b><span>' + t('ob_factory_sub') + '</span></button>' +
+      '</div>' +
+      '<button class="ob-skip" onclick="obDone()">' + t('ob_skip') + '</button>' +
+    '</div>';
+  document.body.appendChild(bd);
+}
+function obClose() {
+  try { localStorage.setItem('sonnaOnboarded', '1'); } catch (e) {}
+  var m = document.querySelector('.onboard-modal');
+  if (m && m.closest('.modal-backdrop')) m.closest('.modal-backdrop').remove();
+}
+window.obPick = function (role) {
+  obClose();
+  if (role === 'factory') { if (window.listYourFactory) listYourFactory(); else window.location.href = 'account.html'; }
+  else { window.location.href = 'factories.html'; }
+};
+window.obDone = function () { obClose(); };
+
 // Footer
 function footerHTML() {
   // Each link is [label, target]; a target ending in "()" runs as JS, anything

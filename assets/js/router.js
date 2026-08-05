@@ -241,6 +241,9 @@ function renderHomePage() {
   loadHomeRequests();     // pull the latest live requests from Supabase
   initFloatRotation();
 
+  // First-run onboarding for new, logged-out visitors.
+  if (window.maybeShowOnboarding) setTimeout(maybeShowOnboarding, 700);
+
   // Autocomplete on the hero search — jump straight to a filtered directory.
   if (window.attachSearchAutocomplete) {
     attachSearchAutocomplete(document.querySelector('.search-bar input'), function (q) {
