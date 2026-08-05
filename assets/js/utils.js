@@ -481,3 +481,73 @@ function openRequestForm(existing) {
     });
   };
 }
+
+// ---- Search autocomplete (shared by the home hero + factories page) ----
+// Builds a de-duplicated suggestion index from factory names, categories and
+// product terms, then renders a dropdown under the given input.
+var _SEARCH_SUGG = null;
+function buildSearchSuggestions() {
+  var out = [], seen = {};
+  function add(label, type) {
+    label = String(label || '').trim();
+    if (!label) return;
+    var k = type + '|' + label.toLowerCase();
+    if (seen[k]) return; seen[k] = 1;
+    out.push({ label: label, type: type });
+  }
+  // These are `const` globals (not on window), so reference them directly.
+  var IND = (typeof INDUSTRIES !== 'undefined') ? INDUSTRIES : [];
+  var FAC = (typeof FACTORIES !== 'undefined') ? FACTORIES : [];
+  var INP = (typeof IND_PRODUCTS !== 'undefined') ? IND_PRODUCTS : null;
+  IND.forEach(function (i) { add(L({ en: i.en, ar: i.ar }), 'sector'); });
+  FAC.forEach(function (f) {
+    if (f.verified === false) return;
+    add(L(f.name), 'factory');
+    (f.productItems || []).forEach(function (p) {
+      var nm = p && (p.name ? (p.name.en || p.name.ar || p.name) : p);
+      if (typeof nm === 'string') add(nm, 'product');
+    });
+    var pr = f.products || { en: [], ar: [] };
+    (pr.en || []).concat(pr.ar || []).forEach(function (p) { add(p, 'product'); });
+  });
+  if (INP) Object.keys(INP).forEach(function (k) {
+    var p = INP[k] || {}; (p.en || []).concat(p.ar || []).forEach(function (x) { add(x, 'product'); });
+  });
+  return out;
+}
+function attachSearchAutocomplete(input, onPick) {
+  if (!input || input._acWired) return;
+  input._acWired = true;
+  input.setAttribute('autocomplete', 'off');
+  var host = input.closest('.search-bar') || input.parentElement;
+  if (host && getComputedStyle(host).position === 'static') host.style.position = 'relative';
+  var box = document.createElement('div');
+  box.className = 'search-ac'; box.style.display = 'none';
+  host.appendChild(box);
+  function render(q) {
+    q = String(q || '').toLowerCase().trim();
+    if (q.length < 2) { box.style.display = 'none'; return; }
+    if (!_SEARCH_SUGG) _SEARCH_SUGG = buildSearchSuggestions();
+    var items = _SEARCH_SUGG.filter(function (s) { return s.label.toLowerCase().indexOf(q) >= 0; });
+    items.sort(function (a, b) { return a.label.toLowerCase().indexOf(q) - b.label.toLowerCase().indexOf(q) || a.label.length - b.label.length; });
+    items = items.slice(0, 7);
+    if (!items.length) { box.style.display = 'none'; return; }
+    box.innerHTML = items.map(function (s) {
+      var ic = s.type === 'factory' ? ICONS.factory : s.type === 'sector' ? ICONS.compass : ICONS.search;
+      return '<button type="button" class="ac-item" data-q="' + esc(s.label) + '">' +
+        '<span class="ac-ic">' + ic + '</span><span class="ac-lb">' + esc(s.label) + '</span>' +
+        '<small>' + t('ac_' + s.type) + '</small></button>';
+    }).join('');
+    box.style.display = 'block';
+  }
+  input.addEventListener('input', function () { render(input.value); });
+  input.addEventListener('focus', function () { if (input.value) render(input.value); });
+  box.addEventListener('mousedown', function (e) {
+    var b = e.target.closest('.ac-item'); if (!b) return;
+    e.preventDefault();
+    var q = b.getAttribute('data-q');
+    input.value = q; box.style.display = 'none';
+    if (typeof onPick === 'function') onPick(q);
+  });
+  document.addEventListener('click', function (e) { if (host && !host.contains(e.target)) box.style.display = 'none'; });
+}

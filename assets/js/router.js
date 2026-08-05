@@ -241,6 +241,13 @@ function renderHomePage() {
   loadHomeRequests();     // pull the latest live requests from Supabase
   initFloatRotation();
 
+  // Autocomplete on the hero search — jump straight to a filtered directory.
+  if (window.attachSearchAutocomplete) {
+    attachSearchAutocomplete(document.querySelector('.search-bar input'), function (q) {
+      window.location.href = 'factories.html?q=' + encodeURIComponent(q);
+    });
+  }
+
   // Subscribed factory owners see "Change plan"; everyone else "Subscribe now".
   if (window.Auth && Auth.isLoggedIn() && Auth.myVerifiedPlan) {
     Auth.myVerifiedPlan().then(function (plan) {
