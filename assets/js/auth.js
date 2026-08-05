@@ -580,20 +580,34 @@
   // Until then the token is simply ignored, so this never blocks sign-in.
   var TURNSTILE_SITEKEY = '0x4AAAAAAEEHTneezpC_D8fO';
 
-  function ensureTurnstile(cb) {
+  function ensureTurnstile(cb, onFail) {
     if (window.turnstile && window.turnstile.render) { cb(); return; }
     if (!document.getElementById('cf-turnstile-js')) {
       var s = document.createElement('script');
       s.id = 'cf-turnstile-js';
       s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
       s.async = true; s.defer = true;
+      s.onerror = function () { if (onFail) onFail('script'); };
       document.head.appendChild(s);
     }
     var tries = 0;
     var iv = setInterval(function () {
       if (window.turnstile && window.turnstile.render) { clearInterval(iv); cb(); }
-      else if (++tries > 100) { clearInterval(iv); }   // give up after ~10s
+      else if (++tries > 100) { clearInterval(iv); if (onFail) onFail('timeout'); }   // give up after ~10s
     }, 100);
+  }
+  // A captcha failure must never be silent — it can block logins. Surface it in
+  // analytics (so you see it before users complain) and tell the user.
+  function capFail(holder, reason) {
+    try { if (window.gtag) gtag('event', 'captcha_failed', { reason: reason || 'unknown' }); } catch (e) {}
+    if (holder && !holder.dataset.failNoted && holder.parentNode) {
+      holder.dataset.failNoted = '1';
+      var note = document.createElement('div');
+      note.className = 'cf-fail';
+      note.textContent = AL('Verification could not load — please refresh the page or disable any ad-blocker.',
+                            'تعذّر تحميل التحقق — يرجى تحديث الصفحة أو تعطيل مانع الإعلانات.');
+      holder.parentNode.insertBefore(note, holder.nextSibling);
+    }
   }
   function mountCaptcha(holder) {
     if (!holder) return;
@@ -602,16 +616,17 @@
       try { if (holder.dataset.wid) window.turnstile.remove(holder.dataset.wid); } catch (e) {}
       holder.innerHTML = '';
       holder.dataset.token = '';
+      holder.dataset.failNoted = '';
       try {
         holder.dataset.wid = window.turnstile.render(holder, {
           sitekey: TURNSTILE_SITEKEY,
           theme: 'auto',
           callback: function (tok) { holder.dataset.token = tok; },
           'expired-callback': function () { holder.dataset.token = ''; },
-          'error-callback': function () { holder.dataset.token = ''; }
+          'error-callback': function () { holder.dataset.token = ''; capFail(holder, 'error-callback'); }
         });
-      } catch (e) { /* already rendered or blocked */ }
-    });
+      } catch (e) { capFail(holder, 'render-threw'); }
+    }, function (reason) { capFail(holder, reason); });
   }
   function capToken(holder) { return holder ? (holder.dataset.token || '') : ''; }
   // Only enforce the captcha when a widget actually rendered (Turnstile injects
