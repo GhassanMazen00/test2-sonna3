@@ -610,6 +610,10 @@
     });
   }
   function capToken(holder) { return holder ? (holder.dataset.token || '') : ''; }
+  // Only enforce the captcha when a widget actually rendered (Turnstile injects
+  // an iframe). If it failed to load — ad-blocker, network, domain not allow-
+  // listed — never block the user; let the server decide.
+  function capRequired(holder) { return !!(holder && holder.querySelector && holder.querySelector('iframe')); }
   function capReset(holder) {
     if (holder && holder.dataset.wid && window.turnstile) {
       try { window.turnstile.reset(holder.dataset.wid); } catch (e) {}
@@ -669,7 +673,7 @@
       var email = (bd.querySelector('#rc_email').value || '').trim();
       if (!email) { show(AL('Enter your email.', 'أدخل بريدك الإلكتروني.')); return; }
       var token = capToken(cap);
-      if (!token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
+      if (capRequired(cap) && !token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
       var btn = bd.querySelector('#rcSend'); var label = btn.textContent; btn.textContent = '…'; btn.disabled = true;
       Auth.recover(email, token).then(function () {
         err.style.display = 'none';
@@ -691,7 +695,7 @@
     }
     var cap = bd.querySelector('#auCaptcha');
     var token = capToken(cap);
-    if (!token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
+    if (capRequired(cap) && !token) { show(AL('Please complete the verification below.', 'يرجى إكمال التحقق بالأسفل.')); return; }
     var btn = bd.querySelector('#auSubmit'); var label = btn.textContent; btn.textContent = '…'; btn.disabled = true;
     // Turnstile tokens are single-use — reset the widget so a retry gets a fresh one.
     var done = function (e) { btn.disabled = false; btn.textContent = label; capReset(cap); show(e.message || String(e)); };
@@ -728,7 +732,7 @@
     var rb = m.querySelector('#cfResend');
     rb.onclick = function () {
       var token = capToken(cap);
-      if (!token) { var e0 = m.querySelector('#cfErr'); e0.textContent = AL('Please complete the verification.', 'يرجى إكمال التحقق.'); e0.style.display = 'block'; return; }
+      if (capRequired(cap) && !token) { var e0 = m.querySelector('#cfErr'); e0.textContent = AL('Please complete the verification.', 'يرجى إكمال التحقق.'); e0.style.display = 'block'; return; }
       rb.disabled = true; rb.textContent = '…';
       m.querySelector('#cfErr').style.display = 'none';
       Auth.resendConfirmation(email, token).then(function () {
