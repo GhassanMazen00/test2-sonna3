@@ -5056,3 +5056,21 @@ button.pv-img:hover { opacity: .92; }
   background: var(--teal-tint); padding: 7px 12px; border-radius: 10px;
 }
 .verified-note svg { width: 15px; height: 15px; flex: none; }
+
+/* Search autocomplete dropdown */
+.search-ac {
+  position: absolute; top: calc(100% + 8px); inset-inline-start: 0; inset-inline-end: 0;
+  z-index: 60; background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 14px 40px rgba(21,34,31,.14); overflow: hidden; padding: 6px;
+}
+.ac-item {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: none; border: none; cursor: pointer; text-align: start; border-radius: 10px;
+  font-family: inherit; font-size: 14px; color: var(--ink);
+}
+.ac-item:hover { background: var(--teal-tint); }
+.ac-item .ac-ic { color: var(--teal); display: inline-flex; flex: none; }
+.ac-item .ac-ic svg { width: 17px; height: 17px; }
+.ac-item .ac-lb { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-item small { color: var(--ink-soft); font-size: 11px; flex: none; }
+:root[data-theme="dark"] .search-ac { box-shadow: 0 14px 40px rgba(0,0,0,.5); }

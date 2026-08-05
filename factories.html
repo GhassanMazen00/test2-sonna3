@@ -160,6 +160,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Restore filter values
   restoreFilters();
 
+  // Product/factory/category autocomplete on the search box.
+  if (window.attachSearchAutocomplete) {
+    attachSearchAutocomplete(document.getElementById('searchInput'), function (q) { updateFilter('q', q); });
+  }
+
   // Load the user's shortlist (for heart state), then render.
   loadFavorites(function () { renderFactoryList(); });
   });
