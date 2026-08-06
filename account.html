@@ -94,6 +94,7 @@ function dashboardHtml(p, fac) {
     '</div>' +
     (appMode() ? appPromoCards(false) : '') +
     factorySection(fac) +
+    (fac ? '<div class="panel" id="payPanel" style="margin-bottom:16px"><h2>' + t('pm_title') + '</h2>' + loadingHTML() + '</div>' : '') +
     '<div class="panel" id="myPostsPanel" style="margin-bottom:16px"><h2>' + t('myposts_title') + '</h2>' + loadingHTML() + '</div>' +
     '<div class="panel" id="myRfqPanel" style="margin-bottom:16px"><h2>' + t('myrfq_title') + '</h2>' + loadingHTML() + '</div>' +
     '<div class="panel">' +
@@ -261,7 +262,48 @@ function renderAccount() {
   shell(dashboardHtml(p, null));   // render immediately, then fill in the factory
   loadPhoneState();
   loadMyPosts();
-  Auth.myFactory().then(function(fac){ shell(dashboardHtml(p, fac)); loadMyRFQs(); loadMyPosts(); loadPhoneState(); }).catch(function(){ loadMyRFQs(); loadMyPosts(); });
+  Auth.myFactory().then(function(fac){ shell(dashboardHtml(p, fac)); loadMyRFQs(); loadMyPosts(); loadPhoneState(); if (fac) loadPaymentMethod(); }).catch(function(){ loadMyRFQs(); loadMyPosts(); });
+}
+
+// ---- Payment methods / auto-renew panel ----
+function loadPaymentMethod() {
+  var panel = document.getElementById('payPanel');
+  if (!panel || !Auth.myPaymentMethod) return;
+  var head = '<h2 style="margin-bottom:12px">' + t('pm_title') + '</h2>';
+  Promise.all([Auth.myPaymentMethod(), Auth.mySubscription()]).then(function (res) {
+    var card = res[0], sub = res[1];
+    var autoOn = !!(sub && sub.auto_renew);
+    var html = head;
+    if (card) {
+      var brand = (card.card_brand || t('pm_card')).toUpperCase();
+      html += '<div class="pm-card">' +
+          '<span class="pm-chip">' + ICONS.creditCard + '</span>' +
+          '<div class="pm-meta"><b>' + esc(brand) + ' •••• ' + esc(card.card_last4 || '****') + '</b>' +
+            (card.card_exp ? '<span class="muted">' + t('pm_expires') + ' ' + esc(card.card_exp) + '</span>' : '') + '</div>' +
+          '<button class="btn btn-ghost btn-sm" onclick="removeCard()">' + t('pm_remove') + '</button>' +
+        '</div>' +
+        '<label class="pm-toggle"><input type="checkbox" id="pm_auto"' + (autoOn ? ' checked' : '') + ' onchange="toggleAutoRenew(this)"><span>' + t('pm_autorenew') + '</span></label>' +
+        '<p class="muted" style="font-size:12.5px;margin-top:6px">' + t('pm_autorenew_hint') + '</p>';
+    } else {
+      html += '<p class="muted" style="margin-bottom:12px">' + t('pm_none') + '</p>' +
+        '<a class="btn btn-ghost btn-sm" href="subscribe.html">' + ICONS.sparkle + ' ' + t('pm_add_hint') + '</a>';
+    }
+    panel.innerHTML = html;
+  }).catch(function () { panel.innerHTML = head + '<p class="muted">' + t('pm_none') + '</p>'; });
+}
+
+function toggleAutoRenew(el) {
+  var on = el.checked; el.disabled = true;
+  Auth.setAutoRenew(on)
+    .then(function () { el.disabled = false; toast(on ? t('pm_autorenew_on') : t('pm_autorenew_off')); })
+    .catch(function (e) { el.disabled = false; el.checked = !on; alert((e.message || e)); });
+}
+
+function removeCard() {
+  if (!confirm(t('pm_remove_confirm'))) return;
+  Auth.removePaymentMethod()
+    .then(function () { toast(t('pm_removed')); loadPaymentMethod(); })
+    .catch(function (e) { alert(e.message || e); });
 }
 
 // ---- Optional phone verification ----

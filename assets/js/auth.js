@@ -555,6 +555,30 @@
           .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows && rows[0]) || null; });
       }).catch(function () { return null; });
     },
+    // ---- Saved card / auto-renew (RLS lets an owner read only their own) ----
+    // Returns the masked saved card { card_brand, card_last4, card_exp } or null.
+    myPaymentMethod: function () {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/payment_methods?select=card_brand,card_last4,card_exp&owner=eq.' + AUTH.session.user.id + '&limit=1', { headers: restHeaders(tok) })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) { return (rows && rows[0]) || null; });
+      }).catch(function () { return null; });
+    },
+    // Turn auto-renew on/off for the owner's active subscription.
+    setAutoRenew: function (on) {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rpc/set_auto_renew', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({ p_on: !!on })
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      });
+    },
+    // Delete the saved card (also clears auto-renew).
+    removePaymentMethod: function () {
+      return freshToken().then(function (tok) {
+        return fetch(SUPABASE_URL + '/rest/v1/rpc/remove_payment_method', {
+          method: 'POST', headers: restHeaders(tok), body: JSON.stringify({})
+        }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(t || r.status); }); return true; });
+      });
+    },
     // Admin: upgrade a paid factory to "visited" after the on-site visit.
     markFactoryVisited: function (factoryId) {
       return freshToken().then(function (tok) {
