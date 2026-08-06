@@ -179,10 +179,20 @@
     },
     createRequest: function (fields) {
       return freshToken().then(function (tok) {
+        var prof = AUTH.profile || {};
+        // Readable sector label from the profile's stored industry id.
+        var secLabel = null;
+        if (prof.sector && typeof INDUSTRIES !== 'undefined') {
+          for (var i = 0; i < INDUSTRIES.length; i++) {
+            if (INDUSTRIES[i].id === prof.sector) { secLabel = (LANG === 'ar' ? INDUSTRIES[i].ar : INDUSTRIES[i].en); break; }
+          }
+        }
         var row = Object.assign({
           owner: AUTH.session.user.id,
           owner_name: window.Auth.displayName(),
-          owner_company: (AUTH.profile && AUTH.profile.company) || null
+          owner_company: prof.company || null,
+          owner_job: prof.job_title || null,
+          owner_sector: secLabel
         }, fields || {});
         return fetch(SUPABASE_URL + '/rest/v1/requests', {
           method: 'POST', headers: restHeaders(tok, { Prefer: 'return=representation' }), body: JSON.stringify(row)

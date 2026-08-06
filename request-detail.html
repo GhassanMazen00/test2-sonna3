@@ -133,7 +133,9 @@ function renderRequest(r) {
               '<h1 style="font-size:22px;font-weight:800">' + esc(r.title || '') + '</h1>' +
               '<span style="font-size:13px;color:var(--ink-soft)">' +
                 t('posted') + ' ' + STR[LANG].days_ago(daysAgo(r.created_at)) + ' · ' + t('by') + ' <b>' + esc(r.owner_name || 'User') + '</b>' +
+                (r.owner_job ? ' <span class="chip" style="font-size:11px;vertical-align:1px">' + ICONS.user + ' ' + esc(r.owner_job) + '</span>' : '') +
                 (r.owner_company ? ' <span class="chip" style="font-size:11px;vertical-align:1px">' + ICONS.factory + ' ' + esc(r.owner_company) + '</span>' : '') +
+                (r.owner_sector ? ' <span class="chip" style="font-size:11px;vertical-align:1px">' + ICONS.tag + ' ' + esc(r.owner_sector) + '</span>' : '') +
                 ' · ' + ICONS.eye + ' <span id="reqViews">…</span> ' + t('views') +
               '</span>' +
             '</div>' +
