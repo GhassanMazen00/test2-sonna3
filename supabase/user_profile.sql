@@ -8,7 +8,7 @@
 -- new RLS is needed — these columns inherit it.)
 -- ============================================================
 
-alter table public.profiles add column if not exists account_type text;   -- buyer | supplier | both
+alter table public.profiles add column if not exists user_role    text;   -- buyer | supplier | both ("I'm here to")
 alter table public.profiles add column if not exists job_title    text;   -- e.g. Procurement Manager
 alter table public.profiles add column if not exists sector       text;   -- industry id (from INDUSTRIES)
 alter table public.profiles add column if not exists city         text;   -- governorate index (from GOVS)
