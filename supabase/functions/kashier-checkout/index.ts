@@ -79,6 +79,10 @@ Deno.serve(async (req) => {
     if (!(plan in PLAN_AMOUNTS)) plan = "basic";
     if (plan === "verified") plan = "basic";   // migrate legacy id
     const amount = String(PLAN_AMOUNTS[plan]);
+    // Renewal opt-ins. Auto-renew has no meaning without a saved card, so it
+    // implies save_card server-side even if the client forgets to.
+    const saveCard = !!body?.save_card || !!body?.auto_renew;
+    const autoRenew = !!body?.auto_renew;
     if (!subName) return json({ error: "Your full name is required." }, 200);
     if (!subPhone) return json({ error: "A mobile number is required." }, 200);
 
@@ -93,6 +97,7 @@ Deno.serve(async (req) => {
     const { error: piErr } = await admin.from("payment_intents").insert({
       ref: orderId, owner: user.id, factory_id: fac.id, plan, amount_cents: Math.round(Number(amount)), currency, status: "pending",
       sub_name: subName, sub_phone: subPhone, sub_email: user.email ?? null,
+      save_card: saveCard, auto_renew: autoRenew,
     });
     if (piErr) { console.log("checkout: payment_intents insert error", piErr.message); return json({ error: "Could not start checkout: " + piErr.message }, 200); }
 
@@ -114,6 +119,14 @@ Deno.serve(async (req) => {
       display: "en",
       type: "external",
     });
+    // Ask Kashier to tokenize the card when the buyer opted to save it. Kashier
+    // returns the token on the webhook; we store only that token, never the PAN.
+    // (Param name per Kashier HPP tokenization — confirm against your Kashier
+    // dashboard docs when recurring/tokenization is activated on the account.)
+    if (saveCard) {
+      params.set("enableTokenization", "true");
+      params.set("customerReference", user.id);
+    }
 
     const url = `https://checkout.kashier.io/?${params.toString()}`;
     console.log("checkout: created url ok");

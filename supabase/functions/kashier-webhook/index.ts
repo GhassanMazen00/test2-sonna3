@@ -72,6 +72,27 @@ Deno.serve(async (req) => {
     });
     if (error) { console.log("webhook: apply error", error.message); return new Response(`apply error: ${error.message}`, { status: 200 }); }
     console.log("webhook: applied ok");
+
+    // If Kashier tokenized the card (buyer chose "save card"), persist the
+    // token so we can auto-renew / pre-fill later. Field names vary across
+    // Kashier payloads, so we look in a few likely places. Never store the PAN.
+    const card = data.card ?? data.cardData ?? {};
+    const cardToken = data.cardToken ?? card.cardToken ?? card.token ?? data.token ?? "";
+    if (cardToken) {
+      const masked = String(data.maskedCard ?? card.maskedCard ?? card.cardNumber ?? "");
+      const last4 = masked ? masked.replace(/\D/g, "").slice(-4) : "";
+      const brand = String(data.cardBrand ?? card.brand ?? card.cardBrand ?? "");
+      const exp = String(card.expiryDate ?? card.expiry ?? data.expiryDate ?? "");
+      const { error: pmErr } = await admin.rpc("store_payment_method", {
+        p_ref: String(ref),
+        p_card_token: String(cardToken),
+        p_card_brand: brand || null,
+        p_card_last4: last4 || null,
+        p_card_exp: exp || null,
+      });
+      if (pmErr) console.log("webhook: store_payment_method error", pmErr.message);
+      else console.log("webhook: card token stored");
+    }
     return new Response("ok", { status: 200 });
   } catch (e) {
     console.log("webhook: EXCEPTION", String(e));

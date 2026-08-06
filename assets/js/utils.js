@@ -91,6 +91,11 @@ function startSubscribe(plan) {
         '<div class="form-field full"><label>' + t('sub_name') + ' *</label><input id="sub_name" type="text" value="' + esc(p.full_name || '') + '"></div>' +
         '<div class="form-field full"><label>' + t('sub_phone') + ' *</label><input id="sub_phone" type="tel" dir="ltr" placeholder="01X XXXX XXXX" value="' + esc(p.phone || '') + '"></div>' +
       '</div>' +
+      '<div class="sub-opts">' +
+        '<label class="sub-check"><input type="checkbox" id="sub_save"><span>' + t('save_card_label') + '</span></label>' +
+        '<label class="sub-check"><input type="checkbox" id="sub_auto" disabled><span>' + t('auto_renew_label') + '</span></label>' +
+        '<p class="sub-check-hint">' + t('auto_renew_hint') + '</p>' +
+      '</div>' +
       '<div class="modal-actions">' +
         '<button class="btn btn-ghost" id="sub_cancel">' + t('cancel') + '</button>' +
         '<button class="btn btn-primary" id="sub_go">' + t('sub_go') + '</button>' +
@@ -99,13 +104,24 @@ function startSubscribe(plan) {
   document.body.appendChild(bd);
   var err = function (m) { var e = bd.querySelector('#subErr'); e.textContent = m; e.style.display = 'block'; };
   bd.querySelector('#sub_cancel').onclick = function () { bd.remove(); };
+  // Auto-renew needs a card on file, so it's only selectable once "save card"
+  // is ticked; unticking "save card" also clears auto-renew.
+  var saveBox = bd.querySelector('#sub_save');
+  var autoBox = bd.querySelector('#sub_auto');
+  saveBox.onchange = function () {
+    autoBox.disabled = !saveBox.checked;
+    if (!saveBox.checked) autoBox.checked = false;
+  };
   bd.querySelector('#sub_go').onclick = function () {
     var name = (bd.querySelector('#sub_name').value || '').trim();
     var phone = (bd.querySelector('#sub_phone').value || '').trim();
     if (!name) { err(t('sub_need_name')); return; }
     if (!isEgyptMobile(phone)) { err(t('sub_bad_phone')); return; }
     var btn = bd.querySelector('#sub_go'); btn.disabled = true; btn.textContent = t('pay_starting');
-    Auth.startSubscription(plan || 'verified', { name: name, phone: phone }).then(function (r) {
+    Auth.startSubscription(plan || 'verified', {
+      name: name, phone: phone,
+      save_card: saveBox.checked, auto_renew: autoBox.checked
+    }).then(function (r) {
       if (r && r.url) { window.location.href = r.url; return; }
       throw new Error('no checkout url');
     }).catch(function (e) { btn.disabled = false; btn.textContent = t('sub_go'); err((t('pay_error') || 'Could not start checkout') + ': ' + (e.message || e)); });
