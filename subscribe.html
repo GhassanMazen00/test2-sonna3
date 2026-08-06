@@ -36,7 +36,8 @@ function renderPlans(currentPlan) {
         '<p>' + t('tiers_sub') + '</p>' +
       '</div>' +
       '<div class="plans-wrap">' + pricingTableHTML(currentPlan) + '</div>' +
-      '<p class="plan-note" style="text-align:center;margin:22px auto 70px;max-width:560px">' + ICONS.shieldCheck + ' ' + t('plan_pay_note') + '</p>' +
+      '<p class="plan-note" style="text-align:center;margin:22px auto 10px;max-width:560px">' + ICONS.shieldCheck + ' ' + t('plan_pay_note') + '</p>' +
+      '<p class="plan-note" style="text-align:center;margin:0 auto 70px;max-width:560px">' + ICONS.bell + ' ' + t('plan_renew_note') + '</p>' +
     '</div>' +
   '</main>' + footerHTML();
 }
