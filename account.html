@@ -115,8 +115,7 @@ function dashboardHtml(p, fac) {
       '<h2 style="margin-bottom:14px">' + t('dash_profile') + '</h2>' +
       '<div class="form-grid">' +
         accField(t('au_name'), '<input id="ac_name" type="text" value="' + esc(p.full_name || '') + '">') +
-        accField(t('au_phone'), '<input id="ac_phone" type="text" value="' + esc(p.phone || '') + '">') +
-        accField(t('acc_role'), '<select id="ac_type">' + acctTypeOpts(p.account_type) + '</select>') +
+        accField(t('acc_role'), '<select id="ac_type">' + acctTypeOpts(p.user_role) + '</select>') +
         accField(t('acc_job') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_job" type="text" placeholder="' + t('acc_job_ph') + '" value="' + esc(p.job_title || '') + '">') +
         accField(t('acc_company') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_company" type="text" value="' + esc(p.company || '') + '">') +
         accField(t('acc_sector') + ' <span class="opt">(' + t('optional') + ')</span>', '<select id="ac_sector">' + sectorOptsFor(p.sector) + '</select>') +
@@ -164,12 +163,8 @@ function verifyPanel(p) {
       (emailOK ? okBadge : pendBadge) +
     '</div>' +
 
-    '<div class="ver-row" id="phoneRow">' +
-      '<div><div class="ver-label">' + ICONS.phone + ' ' + t('ver_phone') + ' <span class="opt">(' + t('optional') + ')</span></div>' +
-        '<div class="muted" style="font-size:13px" id="phoneState">' + t('ver_checking') + '</div></div>' +
-      '<div id="phoneAction"></div>' +
-    '</div>' +
-    '<div id="phoneForm"></div>' +
+    // Phone verification is hidden until an OTP mechanism is live. The code
+    // below (loadPhoneState / showPhoneForm) stays so it can be switched back on.
 
     '<h3 style="margin:20px 0 4px;font-size:15px">' + t('ver_prefs_title') + '</h3>' +
     '<p class="muted" style="margin-bottom:12px;font-size:13px">' + t('ver_prefs_sub') + '</p>' +
@@ -494,8 +489,8 @@ function saveAccount() {
   var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : undefined; };
   var btn = document.getElementById('ac_save'); btn.disabled = true; btn.textContent = '…';
   Auth.updateProfile({
-      full_name: v('ac_name'), phone: v('ac_phone'), company: v('ac_company'), sourcing: v('ac_sourcing'),
-      account_type: v('ac_type'), job_title: v('ac_job'), sector: v('ac_sector'),
+      full_name: v('ac_name'), company: v('ac_company'), sourcing: v('ac_sourcing'),
+      user_role: v('ac_type'), job_title: v('ac_job'), sector: v('ac_sector'),
       city: v('ac_city'), bio: v('ac_bio')
     })
     .then(function(){ btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function(){ btn.textContent = t('acc_save'); }, 2000); })

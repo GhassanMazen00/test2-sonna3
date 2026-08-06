@@ -70,7 +70,7 @@
       if (p) { AUTH.profile = p; writeCache(); return p; }
       var meta = (AUTH.session.user && AUTH.session.user.user_metadata) || {};
       var fields = {};
-      ['full_name', 'phone', 'company', 'city', 'website', 'bio'].forEach(function (k) { if (meta[k] != null) fields[k] = meta[k]; });
+      ['full_name', 'user_role', 'job_title', 'company', 'sector', 'city', 'sourcing', 'bio'].forEach(function (k) { if (meta[k] != null) fields[k] = meta[k]; });
       return createProfile(meta.account_type || 'user', fields, AUTH.session.user.email).then(function (np) { AUTH.profile = np; writeCache(); return np; });
     });
   }
@@ -612,6 +612,27 @@
 
   function field(label, inputHTML) { return '<div class="form-field full"><label>' + label + '</label>' + inputHTML + '</div>'; }
 
+  // Option builders for the "about you" fields collected at sign-up.
+  function roleOptsHTML(cur) {
+    var opts = [['', t('acc_role_pick')], ['buyer', t('acc_role_buyer')], ['supplier', t('acc_role_supplier')], ['both', t('acc_role_both')]];
+    return opts.map(function (o) { return '<option value="' + o[0] + '"' + (cur === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
+  }
+  function sectorOptsHTML(cur) {
+    var out = '<option value="">' + esc(t('acc_sector_pick')) + '</option>';
+    if (typeof INDUSTRIES !== 'undefined') for (var i = 0; i < INDUSTRIES.length; i++) {
+      var s = INDUSTRIES[i];
+      out += '<option value="' + esc(s.id) + '"' + (cur === s.id ? ' selected' : '') + '>' + esc(LANG === 'ar' ? s.ar : s.en) + '</option>';
+    }
+    return out;
+  }
+  function cityOptsHTML(cur) {
+    var out = '<option value="">' + esc(t('acc_city_pick')) + '</option>';
+    if (typeof GOVS !== 'undefined') for (var i = 0; i < GOVS.length; i++) {
+      out += '<option value="' + i + '"' + (String(cur) === String(i) ? ' selected' : '') + '>' + esc(LANG === 'ar' ? GOVS[i].ar : GOVS[i].en) + '</option>';
+    }
+    return out;
+  }
+
   // ---- Cloudflare Turnstile (bot protection on signup / login / resend) ----
   // The widget renders a token client-side; Supabase verifies it once
   // "Enable Captcha protection" (Turnstile) is switched on in the dashboard.
@@ -693,11 +714,23 @@
         (isSignup ? '<p class="sub">' + t('au_signup_sub') + '</p>' : '') +
         '<div class="au-err" id="auErr" style="display:none"></div>' +
         '<div class="form-grid">' +
-          (isSignup ? field(t('au_name'), '<input id="au_name" type="text">') : '') +
+          (isSignup ? field(t('au_name') + ' *', '<input id="au_name" type="text">') : '') +
           field(t('au_email'), '<input id="au_email" type="email">') +
           field(t('au_password'), '<input id="au_password" type="password">') +
-          (isSignup ? field(t('au_phone') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="au_phone" type="text">') : '') +
+          (isSignup ? field(t('acc_role') + ' *', '<select id="au_role">' + roleOptsHTML('') + '</select>') : '') +
         '</div>' +
+        (isSignup
+          ? '<div class="au-more-head">' + t('au_about_you') + ' <span class="opt">(' + t('optional') + ')</span></div>' +
+            '<div class="form-grid">' +
+              field(t('acc_job'), '<input id="au_job" type="text" placeholder="' + t('acc_job_ph') + '">') +
+              field(t('acc_company'), '<input id="au_company" type="text">') +
+              field(t('acc_sector'), '<select id="au_sector">' + sectorOptsHTML('') + '</select>') +
+              field(t('acc_city'), '<select id="au_city">' + cityOptsHTML('') + '</select>') +
+              field(t('acc_sourcing'), '<input id="au_sourcing" type="text" placeholder="' + t('acc_sourcing_ph') + '">') +
+            '</div>' +
+            '<div class="form-field full"><label>' + t('acc_bio') + '</label>' +
+              '<textarea id="au_bio" rows="2" maxlength="280" placeholder="' + t('acc_bio_ph') + '"></textarea></div>'
+          : '') +
         (isSignup
           ? '<label class="au-terms"><input type="checkbox" id="au_terms"><span>' + t('au_terms_agree') + '</span></label>'
           : '<div class="au-forgot-row"><button type="button" class="au-link" id="auForgot">' + t('au_forgot') + '</button></div>') +
@@ -754,6 +787,8 @@
     var email = v('au_email'), pw = v('au_password');
     if (!email || !pw) { show(AL('Enter your email and password.', 'أدخل البريد الإلكتروني وكلمة المرور.')); return; }
     if (mode === 'signup') {
+      if (!v('au_name')) { show(AL('Please enter your full name.', 'يرجى إدخال اسمك الكامل.')); return; }
+      if (!v('au_role')) { show(AL('Please choose what you\'re here to do.', 'يرجى اختيار سبب انضمامك.')); return; }
       var termsEl = bd.querySelector('#au_terms');
       if (termsEl && !termsEl.checked) { show(t('au_terms_required')); return; }
     }
@@ -767,7 +802,13 @@
     if (mode === 'login') {
       Auth.login(email, pw, token).then(function () { window.location.reload(); }).catch(done);
     } else {
-      var fields = { full_name: v('au_name'), phone: v('au_phone') };
+      var fields = {
+        full_name: v('au_name'), user_role: v('au_role'),
+        job_title: v('au_job'), company: v('au_company'), sector: v('au_sector'),
+        city: v('au_city'), sourcing: v('au_sourcing'), bio: v('au_bio')
+      };
+      // Drop empty optionals so we don't write blank strings.
+      Object.keys(fields).forEach(function (k) { if (fields[k] === '' || fields[k] == null) delete fields[k]; });
       Auth.signup(email, pw, 'user', fields, token).then(function (r) {
         if (r.needConfirm) { showConfirmScreen(bd, email); }
         else { window.location.href = 'account.html'; }   // land in the dashboard
