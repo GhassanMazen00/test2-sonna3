@@ -121,7 +121,6 @@ function dashboardHtml(p, fac) {
         accField(t('acc_company') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_company" type="text" value="' + esc(p.company || '') + '">') +
         accField(t('acc_sector') + ' <span class="opt">(' + t('optional') + ')</span>', '<select id="ac_sector">' + sectorOptsFor(p.sector) + '</select>') +
         accField(t('acc_city') + ' <span class="opt">(' + t('optional') + ')</span>', '<select id="ac_city">' + govOptsFor(p.city) + '</select>') +
-        accField(t('acc_website') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_website" type="url" dir="ltr" placeholder="https://" value="' + esc(p.website || '') + '">') +
         accField(t('acc_sourcing') + ' <span class="opt">(' + t('optional') + ')</span>', '<input id="ac_sourcing" type="text" placeholder="' + t('acc_sourcing_ph') + '" value="' + esc(p.sourcing || '') + '">') +
       '</div>' +
       '<div class="form-field full" style="margin-top:12px"><label>' + t('acc_bio') + ' <span class="opt">(' + t('optional') + ')</span></label>' +
@@ -497,7 +496,7 @@ function saveAccount() {
   Auth.updateProfile({
       full_name: v('ac_name'), phone: v('ac_phone'), company: v('ac_company'), sourcing: v('ac_sourcing'),
       account_type: v('ac_type'), job_title: v('ac_job'), sector: v('ac_sector'),
-      city: v('ac_city'), website: v('ac_website'), bio: v('ac_bio')
+      city: v('ac_city'), bio: v('ac_bio')
     })
     .then(function(){ btn.disabled = false; btn.textContent = t('acc_saved') + ' ✓'; setTimeout(function(){ btn.textContent = t('acc_save'); }, 2000); })
     .catch(function(e){ btn.disabled = false; btn.textContent = t('acc_save'); alert('Could not save changes: ' + (e.message || e)); });
