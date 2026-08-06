@@ -12,7 +12,6 @@ alter table public.profiles add column if not exists account_type text;   -- buy
 alter table public.profiles add column if not exists job_title    text;   -- e.g. Procurement Manager
 alter table public.profiles add column if not exists sector       text;   -- industry id (from INDUSTRIES)
 alter table public.profiles add column if not exists city         text;   -- governorate index (from GOVS)
-alter table public.profiles add column if not exists website      text;
 alter table public.profiles add column if not exists bio          text;
 
 -- Stamp a little more buyer context onto each request so it shows on the
