@@ -79,6 +79,30 @@ Deno.serve(async (req) => {
     });
     if (error) { console.log("confirm: apply error", error.message); return json({ error: error.message }, 200); }
     console.log("confirm: applied", data);
+
+    // If the buyer chose "save card", Kashier returns a card token on the
+    // redirect. Store only the token (never the PAN/CVV). Field names vary, so
+    // we check the likely ones — the "confirm: card fields" log below shows
+    // exactly what Kashier sent so we can pin them down.
+    const cardToken = usp.get("cardToken") || usp.get("ck") || usp.get("cardDataToken") || usp.get("token") || usp.get("cardOrderId") || "";
+    console.log("confirm: card fields", {
+      cardToken: usp.get("cardToken"), ck: usp.get("ck"), cardDataToken: usp.get("cardDataToken"),
+      maskedCard: usp.get("maskedCard"), cardBrand: usp.get("cardBrand"), expiryDate: usp.get("expiryDate"),
+      allKeys: Array.from(usp.keys()).join(","),
+    });
+    if (cardToken) {
+      const masked = String(usp.get("maskedCard") || usp.get("cardNumber") || "");
+      const last4 = masked ? masked.replace(/\D/g, "").slice(-4) : "";
+      const brand = String(usp.get("cardBrand") || usp.get("brand") || "");
+      const exp = String(usp.get("expiryDate") || usp.get("cardExpiry") || usp.get("expiry") || "");
+      const { error: pmErr } = await admin.rpc("store_payment_method", {
+        p_ref: ref, p_card_token: String(cardToken),
+        p_card_brand: brand || null, p_card_last4: last4 || null, p_card_exp: exp || null,
+      });
+      if (pmErr) console.log("confirm: store_payment_method error", pmErr.message);
+      else console.log("confirm: card token stored");
+    }
+
     // apply_subscription_payment returns false only if the order ref is unknown.
     return json({ ok: true, verified: data !== false });
   } catch (e) {
