@@ -392,6 +392,13 @@ header {
 /* Home hides its logo on the web (the hero carried the brand); the app has no
    hero brand, so show the logo in the top bar on every screen. */
 .app-mode .logo.home-hidden { display: flex !important; }
+/* Center the brand wordmark in the slim app top bar; the bell (in
+   .header-actions) stays pinned to the end. The logo is taken out of flow and
+   absolutely centered so it sits mid-bar regardless of what's beside it. */
+.app-mode .header-inner { position: relative; justify-content: flex-end; }
+.app-mode .header-inner .logo {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0;
+}
 
 /* ---- Declutter the home hero inside the app ---- */
 .app-mode .hero .float-chips-container,
