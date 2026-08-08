@@ -153,6 +153,7 @@ function footerHTML() {
     '</div>' +
     '<div class="footer-bottom">' +
       '<span>' + t('rights') + '</span>' +
+      '<span><a href="mailto:contact@sonna3.net" style="color:inherit">contact@sonna3.net</a></span>' +
       '<span>' + t('made') + '</span>' +
     '</div>' +
   '</div></footer>';
