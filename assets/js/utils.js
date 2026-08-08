@@ -208,7 +208,7 @@ function listYourFactory() {
 // Contact-us popup: two channels (WhatsApp + email). Fill CONTACT_WHATSAPP /
 // CONTACT_EMAIL below when they're ready; until then they show "Coming soon".
 var CONTACT_WHATSAPP = '';   // e.g. '201001234567'
-var CONTACT_EMAIL = '';      // e.g. 'hello@sonna3.net'
+var CONTACT_EMAIL = 'contact@sonna3.net';
 function openContactModal() {
   var ar = LANG === 'ar';
   var bd = document.createElement('div');
