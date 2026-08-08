@@ -92,7 +92,7 @@
 // login, and changes save straight to the live database. Connection values are
 // in assets/js/supabase-config.js.
 var DATA = null;
-var TAB = 'factories';
+var TAB = 'overview';
 var root = document.getElementById('root');
 var SB_TOKEN = null;
 var SEARCH = {};        // per-tab search text
@@ -102,6 +102,10 @@ var _FAC_ONSAVE = null; // what to do when the factory form is saved
 var SUBS = [];          // user-submitted factories (from the 'factories' table)
 var VERIF = {};         // verification info per factory id (admin-only table)
 var SUBS_FILTER = 'all';
+var USERS = [];         // full user directory (from admin_list_users RPC)
+var USERS_FILTER = 'all';
+var LIVE_REQUESTS = []; // real buyer requests (from the 'requests' table)
+var SUBSCRIPTIONS = []; // latest subscription per factory (for export)
 
 // Live-filter a table body without rebuilding the search box (keeps focus)
 function onSearch(tab, v) {
@@ -238,7 +242,7 @@ function boot() {
   }).catch(function(){ renderNotAuthorized(); });
 }
 function renderApp() {
-  var tabs = [['factories','Factories'],['submissions','Factory submissions'],['subscriptions','Subscriptions'],['consultations','Consultations'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
+  var tabs = [['overview','Overview'],['users','Users'],['factories','Factories'],['submissions','Factory submissions'],['subscriptions','Subscriptions'],['consultations','Consultations'],['requests','Requests'],['reports','Reports'],['sectors','Sectors'],['config','Search & Filters'],['data','Data & Backup']];
   root.innerHTML =
     '<div class="admin-wrap">' +
       '<div class="admin-top">' +
@@ -258,7 +262,9 @@ function renderApp() {
 }
 function switchTab(t) { TAB = t; renderApp(); }
 function renderTab() {
-  if (TAB === 'factories') renderFactories();
+  if (TAB === 'overview') renderOverview();
+  else if (TAB === 'users') renderUsers();
+  else if (TAB === 'factories') renderFactories();
   else if (TAB === 'submissions') renderSubmissions();
   else if (TAB === 'subscriptions') renderSubscriptions();
   else if (TAB === 'consultations') renderConsultations();
@@ -755,8 +761,11 @@ function planSelectHTML(factoryId, currentPlan) {
 function renderSubscriptions() {
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
-      '<h2>Subscribed clients</h2>' +
-      '<div class="hint" style="margin:0 0 12px">Every factory that subscribed. Manage each client: extend +30 days, change their tier, or cancel (which unverifies them immediately). Subscriptions also auto-expire on their end date.</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">' +
+        '<h2 style="margin:0">Subscribed clients</h2>' +
+        '<button class="btn btn-ghost btn-sm" onclick="exportSubsCSV()">⬇ Export CSV</button>' +
+      '</div>' +
+      '<div class="hint" style="margin:6px 0 12px">Every factory that subscribed. Manage each client: extend +30 days, change their tier, or cancel (which unverifies them immediately). Subscriptions also auto-expire on their end date.</div>' +
       '<div id="subsListBody">Loading…</div>' +
     '</div>';
   getFreshToken().then(function(tok){
@@ -769,6 +778,7 @@ function renderSubscriptions() {
     // One row per factory: keep the latest subscription record.
     var seen = {}, uniq = [];
     rows.forEach(function(s){ if(s.factory_id && !seen[s.factory_id]){ seen[s.factory_id]=1; uniq.push(s); } });
+    SUBSCRIPTIONS = uniq;
     body.innerHTML = '<div style="overflow-x:auto"><table class="data"><thead><tr>' +
       '<th>Factory</th><th>Contact</th><th>Phone</th><th>Email</th><th>Plan</th><th>Amount</th><th>Started</th><th>Expires</th><th>Status</th><th>Manage</th></tr></thead><tbody>' +
       uniq.map(function(s){
@@ -804,6 +814,11 @@ function renderSubscriptions() {
     var body = document.getElementById('subsListBody');
     if(body) body.innerHTML = '<p class="muted">Could not load subscriptions: '+esc(e.message||e)+'</p>';
   });
+}
+function exportSubsCSV(){
+  downloadCSV('sonna-subscriptions.csv',
+    ['Factory','Contact','Phone','Email','Plan','Amount','Currency','Started','Expires','Provider'],
+    SUBSCRIPTIONS.map(function(s){ var f=s.factories||{}; return [f.name, s.sub_name, s.sub_phone, s.sub_email, (f.plan&&f.plan!=='none'?f.plan:s.plan), s.amount_cents, s.currency, s.created_at?new Date(s.created_at).toLocaleDateString():'', f.plan_expires?new Date(f.plan_expires).toLocaleDateString():'', s.provider]; }));
 }
 function renderConsultations() {
   document.getElementById('tabBody').innerHTML =
@@ -863,40 +878,194 @@ function editSubmittedFactory(id) {
   });
 }
 
-/* ---------- Requests ---------- */
-function reqGovName(ix) { var g = DATA.govs[ix]; return g ? g.en : '—'; }
-function requestRows() {
-  if (!DATA.requests) DATA.requests = [];
-  var out = DATA.requests.map(function(r, i){ return { r:r, i:i }; })
-    .filter(function(o){ var r=o.r; return hit((r.title.en||'')+' '+(r.title.ar||'')+' '+(r.by.en||'')+' '+reqGovName(r.gov), 'requests'); })
-    .map(function(o){ var r=o.r, i=o.i;
-      return '<tr>' +
-        '<td class="ic-cell">'+(window.ICONS[r.iconKey]||window.ICONS.clipboard)+'</td>' +
-        '<td><b>'+esc(r.title.en)+'</b><div class="muted" dir="rtl">'+esc(r.title.ar)+'</div></td>' +
-        '<td>'+esc(r.by.en||'—')+'</td>' +
-        '<td>'+esc(reqGovName(r.gov))+'</td>' +
-        '<td>'+esc(r.qty||'')+'</td>' +
-        '<td><div class="row-actions">' +
-          '<button class="btn btn-ghost btn-sm" onclick="editRequest('+i+')">Edit</button>' +
-          '<button class="btn btn-sm btn-danger" onclick="deleteRequest('+i+')">Delete</button>' +
-        '</div></td>' +
-      '</tr>';
-    }).join('');
-  return out || '<tr><td colspan="6" class="muted">No requests match.</td></tr>';
+/* ---------- CSV export helper (for CRM / spreadsheets) ---------- */
+function csvCell(v){ if (v==null) v=''; v=String(v); if (/[",\n\r]/.test(v)) v='"'+v.replace(/"/g,'""')+'"'; return v; }
+function downloadCSV(filename, headers, rows){
+  var lines=[headers.map(csvCell).join(',')];
+  rows.forEach(function(r){ lines.push(r.map(csvCell).join(',')); });
+  var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});   // BOM = Excel reads Arabic
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },100);
 }
-function renderRequests() {
-  if (!DATA.requests) DATA.requests = [];
+
+/* ---------- Overview ---------- */
+function statCard(label, value, sub){
+  return '<div class="panel-card" style="flex:1;min-width:150px;text-align:center;margin:0">' +
+    '<div style="font-size:30px;font-weight:800;color:var(--teal);line-height:1.1">'+value+'</div>' +
+    '<div style="font-weight:700;margin-top:4px">'+label+'</div>' +
+    (sub?'<div class="hint" style="margin:4px 0 0">'+sub+'</div>':'') + '</div>';
+}
+function renderOverview(){
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card"><h2>Platform overview</h2><div class="hint" style="margin:0">A live snapshot of who and what is on Sonnaع right now.</div></div>' +
+    '<div id="ovStats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px"><div class="panel-card" style="flex:1"><div class="muted">Loading…</div></div></div>';
+  Promise.all([adminFetchUsers().catch(function(){return [];}), adminLoadRequests().catch(function(){return [];})]).then(function(res){
+    USERS = res[0]||[];
+    var owners=USERS.filter(function(u){return u.has_factory;}).length;
+    var verified=USERS.filter(function(u){return u.factory_verified;}).length;
+    var buyers=USERS.filter(function(u){return userMatches(u,'buyers');}).length;
+    var passive=USERS.filter(function(u){return userMatches(u,'passive');}).length;
+    var subs=USERS.filter(function(u){return u.sub_status==='active';}).length;
+    var el=document.getElementById('ovStats');
+    if(el) el.innerHTML =
+      statCard('Total users', USERS.length, '') +
+      statCard('Factory owners', owners, verified+' verified') +
+      statCard('Buyers', buyers, 'posted a request') +
+      statCard('Passive sign-ups', passive, 'no factory, no request') +
+      statCard('Active subscriptions', subs, '') +
+      statCard('Requests', LIVE_REQUESTS.length, 'live on the site');
+  });
+}
+
+/* ---------- Users directory ---------- */
+function adminFetchUsers(){
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL+'/rest/v1/rpc/admin_list_users', { method:'POST', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json' }, body:'{}' })
+      .then(function(r){ return r.ok ? r.json() : r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); });
+  });
+}
+function userType(u){
+  if (u.has_factory) return 'owner';
+  if ((u.request_count||0)>0 || u.user_role==='buyer' || u.user_role==='both') return 'buyer';
+  return 'passive';
+}
+function userMatches(u, f){
+  if (f==='all') return true;
+  if (f==='owners') return !!u.has_factory;
+  if (f==='buyers') return (u.request_count||0)>0 || u.user_role==='buyer' || u.user_role==='both';
+  if (f==='passive') return !u.has_factory && (u.request_count||0)===0;
+  if (f==='subscribers') return !!u.factory_verified || u.sub_status==='active';
+  return true;
+}
+function userTypeChip(u){
+  var t=userType(u);
+  var label = t==='owner'?'Factory owner':t==='buyer'?'Buyer':'Passive';
+  var style = t==='owner'?'background:var(--teal-tint);color:var(--teal)':t==='buyer'?'background:var(--amber-soft);color:#8A5A12':'';
+  return '<span class="chip" style="'+style+'">'+label+'</span>' + (u.factory_verified?' <span class="chip" style="background:var(--teal);color:#fff">Verified</span>':'');
+}
+function userRows(){
+  var q=(SEARCH.users||'').trim().toLowerCase();
+  var rows=USERS.filter(function(u){ return userMatches(u,USERS_FILTER); })
+    .filter(function(u){ return !q || ((u.full_name||'')+' '+(u.email||'')+' '+(u.company||'')+' '+(u.phone||'')).toLowerCase().indexOf(q)>=0; });
+  var out=rows.map(function(u){
+    return '<tr>' +
+      '<td><b>'+esc(u.full_name||'—')+'</b></td>' +
+      '<td>'+esc(u.email||'—')+'</td>' +
+      '<td>'+userTypeChip(u)+'</td>' +
+      '<td>'+esc(u.company||'—')+'</td>' +
+      '<td>'+esc(u.phone||'—')+'</td>' +
+      '<td>'+(u.request_count||0)+'</td>' +
+      '<td>'+esc(u.plan||'—')+'</td>' +
+      '<td style="white-space:nowrap">'+fmtDate(u.created_at)+'</td>' +
+    '</tr>';
+  }).join('');
+  return out || '<tr><td colspan="8" class="muted">No users match.</td></tr>';
+}
+function usersFilterBtn(key,label){
+  var on = USERS_FILTER===key;
+  return '<button class="chip" style="cursor:pointer;'+(on?'background:var(--teal);color:#fff':'')+'" onclick="setUsersFilter(\''+key+'\')">'+label+'</button>';
+}
+function usersFilterChips(){
+  return usersFilterBtn('all','All ('+USERS.length+')') +
+    usersFilterBtn('owners','Factory owners ('+USERS.filter(function(u){return u.has_factory;}).length+')') +
+    usersFilterBtn('buyers','Buyers ('+USERS.filter(function(u){return userMatches(u,'buyers');}).length+')') +
+    usersFilterBtn('passive','Passive ('+USERS.filter(function(u){return userMatches(u,'passive');}).length+')') +
+    usersFilterBtn('subscribers','Subscribers ('+USERS.filter(function(u){return userMatches(u,'subscribers');}).length+')');
+}
+function setUsersFilter(f){
+  USERS_FILTER=f;
+  var b=document.getElementById('usersBody'); if(b) b.innerHTML=userRows();
+  var bar=document.getElementById('usersFilters'); if(bar) bar.innerHTML=usersFilterChips();
+}
+function renderUsers(){
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
-        '<div><h2>Manufacturing requests ('+DATA.requests.length+')</h2><div class="hint" style="margin:0">Buyer requests shown on the site. Add, edit, or remove them.</div></div>' +
-        '<button class="btn btn-primary btn-sm" onclick="editRequest(-1)">+ Add request</button>' +
+        '<div><h2 id="usersCount">Users…</h2><div class="hint" style="margin:0">Everyone registered on the platform. Filter by type, or export for your CRM.</div></div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="exportUsersCSV()">⬇ Export CSV</button>' +
       '</div>' +
-      searchBar('requests', 'Search requests by title, buyer, city…') +
-      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Icon</th><th>Title</th><th>Buyer</th><th>Governorate</th><th>Qty</th><th></th></tr></thead><tbody id="requestsBody">' +
-        requestRows() +
+      '<div id="usersFilters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>' +
+      searchBar('users','Search by name, email, company, phone…') +
+      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Company</th><th>Phone</th><th>Requests</th><th>Plan</th><th>Joined</th></tr></thead><tbody id="usersBody">' +
+        '<tr><td colspan="8" class="muted">Loading…</td></tr>' +
       '</tbody></table></div>' +
     '</div>';
+  adminFetchUsers().then(function(rows){
+    USERS = rows||[];
+    var b=document.getElementById('usersBody'); if(b) b.innerHTML=userRows();
+    var f=document.getElementById('usersFilters'); if(f) f.innerHTML=usersFilterChips();
+    var c=document.getElementById('usersCount'); if(c) c.textContent='Users ('+USERS.length+')';
+  }).catch(function(e){
+    var b=document.getElementById('usersBody'); if(b) b.innerHTML='<tr><td colspan="8" class="muted">Could not load users — run supabase/admin_users.sql in the SQL editor, then reload. ('+esc(e.message||e)+')</td></tr>';
+  });
+}
+function exportUsersCSV(){
+  var q=(SEARCH.users||'').trim().toLowerCase();
+  var rows=USERS.filter(function(u){ return userMatches(u,USERS_FILTER); })
+    .filter(function(u){ return !q || ((u.full_name||'')+' '+(u.email||'')+' '+(u.company||'')+' '+(u.phone||'')).toLowerCase().indexOf(q)>=0; });
+  downloadCSV('sonna-users.csv',
+    ['Name','Email','Type','Role','Company','Phone','Owns factory','Verified','Plan','Requests','Subscription','Joined','Last sign-in'],
+    rows.map(function(u){ return [u.full_name,u.email,userType(u),u.user_role,u.company,u.phone,u.has_factory?'yes':'no',u.factory_verified?'yes':'no',u.plan,u.request_count||0,u.sub_status,fmtDate(u.created_at),u.last_sign_in?fmtDate(u.last_sign_in):'']; }));
+}
+
+/* ---------- Requests (LIVE buyer submissions from the 'requests' table) ---------- */
+function reqGovName(ix) { var g = DATA.govs[ix]; return (ix==null||!g) ? '—' : g.en; }
+function adminLoadRequests(){
+  return AdminStore.fetchRequests().then(function(rows){ LIVE_REQUESTS=rows||[]; return LIVE_REQUESTS; }).catch(function(){ LIVE_REQUESTS=[]; return []; });
+}
+function requestRows() {
+  var q=(SEARCH.requests||'').trim().toLowerCase();
+  var rows = LIVE_REQUESTS.filter(function(r){
+    return !q || ((r.title||'')+' '+(r.owner_name||'')+' '+(r.owner_company||'')+' '+reqGovName(r.gov)+' '+(r.contact||'')).toLowerCase().indexOf(q)>=0;
+  });
+  var out = rows.map(function(r){
+    return '<tr>' +
+      '<td><b>'+esc(r.title||'—')+'</b>'+(r.description?'<div class="muted" style="margin-top:3px;max-width:340px">'+esc(String(r.description).slice(0,140))+'</div>':'')+'</td>' +
+      '<td>'+esc(r.owner_name||'—')+(r.owner_company?'<div class="muted">'+esc(r.owner_company)+'</div>':'')+'</td>' +
+      '<td>'+esc(reqGovName(r.gov))+'</td>' +
+      '<td>'+esc(r.qty||'—')+'</td>' +
+      '<td>'+esc(r.contact||'—')+'</td>' +
+      '<td style="white-space:nowrap">'+fmtDate(r.created_at)+'</td>' +
+      '<td><div class="row-actions">' +
+        '<a class="btn btn-ghost btn-sm" href="request-detail.html?id='+encodeURIComponent(r.id)+'" target="_blank">View ↗</a>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteLiveRequest(\''+esc(r.id)+'\')">Delete</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  return out || '<tr><td colspan="7" class="muted">No requests'+((SEARCH.requests||'').trim()?' match.':' yet.')+'</td></tr>';
+}
+function renderRequests() {
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">' +
+        '<div><h2 id="reqCount">Manufacturing requests…</h2><div class="hint" style="margin:0">Real buyer requests submitted on the site.</div></div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="exportRequestsCSV()">⬇ Export CSV</button>' +
+      '</div>' +
+      searchBar('requests', 'Search by title, buyer, city, contact…') +
+      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Title</th><th>Buyer</th><th>Governorate</th><th>Qty</th><th>Contact</th><th>Posted</th><th></th></tr></thead><tbody id="requestsBody">' +
+        '<tr><td colspan="7" class="muted">Loading…</td></tr>' +
+      '</tbody></table></div>' +
+    '</div>';
+  adminLoadRequests().then(function(){
+    var b=document.getElementById('requestsBody'); if(b) b.innerHTML=requestRows();
+    var c=document.getElementById('reqCount'); if(c) c.textContent='Manufacturing requests ('+LIVE_REQUESTS.length+')';
+  });
+}
+function deleteLiveRequest(id){
+  if(!confirm('Delete this request? It will be removed from the site.')) return;
+  getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL+'/rest/v1/requests?id=eq.'+encodeURIComponent(id), { method:'DELETE', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok } });
+  }).then(function(r){
+    if(!r.ok) throw new Error('delete '+r.status);
+    LIVE_REQUESTS=LIVE_REQUESTS.filter(function(x){ return String(x.id)!==String(id); });
+    var b=document.getElementById('requestsBody'); if(b) b.innerHTML=requestRows();
+    var c=document.getElementById('reqCount'); if(c) c.textContent='Manufacturing requests ('+LIVE_REQUESTS.length+')';
+  }).catch(function(e){ alert('Could not delete: '+(e.message||e)+'\n(Run supabase/admin_users.sql so admins can manage requests.)'); });
+}
+function exportRequestsCSV(){
+  downloadCSV('sonna-requests.csv',
+    ['Title','Buyer','Company','Governorate','Qty','Budget','Material','Contact','Description','Posted'],
+    LIVE_REQUESTS.map(function(r){ return [r.title,r.owner_name,r.owner_company,reqGovName(r.gov),r.qty,r.budget,r.material,r.contact,r.description,fmtDate(r.created_at)]; }));
 }
 function editRequest(i) {
   if (!DATA.requests) DATA.requests = [];
