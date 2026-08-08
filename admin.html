@@ -820,48 +820,99 @@ function exportSubsCSV(){
     ['Factory','Contact','Phone','Email','Plan','Amount','Currency','Started','Expires','Provider'],
     SUBSCRIPTIONS.map(function(s){ var f=s.factories||{}; return [f.name, s.sub_name, s.sub_phone, s.sub_email, (f.plan&&f.plan!=='none'?f.plan:s.plan), s.amount_cents, s.currency, s.created_at?new Date(s.created_at).toLocaleDateString():'', f.plan_expires?new Date(f.plan_expires).toLocaleDateString():'', s.provider]; }));
 }
+var CONSULTS = []; var CONSULTS_FILTER = 'all';
+var CONSULT_STAGES = [['new','New'],['contacted','Contacted'],['scheduled','Scheduled'],['in_progress','In progress'],['completed','Completed'],['cancelled','Cancelled']];
+function consultStageLabel(s){ for(var i=0;i<CONSULT_STAGES.length;i++){ if(CONSULT_STAGES[i][0]===s) return CONSULT_STAGES[i][1]; } return 'New'; }
+function consultStageColor(s){
+  return s==='completed' ? 'background:var(--teal);color:#fff'
+    : s==='cancelled' ? 'background:#f3d9d5;color:#B4322A'
+    : s==='in_progress' ? 'background:var(--teal-tint);color:var(--teal)'
+    : (s==='scheduled'||s==='contacted') ? 'background:var(--amber-soft);color:#8A5A12'
+    : '';
+}
+function consultRows(){
+  var rows = CONSULTS.filter(function(c){ return CONSULTS_FILTER==='all' || (c.stage||'new')===CONSULTS_FILTER; });
+  if(!rows.length) return '<tr><td colspan="12" class="muted">No consultations'+(CONSULTS_FILTER!=='all'?' at this stage.':' yet.')+'</td></tr>';
+  return rows.map(function(c){
+    var joined = c.created_at ? new Date(c.created_at).toLocaleString() : '—';
+    var amt = (c.amount_cents!=null) ? (c.amount_cents + ' ' + (c.currency||'EGP')) : '—';
+    var paid = c.status==='paid';
+    var samples = Array.isArray(c.sample_urls) ? c.sample_urls : [];
+    var sampleLinks = samples.length ? samples.map(function(u,ix){ return '<a href="'+esc(u)+'" target="_blank" rel="noopener">#'+(ix+1)+'</a>'; }).join(' ') : '—';
+    var stage = c.stage||'new';
+    var opts = CONSULT_STAGES.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===stage?' selected':'')+'>'+s[1]+'</option>'; }).join('');
+    return '<tr>' +
+      '<td style="white-space:nowrap">'+esc(joined)+'</td>' +
+      '<td><b>'+esc(c.name||'—')+'</b></td>' +
+      '<td>'+esc(c.company||'—')+'</td>' +
+      '<td dir="ltr">'+esc(c.phone||'—')+'</td>' +
+      '<td dir="ltr">'+esc(c.whatsapp||'—')+'</td>' +
+      '<td dir="ltr">'+esc(c.email||'—')+'</td>' +
+      '<td>'+esc(c.sector||'—')+'</td>' +
+      '<td>'+esc(c.city||'—')+'</td>' +
+      '<td style="max-width:200px;white-space:normal">'+esc(c.needs||'—')+'</td>' +
+      '<td>'+sampleLinks+'</td>' +
+      '<td style="white-space:nowrap">'+esc(amt)+(paid?' <span style="color:#0E6B5E;font-weight:600">Paid</span>':' <span class="muted">Pending</span>')+'</td>' +
+      '<td style="white-space:nowrap">' +
+        '<span class="chip" style="'+consultStageColor(stage)+'">'+esc(consultStageLabel(stage))+'</span>' +
+        '<br><select onchange="setConsultStage(\''+esc(c.id)+'\',this.value)" style="margin-top:4px;padding:4px 6px;border:1px solid var(--line);border-radius:6px">'+opts+'</select>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+function consultFilterChips(){
+  var chips = '<button class="chip" style="cursor:pointer;'+(CONSULTS_FILTER==='all'?'background:var(--teal);color:#fff':'')+'" onclick="setConsultFilter(\'all\')">All ('+CONSULTS.length+')</button>';
+  CONSULT_STAGES.forEach(function(s){
+    var n = CONSULTS.filter(function(c){ return (c.stage||'new')===s[0]; }).length;
+    chips += '<button class="chip" style="cursor:pointer;'+(CONSULTS_FILTER===s[0]?'background:var(--teal);color:#fff':'')+'" onclick="setConsultFilter(\''+s[0]+'\')">'+s[1]+' ('+n+')</button>';
+  });
+  return chips;
+}
+function setConsultFilter(f){
+  CONSULTS_FILTER=f;
+  var b=document.getElementById('consBody'); if(b) b.innerHTML=consultRows();
+  var bar=document.getElementById('consFilters'); if(bar) bar.innerHTML=consultFilterChips();
+}
+function setConsultStage(id, stage){
+  getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL+'/rest/v1/consultations?id=eq.'+encodeURIComponent(id), { method:'PATCH', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json', Prefer:'return=minimal' }, body:JSON.stringify({ stage:stage }) });
+  }).then(function(r){
+    if(!r.ok) throw new Error('update '+r.status);
+    var c=CONSULTS.find(function(x){ return String(x.id)===String(id); }); if(c) c.stage=stage;
+    var b=document.getElementById('consBody'); if(b) b.innerHTML=consultRows();
+    var bar=document.getElementById('consFilters'); if(bar) bar.innerHTML=consultFilterChips();
+  }).catch(function(e){ alert('Could not update stage: '+(e.message||e)+'\n(Run supabase/consultation_stage.sql so admins can update.)'); });
+}
+function exportConsultsCSV(){
+  downloadCSV('sonna-consultations.csv',
+    ['Date','Name','Company','Phone','WhatsApp','Email','Sector','City','Needs','Amount','Currency','Payment','Stage'],
+    CONSULTS.map(function(c){ return [c.created_at?new Date(c.created_at).toLocaleString():'', c.name, c.company, c.phone, c.whatsapp, c.email, c.sector, c.city, c.needs, c.amount_cents, c.currency, c.status, consultStageLabel(c.stage||'new')]; }));
+}
 function renderConsultations() {
   document.getElementById('tabBody').innerHTML =
     '<div class="panel-card">' +
-      '<h2>Consultations</h2>' +
-      '<div class="hint" style="margin:0 0 12px">People who booked a paid consultation. Use their phone / WhatsApp to arrange the session.</div>' +
-      '<div id="consListBody">Loading…</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">' +
+        '<h2 style="margin:0">Consultations</h2>' +
+        '<button class="btn btn-ghost btn-sm" onclick="exportConsultsCSV()">⬇ Export CSV</button>' +
+      '</div>' +
+      '<div class="hint" style="margin:6px 0 10px">People who booked a consultation. Move each one through its stage as you work it, and filter by stage to see your pipeline. Use their phone / WhatsApp to arrange the session.</div>' +
+      '<div id="consFilters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>' +
+      '<div id="consListWrap"><div class="muted">Loading…</div></div>' +
     '</div>';
   getFreshToken().then(function(tok){
     return fetch(SUPABASE_URL + '/rest/v1/consultations?select=*&order=created_at.desc', {
       headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok }
     }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error(t||r.status); }); return r.json(); });
   }).then(function(rows){
-    var body = document.getElementById('consListBody'); if(!body) return;
-    if(!rows || !rows.length){ body.innerHTML = '<p class="muted">No consultation bookings yet.</p>'; return; }
-    body.innerHTML = '<div style="overflow-x:auto"><table class="data"><thead><tr>' +
-      '<th>Date</th><th>Name</th><th>Company</th><th>Phone</th><th>WhatsApp</th><th>Email</th><th>Sector</th><th>City</th><th>Needs</th><th>Samples</th><th>Amount</th><th>Status</th></tr></thead><tbody>' +
-      rows.map(function(c){
-        var joined = c.created_at ? new Date(c.created_at).toLocaleString() : '—';
-        var amt = (c.amount_cents!=null) ? (c.amount_cents + ' ' + (c.currency||'EGP')) : '—';
-        var paid = c.status==='paid';
-        var samples = Array.isArray(c.sample_urls) ? c.sample_urls : [];
-        var sampleLinks = samples.length
-          ? samples.map(function(u,ix){ return '<a href="'+esc(u)+'" target="_blank" rel="noopener">#'+(ix+1)+'</a>'; }).join(' ')
-          : '—';
-        return '<tr>' +
-          '<td>'+esc(joined)+'</td>' +
-          '<td><b>'+esc(c.name||'—')+'</b></td>' +
-          '<td>'+esc(c.company||'—')+'</td>' +
-          '<td dir="ltr">'+esc(c.phone||'—')+'</td>' +
-          '<td dir="ltr">'+esc(c.whatsapp||'—')+'</td>' +
-          '<td dir="ltr">'+esc(c.email||'—')+'</td>' +
-          '<td>'+esc(c.sector||'—')+'</td>' +
-          '<td>'+esc(c.city||'—')+'</td>' +
-          '<td style="max-width:220px;white-space:normal">'+esc(c.needs||'—')+'</td>' +
-          '<td>'+sampleLinks+'</td>' +
-          '<td>'+esc(amt)+'</td>' +
-          '<td>'+(paid?'<span style="color:#0E6B5E;font-weight:600">Paid</span>':'Pending')+'</td>' +
-        '</tr>';
-      }).join('') + '</tbody></table></div>';
+    CONSULTS = rows||[];
+    var wrap = document.getElementById('consListWrap'); if(!wrap) return;
+    wrap.innerHTML = '<div style="overflow-x:auto"><table class="data"><thead><tr>' +
+      '<th>Date</th><th>Name</th><th>Company</th><th>Phone</th><th>WhatsApp</th><th>Email</th><th>Sector</th><th>City</th><th>Needs</th><th>Samples</th><th>Amount</th><th>Stage</th></tr></thead><tbody id="consBody">' +
+      consultRows() + '</tbody></table></div>';
+    var bar=document.getElementById('consFilters'); if(bar) bar.innerHTML=consultFilterChips();
   }).catch(function(e){
-    var body = document.getElementById('consListBody');
-    if(body) body.innerHTML = '<p class="muted">Could not load consultations: '+esc(e.message||e)+'</p>';
+    var wrap = document.getElementById('consListWrap');
+    if(wrap) wrap.innerHTML = '<p class="muted">Could not load consultations: '+esc(e.message||e)+'</p>';
   });
 }
 function deleteSubmission(id) {
