@@ -957,9 +957,10 @@ function userRows(){
       '<td>'+(u.request_count||0)+'</td>' +
       '<td>'+esc(u.plan||'—')+'</td>' +
       '<td style="white-space:nowrap">'+fmtDate(u.created_at)+'</td>' +
+      '<td><button class="btn btn-ghost btn-sm" onclick="openUserDetail(\''+esc(u.id)+'\',\''+esc(String(u.full_name||u.email||'').replace(/\x27/g,"&#39;"))+'\')">View ↗</button></td>' +
     '</tr>';
   }).join('');
-  return out || '<tr><td colspan="8" class="muted">No users match.</td></tr>';
+  return out || '<tr><td colspan="9" class="muted">No users match.</td></tr>';
 }
 function usersFilterBtn(key,label){
   var on = USERS_FILTER===key;
@@ -986,8 +987,8 @@ function renderUsers(){
       '</div>' +
       '<div id="usersFilters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>' +
       searchBar('users','Search by name, email, company, phone…') +
-      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Company</th><th>Phone</th><th>Requests</th><th>Plan</th><th>Joined</th></tr></thead><tbody id="usersBody">' +
-        '<tr><td colspan="8" class="muted">Loading…</td></tr>' +
+      '<div style="overflow-x:auto;margin-top:12px"><table class="data"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Company</th><th>Phone</th><th>Requests</th><th>Plan</th><th>Joined</th><th></th></tr></thead><tbody id="usersBody">' +
+        '<tr><td colspan="9" class="muted">Loading…</td></tr>' +
       '</tbody></table></div>' +
     '</div>';
   adminFetchUsers().then(function(rows){
@@ -1006,6 +1007,73 @@ function exportUsersCSV(){
   downloadCSV('sonna-users.csv',
     ['Name','Email','Type','Role','Company','Phone','Owns factory','Verified','Plan','Requests','Subscription','Joined','Last sign-in'],
     rows.map(function(u){ return [u.full_name,u.email,userType(u),u.user_role,u.company,u.phone,u.has_factory?'yes':'no',u.factory_verified?'yes':'no',u.plan,u.request_count||0,u.sub_status,fmtDate(u.created_at),u.last_sign_in?fmtDate(u.last_sign_in):'']; }));
+}
+
+/* ---------- Per-user activity dossier ---------- */
+var ACTIVITY = null; var ACTIVITY_NAME = '';
+function adminFetchUserActivity(id){
+  return getFreshToken().then(function(tok){
+    return fetch(SUPABASE_URL+'/rest/v1/rpc/admin_user_activity', { method:'POST', headers:{ apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json' }, body:JSON.stringify({ p_user:id }) })
+      .then(function(r){ return r.ok ? r.json() : r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); });
+  });
+}
+function trunc(s,n){ s=String(s==null?'':s); return s.length>n ? s.slice(0,n)+'…' : s; }
+function actSection(title, arr, cols){
+  arr=arr||[];
+  var head='<h3 style="margin:20px 0 6px;font-size:15px">'+title+' <span class="muted" style="font-weight:400">('+arr.length+')</span></h3>';
+  if(!arr.length) return head+'<div class="muted" style="font-size:13px">None.</div>';
+  var th='<tr>'+cols.map(function(c){ return '<th>'+c[0]+'</th>'; }).join('')+'</tr>';
+  var body=arr.map(function(it){ return '<tr>'+cols.map(function(c){ var v=c[1](it); return '<td>'+(v==null?'':esc(String(v)))+'</td>'; }).join('')+'</tr>'; }).join('');
+  return head+'<div style="overflow-x:auto"><table class="data"><thead>'+th+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+function openUserDetail(id, name){
+  TAB='users';
+  document.getElementById('tabBody').innerHTML =
+    '<div class="panel-card">' +
+      '<button class="btn btn-ghost btn-sm" onclick="renderUsers()">← Back to users</button>' +
+      '<div id="userDetail" style="margin-top:14px"><div class="muted">Loading '+esc(name||'user')+'’s activity…</div></div>' +
+    '</div>';
+  adminFetchUserActivity(id).then(function(a){
+    ACTIVITY=a; ACTIVITY_NAME=name||id;
+    var p=a.profile||{}; var g=DATA.govs;
+    var govName=function(ix){ return (ix==null||!g[ix]) ? '—' : g[ix].en; };
+    var el=document.getElementById('userDetail'); if(!el) return;
+    el.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">' +
+        '<div><h2 style="margin:0">'+esc(p.full_name||'—')+'</h2>' +
+          '<div class="muted" dir="ltr">'+esc(p.email||'')+(p.phone?' · '+esc(p.phone):'')+'</div>' +
+          '<div class="muted" style="font-size:12.5px;margin-top:4px">' +
+            (p.user_role?'Role: '+esc(p.user_role)+' · ':'')+(p.company?'Company: '+esc(p.company)+' · ':'')+
+            'Joined '+fmtDate(p.created_at)+(p.last_sign_in?' · Last seen '+fmtDate(p.last_sign_in):'')+'</div>' +
+          (p.bio?'<div class="muted" style="font-size:12.5px;margin-top:4px">"'+esc(p.bio)+'"</div>':'') +
+        '</div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="exportUserActivity()">⬇ Export activity (JSON)</button>' +
+      '</div>' +
+      actSection('Factories owned', a.factories, [['Name',function(x){return x.name;}],['Sector',function(x){return x.sector;}],['Verified',function(x){return x.verified?'yes':'no';}],['Plan',function(x){return x.plan;}],['Created',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Manufacturing requests posted', a.requests, [['Title',function(x){return x.title;}],['Qty',function(x){return x.qty;}],['Budget',function(x){return x.budget;}],['City',function(x){return govName(x.gov);}],['Posted',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Quote requests sent (to factories)', a.rfqs_sent, [['Factory',function(x){return x.factory_name;}],['Title',function(x){return x.title;}],['Qty',function(x){return x.qty;}],['Target price',function(x){return x.target_price;}],['Status',function(x){return x.status;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Quote requests received (on their factory)', a.rfqs_received, [['Buyer',function(x){return x.buyer_name;}],['Factory',function(x){return x.factory_name;}],['Title',function(x){return x.title;}],['Status',function(x){return x.status;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Quotes they gave', a.quotes_given, [['Price',function(x){return x.price;}],['Lead time',function(x){return x.lead_time;}],['Notes',function(x){return trunc(x.notes,80);}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Messages', a.messages, [['Dir',function(x){return x.direction;}],['With',function(x){return x.direction==='sent'?x.recipient_name:x.sender_name;}],['Message',function(x){return trunc(x.body,120);}],['Re',function(x){return x.request_title;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Reviews written', a.reviews, [['Rating',function(x){return x.rating+'★';}],['Review',function(x){return trunc(x.body,100);}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Saved factories', a.favorites, [['Factory id',function(x){return x.factory_id;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Reports filed', a.reports_filed, [['Target',function(x){return x.target_type;}],['Reason',function(x){return x.reason;}],['Status',function(x){return x.status;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Subscriptions', a.subscriptions, [['Plan',function(x){return x.plan;}],['Status',function(x){return x.status;}],['Amount',function(x){return x.amount_cents;}],['Renews',function(x){return x.current_period_end?fmtDate(x.current_period_end):'';}],['Auto',function(x){return x.auto_renew?'on':'off';}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Consultations', a.consultations, [['Sector',function(x){return x.sector;}],['Status',function(x){return x.status;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Payment attempts', a.payments, [['Kind',function(x){return x.kind;}],['Plan',function(x){return x.plan;}],['Amount',function(x){return x.amount_cents;}],['Status',function(x){return x.status;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Industries followed', a.buyer_alerts, [['Sector',function(x){return x.sector;}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Notifications received', a.notifications, [['Type',function(x){return x.type;}],['Title',function(x){return x.title;}],['Read',function(x){return x.read_at?'yes':'no';}],['When',function(x){return fmtDate(x.created_at);}]]) +
+      actSection('Recent page views (total '+((a.page_views&&a.page_views.total)||0)+')', (a.page_views&&a.page_views.recent)||[], [['Type',function(x){return x.item_type;}],['Item',function(x){return x.item_id;}],['When',function(x){return fmtDate(x.created_at);}]]);
+  }).catch(function(e){
+    var el=document.getElementById('userDetail'); if(el) el.innerHTML='<div class="muted">Could not load activity — run supabase/admin_user_activity.sql, then reload. ('+esc(e.message||e)+')</div>';
+  });
+}
+function exportUserActivity(){
+  if(!ACTIVITY) return;
+  var blob=new Blob([JSON.stringify(ACTIVITY,null,2)],{type:'application/json'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='sonna-activity-'+String(ACTIVITY_NAME).replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.json';
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },100);
 }
 
 /* ---------- Requests (LIVE buyer submissions from the 'requests' table) ---------- */
