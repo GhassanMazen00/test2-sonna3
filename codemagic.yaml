@@ -25,3 +25,46 @@ workflows:
           ./gradlew assembleDebug --stacktrace
     artifacts:
       - android/app/build/outputs/**/*.apk
+
+  # The `ios-simulator` workflow builds an UNSIGNED app for the iOS Simulator —
+  # no Apple Developer account ($99/yr) or signing certificate needed. It runs
+  # in the iOS Simulator (on a Mac, or Codemagic's preview). Installing on a
+  # real iPhone or shipping to the App Store DOES require an Apple Developer
+  # account + signing — that's a later step.
+  ios-simulator:
+    name: Sonna3 · iOS (simulator preview, unsigned)
+    max_build_duration: 60
+    instance_type: mac_mini_m2      # part of Codemagic's free monthly minutes
+    environment:
+      node: 20
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web bundle (www/)
+        script: npm run build:www
+      - name: Capacitor sync (iOS)
+        script: npx cap sync ios
+      - name: Build for iOS Simulator (unsigned)
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO | xcpretty || \
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Package the .app for download
+        script: |
+          cd ios/build/Build/Products/Debug-iphonesimulator
+          zip -r "$CM_BUILD_DIR/Sonna3-iOS-simulator.app.zip" App.app
+    artifacts:
+      - Sonna3-iOS-simulator.app.zip

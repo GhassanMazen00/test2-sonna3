@@ -70,10 +70,32 @@
     } catch (e) {}
   }
 
-  if (document.readyState !== 'loading') buildTabBar();
-  else document.addEventListener('DOMContentLoaded', buildTabBar);
+  // ---- In-app Back button (for iOS, which has no hardware back) ----
+  // Android keeps its hardware back button (handled below), so we only show an
+  // on-screen back on iOS and in browser preview. Hidden on the root tab pages.
+  var ROOT_PAGES = ['', 'index.html', 'factories.html', 'requests.html', 'messages.html', 'account.html'];
+  function buildBackButton() {
+    var isAndroidNative = isNative && typeof Cap.getPlatform === 'function' && Cap.getPlatform() === 'android';
+    if (isAndroidNative) return;
+    var here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (ROOT_PAGES.indexOf(here) >= 0) return;
+    var inner = document.querySelector('header .header-inner');
+    if (!inner || inner.querySelector('.app-back')) return;
+    var btn = document.createElement('button');
+    btn.className = 'app-back';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', lbl('back', 'رجوع'));
+    btn.innerHTML = ic('back') || '‹';
+    btn.onclick = function () { if (window.history.length > 1) window.history.back(); else window.location.href = 'index.html'; };
+    inner.insertBefore(btn, inner.firstChild);
+  }
+
+  function buildChrome() { buildTabBar(); buildBackButton(); }
+  if (document.readyState !== 'loading') buildChrome();
+  else document.addEventListener('DOMContentLoaded', buildChrome);
   // Header/footer render async after AdminStore.bootstrap — retry once they land.
-  window.addEventListener('load', buildTabBar);
+  window.addEventListener('load', buildChrome);
+  setTimeout(buildChrome, 500); setTimeout(buildChrome, 1200);
 
   if (!isNative) return;                       // preview mode stops here.
 
